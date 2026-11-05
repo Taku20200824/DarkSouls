@@ -111,22 +111,24 @@ describe("DSR synthetic save (encryption + anchor)", () => {
 
   it("keeps reading the inventory past empty slots", () => {
     const start = 0xa58;
-    const s = parseSave(
-      buildDsr((slot) => {
-        const dv = new DataView(slot.buffer);
-        const write = (i: number, type: number, id: number) => {
-          dv.setUint32(start + i * 28 + 4, type, true);
-          dv.setUint32(start + i * 28 + 8, id, true);
-          dv.setUint32(start + i * 28 + 12, 1, true);
-        };
-        write(0, 0, 900000);
-        write(1, 0xffffffff, 0xffffffff);
-        write(2, 0x20000000, ringId);
-      }),
-    );
-    const c = s.characters[0];
+    const build = (hole: boolean) =>
+      parseSave(
+        buildDsr((slot) => {
+          const dv = new DataView(slot.buffer);
+          const write = (i: number, type: number, id: number) => {
+            dv.setUint32(start + i * 28 + 4, type, true);
+            dv.setUint32(start + i * 28 + 8, id, true);
+            dv.setUint32(start + i * 28 + 12, 1, true);
+          };
+          write(0, 0, 900000);
+          if (hole) write(1, 0xffffffff, 0xffffffff);
+          write(2, 0x20000000, ringId);
+        }),
+      ).characters[0];
+    const c = build(true);
     expect(c.inventory.map((i) => i.name)).toContain(ringName);
-    expect(c.unknownItemCount).toBe(0);
+    // The fixture's character block overlaps the array, so compare rather than expect zero.
+    expect(c.unknownItemCount).toBe(build(false).unknownItemCount);
   });
 
   it("reports unknown deaths when the sentinel is missing", () => {
