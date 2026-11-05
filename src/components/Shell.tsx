@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
 import { fmtAgo } from "./ui";
@@ -91,6 +91,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { state, demo, status } = useTracker();
   const [open, setOpen] = useState(false);
+  const reduced = useReducedMotion();
   const bare = path === "/" || path === "/login";
   if (bare) return <>{children}</>;
   return (
@@ -106,12 +107,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </Link>
         <div className="ornament my-5" />
-        <nav className="space-y-0.5">
+        <nav id="tracker-navigation" aria-label="Tracker navigation" className="space-y-0.5">
           {NAV.map((n) => {
             const active = path.startsWith(n.href);
             const Icon = n.icon;
             return (
-              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={clsx("group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "text-gold-200" : "text-ash-400 hover:text-gold-300")}>
+              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "text-gold-200" : "text-ash-400 hover:text-gold-300")}>
                 {active && <motion.span layoutId="nav-active" className="absolute inset-0 border-l-2 border-ember-400 bg-[linear-gradient(90deg,rgba(242,106,27,0.18),transparent)]" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
                 <Icon className={clsx("relative h-4 w-4 shrink-0 transition", active ? "text-ember-300 drop-shadow-[0_0_6px_#ff9142]" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
                 <span className="relative min-w-0">
@@ -138,12 +139,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
       <div className="min-w-0 flex-1">
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gold-600/15 bg-stone-950/85 px-4 py-2.5 backdrop-blur md:hidden">
-          <button className="btn !px-2.5 !py-1.5" onClick={() => setOpen(!open)} aria-label="Цэс">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
+          <button className="btn !px-2.5 !py-1.5" onClick={() => setOpen(!open)} aria-label="Цэс" aria-expanded={open} aria-controls="tracker-navigation">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
           <span className="font-display gold-text text-sm font-bold tracking-[0.3em]">LORDRAN TRACKER</span>
           <BonfireMark className="h-7 w-5" />
         </div>
         {demo && <div className="bg-fuchsia-900/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-fuchsia-200">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
-        <motion.main key={path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
+        <motion.main id="main-content" key={path} initial={{ opacity: 0, y: reduced ? 0 : 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
       <VictoryOverlay />
     </div>

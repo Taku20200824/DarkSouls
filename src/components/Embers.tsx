@@ -7,8 +7,9 @@ export function Embers({ density = 1 }: { density?: number }) {
   useEffect(() => {
     const c = ref.current;
     if (!c) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const ctx = c.getContext("2d")!;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
     let w = 0, h = 0, raf = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     type P = { x: number; y: number; r: number; vy: number; vx: number; life: number; max: number; ph: number; hue: number };
@@ -37,15 +38,18 @@ export function Embers({ density = 1 }: { density?: number }) {
     };
     resize();
     window.addEventListener("resize", resize);
-    const tick = () => {
+    let previous = 0;
+    const tick = (time: number) => {
+      const step = previous ? Math.min((time - previous) / (1000 / 60), 2) : 1;
+      previous = time;
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = "lighter";
       for (let i = 0; i < ps.length; i++) {
         const p = ps[i];
-        p.life++;
-        p.ph += 0.02;
-        p.x += p.vx + Math.sin(p.ph) * 0.35;
-        p.y -= p.vy;
+        p.life += step;
+        p.ph += 0.02 * step;
+        p.x += (p.vx + Math.sin(p.ph) * 0.35) * step;
+        p.y -= p.vy * step;
         const t = p.life / p.max;
         const a = Math.max(0, Math.min(1, t * 6) * (1 - t)) * (0.6 + 0.4 * Math.sin(p.ph * 3));
         if (t >= 1 || p.y < -20) {
@@ -63,15 +67,19 @@ export function Embers({ density = 1 }: { density?: number }) {
       }
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
     const vis = () => {
       cancelAnimationFrame(raf);
-      if (document.visibilityState === "visible") raf = requestAnimationFrame(tick);
+      previous = 0;
+      if (!preference.matches && document.visibilityState === "visible") raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, w, h);
     };
+    vis();
+    preference.addEventListener("change", vis);
     document.addEventListener("visibilitychange", vis);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      preference.removeEventListener("change", vis);
       document.removeEventListener("visibilitychange", vis);
     };
   }, [density]);
