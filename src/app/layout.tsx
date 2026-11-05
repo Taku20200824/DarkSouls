@@ -10,6 +10,7 @@ import "@fontsource/noto-sans/400.css";
 import "@fontsource/noto-sans/500.css";
 import "@fontsource/noto-sans/600.css";
 import "./globals.css";
+import "./cinematic.css";
 import { TrackerProvider } from "@/components/TrackerProvider";
 import { Shell } from "@/components/Shell";
 import { Embers } from "@/components/Embers";
