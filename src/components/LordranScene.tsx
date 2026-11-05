@@ -9,12 +9,13 @@ const SPARKS = Array.from({ length: 30 }, (_, i) => ({
 } as CSSProperties));
 
 /** Optimized original key art, with independent light, mist and ember layers. */
-export function LordranScene() {
+export function LordranScene({ paused = false }: { paused?: boolean }) {
+  const animationStyle = { animationPlayState: paused ? "paused" : "running" } as const;
   return (
     <div className="lordran-scene" aria-hidden="true">
-      <Image src="/artwork/firelink-cinematic.webp" alt="" fill priority sizes="100vw" quality={90} className="cinematic-keyart" />
-      <div className="fire-bloom" /><div className="cinematic-mist" />
-      <div className="cinematic-sparks">{SPARKS.map((style, i) => <span key={i} style={style} />)}</div>
+      <Image src="/artwork/firelink-cinematic.webp" alt="" fill priority sizes="100vw" quality={90} className="cinematic-keyart" style={animationStyle} />
+      <div className="fire-bloom" style={animationStyle} /><div className="cinematic-mist" style={animationStyle} />
+      <div className="cinematic-sparks">{SPARKS.map((style, i) => <span key={i} style={{ ...style, ...animationStyle }} />)}</div>
     </div>
   );
 }

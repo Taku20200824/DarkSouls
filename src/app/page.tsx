@@ -53,7 +53,7 @@ export default function Landing() {
         </nav>
       </header>
       <section className="landing-hero" aria-labelledby="hero-title" onPointerMove={movePointer} onPointerLeave={resetPointer}>
-        <motion.div className="hero-art" style={{ y: reduced || !effects ? 0 : sceneryY }}><motion.div className="hero-art-depth" style={{ x: reduced || !effects ? 0 : artX, y: reduced || !effects ? 0 : artY }}><LordranScene /></motion.div></motion.div><div className="hero-shade" /><div className="hero-frame" aria-hidden="true" />
+        <motion.div className="hero-art" style={{ y: reduced || !effects ? 0 : sceneryY }}><motion.div className="hero-art-depth" style={{ x: reduced || !effects ? 0 : artX, y: reduced || !effects ? 0 : artY }}><LordranScene paused={!effects} /></motion.div></motion.div><div className="hero-shade" /><div className="hero-frame" aria-hidden="true" />
         <motion.div className="hero-copy" initial="hidden" animate="visible" transition={{ staggerChildren: .12 }}>
           <motion.p variants={reveal} transition={{ duration: .7 }} className="eyebrow flex items-center gap-3"><span className="h-px w-8 bg-ember-400" /> A DARK SOULS REMASTERED COMPANION</motion.p>
           <motion.h1 variants={reveal} transition={{ duration: 1 }} id="hero-title" className="hero-title"><span className="title-lordran">LORDRAN</span><span className="title-tracker">T R A C K E R</span></motion.h1>

@@ -10,7 +10,7 @@
 }
 .landing-immersive { background: #07090b; }
 .landing-immersive .landing-nav { height: 86px; margin-inline: 5%; }
-.landing-immersive .landing-hero { min-height: 730px; height: 100svh; max-height: 1100px; }
+.landing-immersive .landing-hero { min-height: 730px; height: 100svh; max-height: 1100px; overflow: hidden; }
 .landing-immersive .hero-art { inset: -20px; }
 .hero-art-depth { position: absolute; inset: 0; }
 .landing-immersive .lordran-scene { background: #090d12; }
