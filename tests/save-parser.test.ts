@@ -4,6 +4,7 @@ import { parseSave, isValidName } from "@/lib/save/ds1";
 import { parseBnd4, checksumOk, entryBlob } from "@/lib/save/bnd4";
 import { SaveParseError } from "@/lib/save/types";
 import { SyncPayloadSchema } from "@/lib/save/schema";
+import bossFlags from "@/lib/data/ds1db/boss_flags.json";
 import { buildDsr } from "./helpers/dsr";
 
 /**
@@ -81,6 +82,29 @@ describe("DSR synthetic save (encryption + anchor)", () => {
     expect(checksumOk(entryBlob(f, e))).toBe(false);
     expect(parseSave(f).checksumsValid).toBe(false);
   });
+  it("follows the death and flag structs when a DSR save places them elsewhere", () => {
+    const shift = -184; // measured on a real DSR save
+    const [flagOff, flagMask] = bossFlags["Taurus Demon"];
+    const s = parseSave(
+      buildDsr((slot) => {
+        const dv = new DataView(slot.buffer);
+        dv.setUint32(0x1f2d8 + 4, 0, true);
+        const off = 0x1f2d8 + shift;
+        dv.setUint32(off, 160, true);
+        dv.setUint32(off + 4, 0xffffffff, true);
+        slot.set([0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00], off + 12);
+        dv.setUint32(127721 + shift + flagOff, flagMask, true);
+      }),
+    );
+    const c = s.characters[0];
+    expect(c.deaths).toEqual({ value: 160, certainty: "verified" });
+    expect(c.bosses["Taurus Demon"]).toContain("flag");
+    // The calibrated NG byte holds unrelated data in this layout (the fixture sets it to 2).
+    expect(c.ngCycle.value).toBe(0);
+    expect(c.ngCycle.certainty).toBe("inferred");
+    expect(c.bosses["Gwyn, Lord of Cinder"]).toBeUndefined();
+  });
+
   it("reports unknown deaths when the sentinel is missing", () => {
     const s = parseSave(buildDsr((slot) => new DataView(slot.buffer).setUint32(0x1f2d8 + 4, 0, true)));
     expect(s.characters[0].deaths.certainty).toBe("unknown");

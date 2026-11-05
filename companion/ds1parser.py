@@ -16,7 +16,7 @@ from typing import Any
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-PARSER_VERSION = "ds1-1.0.0"
+PARSER_VERSION = "ds1-1.0.1"
 DSR_KEY = bytes.fromhex("0123456789ABCDEFFEDCBA9876543210")
 MAX_SAVE_BYTES = 16 * 1024 * 1024
 HEADER_LEN, ENTRY_LEN = 0x40, 0x20
@@ -32,6 +32,10 @@ CLASSES = ["Warrior", "Knight", "Wanderer", "Thief", "Bandit", "Hunter", "Sorcer
 CLASS_K = {0: 82, 1: 81, 2: 83, 3: 81, 4: 82, 5: 82, 6: 79, 7: 83, 8: 82, 9: 82}
 GENDER = {0: "Female", 1: "Male"}
 DEATHS_OFF = {"ptde": 0x1F118, "dsr": 0x1F2D8}
+# Some DSR saves place this struct elsewhere, so it is also located by its constant tail.
+DEATHS_TAIL = bytes.fromhex("0008000000008000")
+DEATHS_TAIL_D = 12
+DEATHS_SEARCH = 0x400
 FLAG_BASE = {"dsr": 127721, "ptde": 127273}
 FLAG_SPAN, FLAG_MAX_DENSITY = 23156, 0.05
 MENU_LEVEL_D, MENU_PLAYTIME_D = 36, 40
@@ -116,6 +120,13 @@ def is_valid_name(s: str) -> bool:
 
 def known(v, note=None):
     d = {"value": v, "certainty": "verified" if v is not None else "unknown"}
+    if note:
+        d["note"] = note
+    return d
+
+
+def inferred(v, note=None):
+    d = {"value": v, "certainty": "inferred"}
     if note:
         d["note"] = note
     return d
@@ -270,9 +281,26 @@ def read_inventory(buf):
     return list(merged.values()), unk
 
 
+def locate_deaths(buf, game):
+    fixed = DEATHS_OFF[game]
+    if u32(buf, fixed + 4) == 0xFFFFFFFF:
+        return fixed
+    for off in range(fixed - DEATHS_SEARCH, fixed + DEATHS_SEARCH + 1):
+        tail = off + DEATHS_TAIL_D
+        if u32(buf, off + 4) == 0xFFFFFFFF and buf[tail:tail + len(DEATHS_TAIL)] == DEATHS_TAIL:
+            return off
+    return None
+
+
+def layout_shift(buf, game):
+    """How far this save's death/flag structs sit from the calibrated layout."""
+    off = locate_deaths(buf, game)
+    return 0 if off is None else off - DEATHS_OFF[game]
+
+
 def read_deaths(buf, game):
-    off = DEATHS_OFF[game]
-    if u32(buf, off + 4) != 0xFFFFFFFF:
+    off = locate_deaths(buf, game)
+    if off is None:
         return unknown("Death counter structure not at the expected location.")
     return known(u32(buf, off))
 
@@ -302,7 +330,7 @@ def read_bonfires(buf):
 
 
 def read_flags(buf, game):
-    base = FLAG_BASE[game]
+    base = FLAG_BASE[game] + layout_shift(buf, game)
     if base + FLAG_SPAN > len(buf):
         return None
     region = buf[base:base + FLAG_SPAN]
@@ -335,7 +363,12 @@ def parse_slot(buf, slot, game, menu):
     klass, gender = u8(buf, m + D["klass"]), u8(buf, m + D["gender"])
     items, unk = read_inventory(buf)
     flags = read_flags(buf, game)
-    ng = known(u8(buf, m + D["ng"]), "NG+ counter (0 = first journey)") if game == "dsr" else unknown("NG cycle offset is only calibrated for Remastered saves.")
+    if game != "dsr":
+        ng = unknown("NG cycle offset is only calibrated for Remastered saves.")
+    elif layout_shift(buf, game) == 0:
+        ng = known(u8(buf, m + D["ng"]), "NG+ counter (0 = first journey)")
+    else:
+        ng = inferred(0, "NG+ counter is not calibrated for this save layout; assuming the first journey.")
     bosses: dict[str, set] = {}
     for it in items:
         if it["category"] == "goods" and it["name"] in BOSS_SOUL_DB:
