@@ -274,6 +274,43 @@ def cmd_run(args) -> int:
             time.sleep(5)
 
 
+def startup_script_path() -> str:
+    base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    return os.path.join(base, "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "LordranCompanion.vbs")
+
+
+def launch_command() -> list[str]:
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "run"]
+    pythonw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
+    return [pythonw, os.path.abspath(__file__), "run"]
+
+
+def startup_script() -> str:
+    command = " ".join(f'""{part}""' for part in launch_command())
+    return f'CreateObject("WScript.Shell").Run "{command}", 0, False\r\n'
+
+
+def cmd_autostart(args) -> int:
+    if os.name != "nt":
+        print("Autostart is only available on Windows.")
+        return 2
+    path = startup_script_path()
+    if args.state == "off":
+        if os.path.exists(path):
+            os.remove(path)
+        print(f"Autostart off: {path}")
+        return 0
+    if not load_config().get("token"):
+        print("Эхлээд pair хийнэ үү: python lordran_companion.py pair CODE --server URL")
+        return 4
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-16", newline="") as f:
+        f.write(startup_script())
+    print(f"Autostart on: {path}")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="lordran-companion", description="LORDRAN TRACKER Windows companion")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -281,8 +318,9 @@ def main(argv=None) -> int:
     r = sub.add_parser("run"); r.add_argument("--save")
     o = sub.add_parser("once"); o.add_argument("--save"); o.add_argument("--print", action="store_true")
     sub.add_parser("status")
+    s = sub.add_parser("autostart"); s.add_argument("state", choices=["on", "off"])
     a = ap.parse_args(argv)
-    return {"pair": cmd_pair, "run": cmd_run, "once": cmd_once, "status": cmd_status}[a.cmd](a)
+    return {"pair": cmd_pair, "run": cmd_run, "once": cmd_once, "status": cmd_status, "autostart": cmd_autostart}[a.cmd](a)
 
 
 if __name__ == "__main__":

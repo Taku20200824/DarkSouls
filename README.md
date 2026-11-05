@@ -97,9 +97,12 @@ python lordran_companion.py pair ABCD2345 --server https://your-site.vercel.app
 REM 2. Watch and sync (leave it running while you play)
 python lordran_companion.py run
 REM Other commands
+python lordran_companion.py autostart on          REM start hidden at every Windows sign-in (autostart off to remove)
 python lordran_companion.py status
 python lordran_companion.py once --print          REM parse locally and print JSON, send nothing
 ```
+
+Steam achievements refresh on their own while the site is open, at most every 10 minutes. Save data cannot come from Steam, so it still needs the companion on the PC: pair once, run `autostart on`, and there is nothing more to do.
 
 Run `build_windows.bat` to build a standalone `dist\lordran-companion.exe` with PyInstaller.
 
