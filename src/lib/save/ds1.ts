@@ -22,7 +22,7 @@ import {
  * saves, combined with tarvitz/dsfp (MIT) for the PtDE death counter. Each value is
  * only reported when its sanity gate passes; otherwise it is `unknown`.
  */
-export const PARSER_VERSION = "ds1-1.0.1";
+export const PARSER_VERSION = "ds1-1.0.2";
 
 const SLOT_COUNT = 10;
 const MENU_ENTRY = 10;
@@ -69,7 +69,9 @@ const MENU_PLAYTIME_D = 40;
 
 const INV_START = 0x988;
 const INV_ANCHOR = hexToBytes("0000000000000000A0BB0D00");
-const INV_END = hexToBytes("00000000FFFFFFFFFFFFFFFF");
+// Fixed-size array. Dropped or used-up items leave empty slots in the middle of it.
+const INV_SLOTS = 1984;
+const INV_EMPTY = 0xffffffff;
 const INV_REC = 28;
 
 const INFUSION: Record<number, string> = {
@@ -211,13 +213,13 @@ export function readInventory(buf: Uint8Array): { items: InventoryItem[]; unknow
   let unknownCount = 0;
   const start = indexOf(buf, INV_ANCHOR, INV_START);
   if (start === -1) return { items, unknown: 0 };
-  let end = indexOf(buf, INV_END, start);
-  if (end === -1) end = buf.length;
+  const end = Math.min(start + INV_SLOTS * INV_REC, buf.length);
   for (let o = start; o + INV_REC <= end; o += INV_REC) {
     const stype = u32(buf, o + 4);
     const id = u32(buf, o + 8);
     const qty = u32(buf, o + 12);
     if (!id || stype === null || qty === null) continue;
+    if (stype === INV_EMPTY && id === INV_EMPTY) continue;
     const top = Math.floor(stype / 0x10000000) * 0x10000000;
     let cat: InventoryCategory | null =
       top === 0 ? "weapons" : top === 0x10000000 ? "armors" : top === 0x20000000 ? "rings" : top === 0x40000000 ? "goods" : null;

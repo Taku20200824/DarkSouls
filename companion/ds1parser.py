@@ -16,7 +16,7 @@ from typing import Any
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-PARSER_VERSION = "ds1-1.0.1"
+PARSER_VERSION = "ds1-1.0.2"
 DSR_KEY = bytes.fromhex("0123456789ABCDEFFEDCBA9876543210")
 MAX_SAVE_BYTES = 16 * 1024 * 1024
 HEADER_LEN, ENTRY_LEN = 0x40, 0x20
@@ -41,7 +41,9 @@ FLAG_SPAN, FLAG_MAX_DENSITY = 23156, 0.05
 MENU_LEVEL_D, MENU_PLAYTIME_D = 36, 40
 INV_START = 0x988
 INV_ANCHOR = bytes.fromhex("0000000000000000A0BB0D00")
-INV_END = bytes.fromhex("00000000FFFFFFFFFFFFFFFF")
+# Fixed-size array. Dropped or used-up items leave empty slots in the middle of it.
+INV_SLOTS = 1984
+INV_EMPTY = 0xFFFFFFFF
 INFUSION = {0: "Normal", 1: "Crystal", 2: "Lightning", 3: "Raw", 4: "Magic", 5: "Enchanted", 6: "Divine", 7: "Occult", 8: "Fire", 9: "Chaos"}
 BONFIRE_STATE = {0: "discovered", 10: "lit", 20: "kindled +1", 30: "kindled +2", 40: "kindled +3"}
 MANDATORY = [
@@ -253,14 +255,14 @@ def read_inventory(buf):
     start = buf.find(INV_ANCHOR, INV_START)
     if start == -1:
         return [], 0
-    end = buf.find(INV_END, start)
-    if end == -1:
-        end = len(buf)
+    end = min(start + INV_SLOTS * 28, len(buf))
     o = start
     while o + 28 <= end:
         stype, iid, qty = u32(buf, o + 4), u32(buf, o + 8), u32(buf, o + 12)
         o += 28
         if not iid or stype is None or qty is None:
+            continue
+        if stype == INV_EMPTY and iid == INV_EMPTY:
             continue
         top = stype & 0xF0000000
         cat = {0: "weapons", 0x10000000: "armors", 0x20000000: "rings", 0x40000000: "goods"}.get(top)

@@ -5,7 +5,11 @@ import { parseBnd4, checksumOk, entryBlob } from "@/lib/save/bnd4";
 import { SaveParseError } from "@/lib/save/types";
 import { SyncPayloadSchema } from "@/lib/save/schema";
 import bossFlags from "@/lib/data/ds1db/boss_flags.json";
+import rings from "@/lib/data/ds1db/Rings.json";
 import { buildDsr } from "./helpers/dsr";
+
+const [ringName, ringValue] = Object.entries(rings)[0];
+const ringId = Number(ringValue);
 
 /**
  * Real PtDE save from tarvitz/dsfp (MIT). dsfp's own test asserts:
@@ -103,6 +107,26 @@ describe("DSR synthetic save (encryption + anchor)", () => {
     expect(c.ngCycle.value).toBe(0);
     expect(c.ngCycle.certainty).toBe("inferred");
     expect(c.bosses["Gwyn, Lord of Cinder"]).toBeUndefined();
+  });
+
+  it("keeps reading the inventory past empty slots", () => {
+    const start = 0xa58;
+    const s = parseSave(
+      buildDsr((slot) => {
+        const dv = new DataView(slot.buffer);
+        const write = (i: number, type: number, id: number) => {
+          dv.setUint32(start + i * 28 + 4, type, true);
+          dv.setUint32(start + i * 28 + 8, id, true);
+          dv.setUint32(start + i * 28 + 12, 1, true);
+        };
+        write(0, 0, 900000);
+        write(1, 0xffffffff, 0xffffffff);
+        write(2, 0x20000000, ringId);
+      }),
+    );
+    const c = s.characters[0];
+    expect(c.inventory.map((i) => i.name)).toContain(ringName);
+    expect(c.unknownItemCount).toBe(0);
   });
 
   it("reports unknown deaths when the sentinel is missing", () => {
