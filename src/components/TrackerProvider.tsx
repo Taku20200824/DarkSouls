@@ -21,6 +21,7 @@ interface Ctx {
 
 const C = createContext<Ctx | null>(null);
 const POLL_MS = 15_000;
+const ACHIEVEMENTS_TTL = 10 * 60_000;
 
 function readFlag(k: string): string | null {
   try {
@@ -111,6 +112,17 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     },
     [refresh],
   );
+
+  // Keep Steam achievements fresh without a button press once the user is signed in.
+  const achievementsTriedAt = useRef(0);
+  useEffect(() => {
+    if (status !== "ready" || demo || !state || state.demo) return;
+    const now = Date.now();
+    if (now - achievementsTriedAt.current < ACHIEVEMENTS_TTL) return;
+    if (state.now - (state.achievements?.checkedAt ?? 0) < ACHIEVEMENTS_TTL) return;
+    achievementsTriedAt.current = now;
+    post("/api/achievements/sync", {}).catch(() => {});
+  }, [status, demo, state, post]);
 
   const tracker = useMemo<TrackerContext>(() => {
     const chars = state?.characters ?? [];

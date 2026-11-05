@@ -4,7 +4,12 @@ import { parseSave, isValidName } from "@/lib/save/ds1";
 import { parseBnd4, checksumOk, entryBlob } from "@/lib/save/bnd4";
 import { SaveParseError } from "@/lib/save/types";
 import { SyncPayloadSchema } from "@/lib/save/schema";
+import bossFlags from "@/lib/data/ds1db/boss_flags.json";
+import rings from "@/lib/data/ds1db/Rings.json";
 import { buildDsr } from "./helpers/dsr";
+
+const [ringName, ringValue] = Object.entries(rings)[0];
+const ringId = Number(ringValue);
 
 /**
  * Real PtDE save from tarvitz/dsfp (MIT). dsfp's own test asserts:
@@ -81,6 +86,51 @@ describe("DSR synthetic save (encryption + anchor)", () => {
     expect(checksumOk(entryBlob(f, e))).toBe(false);
     expect(parseSave(f).checksumsValid).toBe(false);
   });
+  it("follows the death and flag structs when a DSR save places them elsewhere", () => {
+    const shift = -184; // measured on a real DSR save
+    const [flagOff, flagMask] = bossFlags["Taurus Demon"];
+    const s = parseSave(
+      buildDsr((slot) => {
+        const dv = new DataView(slot.buffer);
+        dv.setUint32(0x1f2d8 + 4, 0, true);
+        const off = 0x1f2d8 + shift;
+        dv.setUint32(off, 160, true);
+        dv.setUint32(off + 4, 0xffffffff, true);
+        slot.set([0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00], off + 12);
+        dv.setUint32(127721 + shift + flagOff, flagMask, true);
+      }),
+    );
+    const c = s.characters[0];
+    expect(c.deaths).toEqual({ value: 160, certainty: "verified" });
+    expect(c.bosses["Taurus Demon"]).toContain("flag");
+    // The calibrated NG byte holds unrelated data in this layout (the fixture sets it to 2).
+    expect(c.ngCycle.value).toBe(0);
+    expect(c.ngCycle.certainty).toBe("inferred");
+    expect(c.bosses["Gwyn, Lord of Cinder"]).toBeUndefined();
+  });
+
+  it("keeps reading the inventory past empty slots", () => {
+    const start = 0xa58;
+    const build = (hole: boolean) =>
+      parseSave(
+        buildDsr((slot) => {
+          const dv = new DataView(slot.buffer);
+          const write = (i: number, type: number, id: number) => {
+            dv.setUint32(start + i * 28 + 4, type, true);
+            dv.setUint32(start + i * 28 + 8, id, true);
+            dv.setUint32(start + i * 28 + 12, 1, true);
+          };
+          write(0, 0, 900000);
+          if (hole) write(1, 0xffffffff, 0xffffffff);
+          write(2, 0x20000000, ringId);
+        }),
+      ).characters[0];
+    const c = build(true);
+    expect(c.inventory.map((i) => i.name)).toContain(ringName);
+    // The fixture's character block overlaps the array, so compare rather than expect zero.
+    expect(c.unknownItemCount).toBe(build(false).unknownItemCount);
+  });
+
   it("reports unknown deaths when the sentinel is missing", () => {
     const s = parseSave(buildDsr((slot) => new DataView(slot.buffer).setUint32(0x1f2d8 + 4, 0, true)));
     expect(s.characters[0].deaths.certainty).toBe("unknown");

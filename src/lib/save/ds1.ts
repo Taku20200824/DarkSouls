@@ -22,7 +22,7 @@ import {
  * saves, combined with tarvitz/dsfp (MIT) for the PtDE death counter. Each value is
  * only reported when its sanity gate passes; otherwise it is `unknown`.
  */
-export const PARSER_VERSION = "ds1-1.0.0";
+export const PARSER_VERSION = "ds1-1.0.2";
 
 const SLOT_COUNT = 10;
 const MENU_ENTRY = 10;
@@ -55,6 +55,10 @@ const GENDER: Record<number, string> = { 0: "Female", 1: "Male" };
 
 const DEATHS_OFF: Record<GameVariant, number> = { ptde: 0x1f118, dsr: 0x1f2d8 };
 const DEATHS_SENTINEL = 0xffffffff;
+// Some DSR saves place this struct elsewhere, so it is also located by its constant tail.
+const DEATHS_TAIL = [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00];
+const DEATHS_TAIL_D = 12;
+const DEATHS_SEARCH = 0x400;
 
 const FLAG_BASE: Record<GameVariant, number> = { dsr: 127721, ptde: 127273 };
 const FLAG_SPAN = 23156;
@@ -65,7 +69,9 @@ const MENU_PLAYTIME_D = 40;
 
 const INV_START = 0x988;
 const INV_ANCHOR = hexToBytes("0000000000000000A0BB0D00");
-const INV_END = hexToBytes("00000000FFFFFFFFFFFFFFFF");
+// Fixed-size array. Dropped or used-up items leave empty slots in the middle of it.
+const INV_SLOTS = 1984;
+const INV_EMPTY = 0xffffffff;
 const INV_REC = 28;
 
 const INFUSION: Record<number, string> = {
@@ -207,13 +213,13 @@ export function readInventory(buf: Uint8Array): { items: InventoryItem[]; unknow
   let unknownCount = 0;
   const start = indexOf(buf, INV_ANCHOR, INV_START);
   if (start === -1) return { items, unknown: 0 };
-  let end = indexOf(buf, INV_END, start);
-  if (end === -1) end = buf.length;
+  const end = Math.min(start + INV_SLOTS * INV_REC, buf.length);
   for (let o = start; o + INV_REC <= end; o += INV_REC) {
     const stype = u32(buf, o + 4);
     const id = u32(buf, o + 8);
     const qty = u32(buf, o + 12);
     if (!id || stype === null || qty === null) continue;
+    if (stype === INV_EMPTY && id === INV_EMPTY) continue;
     const top = Math.floor(stype / 0x10000000) * 0x10000000;
     let cat: InventoryCategory | null =
       top === 0 ? "weapons" : top === 0x10000000 ? "armors" : top === 0x20000000 ? "rings" : top === 0x40000000 ? "goods" : null;
@@ -236,9 +242,21 @@ export function readInventory(buf: Uint8Array): { items: InventoryItem[]; unknow
   return { items: [...merged.values()], unknown: unknownCount };
 }
 
+function locateDeaths(buf: Uint8Array, game: GameVariant): number | null {
+  const fixed = DEATHS_OFF[game];
+  if (u32(buf, fixed + 4) === DEATHS_SENTINEL) return fixed;
+  for (let off = fixed - DEATHS_SEARCH; off <= fixed + DEATHS_SEARCH; off++) {
+    if (u32(buf, off + 4) === DEATHS_SENTINEL && DEATHS_TAIL.every((b, i) => buf[off + DEATHS_TAIL_D + i] === b)) return off;
+  }
+  return null;
+}
+
+/** How far this save's death/flag structs sit from the calibrated layout. */
+const layoutShift = (buf: Uint8Array, game: GameVariant) => (locateDeaths(buf, game) ?? DEATHS_OFF[game]) - DEATHS_OFF[game];
+
 export function readDeaths(buf: Uint8Array, game: GameVariant): Field<number> {
-  const off = DEATHS_OFF[game];
-  if (u32(buf, off + 4) !== DEATHS_SENTINEL) return unknown("Death counter structure not at the expected location.");
+  const off = locateDeaths(buf, game);
+  if (off === null) return unknown("Death counter structure not at the expected location.");
   return known(u32(buf, off));
 }
 
@@ -284,7 +302,7 @@ function popcount8(b: number) {
 
 /** Event-flag region: boss kills + world state. Disabled when the region does not read sparse. */
 export function readFlags(buf: Uint8Array, game: GameVariant) {
-  const base = FLAG_BASE[game];
+  const base = FLAG_BASE[game] + layoutShift(buf, game);
   if (base + FLAG_SPAN > buf.length) return null;
   let bits = 0;
   for (let i = base; i < base + FLAG_SPAN; i++) bits += popcount8(buf[i]);
@@ -333,9 +351,11 @@ function parseSlot(buf: Uint8Array, slot: number, game: GameVariant, menu: Uint8
   const flags = readFlags(buf, game);
 
   const ng: Field<number> =
-    game === "dsr"
-      ? known(u8(buf, m + D.ng), "NG+ counter (0 = first journey)")
-      : unknown("NG cycle offset is only calibrated for Remastered saves.");
+    game !== "dsr"
+      ? unknown("NG cycle offset is only calibrated for Remastered saves.")
+      : layoutShift(buf, game) === 0
+        ? known(u8(buf, m + D.ng), "NG+ counter (0 = first journey)")
+        : inferred(0, "NG+ counter is not calibrated for this save layout; assuming the first journey.");
 
   // Boss evidence: flags (direct), held souls (inferred), NG+ (inferred).
   const bosses: Record<string, Set<BossEvidence>> = {};

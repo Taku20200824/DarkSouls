@@ -25,6 +25,13 @@ class ParserTests(unittest.TestCase):
             parse_save(b"\x00" * 100)
 
 
+class AutostartTests(unittest.TestCase):
+    def test_script_runs_hidden_and_quotes_paths(self):
+        script = lc.startup_script()
+        self.assertTrue(script.startswith('CreateObject("WScript.Shell").Run "'))
+        self.assertIn('lordran_companion.py"" ""run""", 0, False', script)
+
+
 class SnapshotTests(unittest.TestCase):
     def test_partial_file_rejected(self):
         with open(FIXTURE, "rb") as f:
