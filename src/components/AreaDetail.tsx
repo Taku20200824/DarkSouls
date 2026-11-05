@@ -1,0 +1,85 @@
+"use client";
+import Link from "next/link";
+import { useTracker } from "./TrackerProvider";
+import { Badge } from "./ui";
+import { AREAS, CONNECTIONS, type Area } from "@/lib/data/areas";
+import { BOSSES } from "@/lib/data/bosses";
+import { BONFIRE_DB } from "@/lib/save/itemdb";
+import { bossStatus, computeObjectives, hasItem } from "@/lib/guide/engine";
+
+export function AreaDetail({ area, compact }: { area: Area; compact?: boolean }) {
+  const { tracker, demo } = useTracker();
+  const ch = tracker.character;
+  const allBonfires = [...BONFIRE_DB.entries()].filter(([, [, a]]) => a === area.bonfireArea);
+  const found = new Set((ch?.bonfires.value ?? []).map((b) => b.id));
+  const bonfiresKnown = ch?.bonfires.certainty === "verified";
+  const objective = computeObjectives(tracker).find((o) => o.area === area.id);
+  const neighbours = CONNECTIONS.filter((c) => c.from === area.id || c.to === area.id).map((c) => ({ id: c.from === area.id ? c.to : c.from, requires: c.requires }));
+  return (
+    <div className="space-y-4 text-sm">
+      <div>
+        <h3 className="font-display text-2xl text-gold-300">{area.name.toUpperCase()}</h3>
+        {area.dlc && <Badge kind="inferred">DLC</Badge>}
+        <p className="mt-1 text-ash-300">{area.mn}</p>
+      </div>
+      <div>
+        <h4 className="text-xs uppercase tracking-widest text-ash-500">Bonfire-ууд {bonfiresKnown ? `(${allBonfires.filter(([id]) => found.has(id)).length}/${allBonfires.length})` : ""}</h4>
+        {allBonfires.length === 0 ? <p className="text-ash-500">Энэ бүсэд бүртгэгдсэн bonfire алга.</p> : (
+          <ul className="mt-1 space-y-0.5">
+            {allBonfires.map(([id, [name]]) => (
+              <li key={id} className="flex justify-between"><span>{name}</span><span className={found.has(id) ? "text-ember-300" : "text-ash-500"}>{!bonfiresKnown ? "Unknown" : found.has(id) ? "🔥 олсон" : "олоогүй"}</span></li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {area.bosses.length > 0 && (
+        <div>
+          <h4 className="text-xs uppercase tracking-widest text-ash-500">Boss-ууд</h4>
+          <ul className="mt-1 space-y-0.5">
+            {area.bosses.map((id) => {
+              const b = BOSSES.find((x) => x.id === id)!;
+              const s = bossStatus(b, tracker);
+              return (
+                <li key={id} className="flex items-center justify-between gap-2">
+                  <Link href={`/bosses/${id}`} className="hover:text-ember-300">{b.name}</Link>
+                  <span className="flex items-center gap-1"><span className={s.state === "defeated" ? "text-emerald-300" : s.state === "alive" ? "text-red-300" : "text-ash-500"}>{s.state === "defeated" ? "Defeated" : s.state === "alive" ? "Alive" : "Unknown"}</span><Badge kind={demo ? "demo" : s.certainty} /></span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {!compact && area.npcs.length > 0 && (
+        <div><h4 className="text-xs uppercase tracking-widest text-ash-500">NPC</h4><p className="mt-1">{area.npcs.join(" · ")}</p></div>
+      )}
+      <div>
+        <h4 className="text-xs uppercase tracking-widest text-ash-500">Чухал эд зүйлс</h4>
+        <ul className="mt-1 space-y-0.5">
+          {area.items.map((it) => {
+            const base = it.replace(/\s*\(.*\)$/, "");
+            const owned = ch ? hasItem(ch, base) : null;
+            return <li key={it} className="flex justify-between gap-2"><span>{it}</span>{owned !== null && <span className={owned ? "text-emerald-300" : "text-ash-500"}>{owned ? "✓ эзэмшдэг" : "—"}</span>}</li>;
+          })}
+        </ul>
+      </div>
+      {area.shortcuts.length > 0 && <div><h4 className="text-xs uppercase tracking-widest text-ash-500">Shortcut</h4><p className="mt-1">{area.shortcuts.join(" · ")}</p></div>}
+      {area.secrets.length > 0 && <div><h4 className="text-xs uppercase tracking-widest text-ash-500">Нууц</h4><p className="mt-1">{area.secrets.join(" · ")}</p></div>}
+      {objective && (
+        <div className="rounded border border-ember-500/40 bg-ember-600/10 p-3">
+          <div className="text-xs uppercase tracking-widest text-ember-300">Зорилт {objective.done ? "✓ биелсэн" : ""}</div>
+          <div className="font-display text-lg text-gold-300">{objective.title}</div>
+          <p className="text-ash-300">{objective.whyMn}</p>
+          {objective.avoidMissingMn.length > 0 && <p className="mt-1 text-amber-300">⚠ {objective.avoidMissingMn.join(" · ")}</p>}
+        </div>
+      )}
+      <div>
+        <h4 className="text-xs uppercase tracking-widest text-ash-500">Холбогдох бүсүүд</h4>
+        <ul className="mt-1 space-y-0.5">
+          {neighbours.map((n) => (
+            <li key={n.id}><Link className="text-gold-300 hover:text-ember-300" href={`/areas/${n.id}`}>{AREAS.find((a) => a.id === n.id)?.name}</Link>{n.requires && <span className="text-ash-500"> — {n.requires}</span>}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
