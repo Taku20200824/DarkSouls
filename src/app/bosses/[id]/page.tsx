@@ -2,7 +2,8 @@
 import { use } from "react";
 import Link from "next/link";
 import { useTracker } from "@/components/TrackerProvider";
-import { Badge, PageTitle, Panel, Sigil } from "@/components/ui";
+import { Badge, PageTitle, Panel } from "@/components/ui";
+import { BossPortrait } from "@/components/BossPortrait";
 import { bossById } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { ACHIEVEMENTS } from "@/lib/data/achievements";
@@ -21,7 +22,7 @@ export default function BossPage({ params }: { params: Promise<{ id: string }> }
       <PageTitle title={b.name} sub={`${areaById(b.area)?.name} · ${b.dlc ? "DLC" : b.optional ? "Optional" : "Mandatory"}`} />
       <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
         <Panel>
-          <div className="flex justify-center"><Sigil text={b.sigil} defeated={s.state === "defeated"} size={140} /></div>
+          <BossPortrait boss={b} defeated={s.state === "defeated"} sizes="(max-width: 1024px) 100vw, 260px" />
           <div className="mt-4 text-center">
             <div className={`font-display text-2xl ${s.state === "defeated" ? "text-emerald-300" : s.state === "alive" ? "text-red-300" : "text-ash-400"}`}>{s.state === "defeated" ? "DEFEATED" : s.state === "alive" ? "ALIVE" : "UNKNOWN"}</div>
             <Badge kind={demo ? "demo" : s.certainty} />

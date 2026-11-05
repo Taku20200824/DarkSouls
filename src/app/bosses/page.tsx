@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useTracker } from "@/components/TrackerProvider";
-import { Badge, PageTitle, Sigil } from "@/components/ui";
+import { Badge, PageTitle } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { bossStatus } from "@/lib/guide/engine";
+import { BossPortrait } from "@/components/BossPortrait";
 import { BossSpotlight } from "@/components/BossSpotlight";
 
 export default function Bosses() {
@@ -23,9 +24,9 @@ export default function Bosses() {
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map(({ b, s }) => (
-          <Link key={b.id} href={`/bosses/${b.id}`} className="panel flex gap-4 p-4 transition hover:ring-1 hover:ring-ember-400/60">
-            <Sigil text={b.sigil} defeated={s.state === "defeated"} />
-            <div className="min-w-0">
+          <Link key={b.id} href={`/bosses/${b.id}`} className="panel flex flex-col overflow-hidden transition hover:ring-1 hover:ring-ember-400/60">
+            <BossPortrait boss={b} defeated={s.state === "defeated"} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+            <div className="min-w-0 p-4">
               <div className="font-display text-lg leading-tight text-gold-300">{b.name}</div>
               <div className="text-xs text-ash-500">{areaById(b.area)?.name} · {b.dlc ? "DLC" : b.optional ? "Optional" : "Mandatory"}</div>
               <div className="mt-2 flex items-center gap-2 text-xs">
@@ -38,7 +39,7 @@ export default function Bosses() {
         ))}
       </div>
       <p className="mt-6 text-xs text-ash-500">NG+ анхааруулга: boss soul ба NG тойргийн нотолгоо нь өмнөх тойрогт ялсныг илэрхийлж болно; “Alive” нь зөвхөн одоогийн тойргийн verified flag дээр суурилна.</p>
-      <p className="mt-2 text-xs text-ash-500">Boss картууд монограм тэмдэг ашиглана. Artorias-ийн онцлох зураг нь AI-аар бүтээсэн албан бус fan art.</p>
+      <p className="mt-2 text-xs text-ash-500">Boss-уудын зураг нь AI-аар бүтээсэн албан бус fan art бөгөөд тоглоомын албан ёсны зураг биш.</p>
     </>
   );
 }
