@@ -5,6 +5,8 @@ import { useSelected, useTracker } from "@/components/TrackerProvider";
 import { Badge, Empty, PageTitle, Panel, Stat, fmtAgo, fmtDuration, fmtNum } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
+import { BonfireMark } from "@/components/BonfireMark";
+import { ArrowUpRight } from "lucide-react";
 import { bossStatus, completionPercent, computeObjectives, estimateArea, nextUpgradeAdvice } from "@/lib/guide/engine";
 
 export default function Dashboard() {
@@ -30,6 +32,11 @@ function Inner() {
 
   return (
     <>
+      <div className="dashboard-chapter">
+        <div className="relative z-10"><p className="eyebrow">THE CHRONICLE / {demo ? "DEMO JOURNEY" : "YOUR JOURNEY"}</p><p className="font-serif mt-3 text-3xl text-gold-200 md:text-4xl">The fire still burns.</p><p className="mt-2 text-xs leading-6 text-ash-400">Every soul has a story. This one is yours.</p></div>
+        <Link href="/guide" className="btn relative z-10 !text-[10px]">Continue the path <ArrowUpRight size={14} /></Link>
+        <BonfireMark className="chapter-bonfire" />
+      </div>
       <PageTitle title={ch?.name.value ?? "Live Dashboard"} sub={ch ? `${ch.className.value ?? ""} · Slot ${ch.slot + 1} · ${sel?.source ?? ""} · ${fmtAgo(sel?.updatedAt)}` : "Дүрийн мэдээлэл хүлээгдэж байна"} />
       {!ch && (
         <Empty>

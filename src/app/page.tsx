@@ -1,111 +1,76 @@
 "use client";
 import Link from "next/link";
-import { motion } from "motion/react";
-import { Compass, Flame, Hammer, Map as MapIcon, ScrollText, Swords } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { ArrowDown, ArrowUpRight, ChevronRight, Compass, Flame, Hammer, Map as MapIcon, ScrollText, ShieldCheck, Swords } from "lucide-react";
 import { useTracker } from "@/components/TrackerProvider";
 import { BonfireMark } from "@/components/BonfireMark";
+import { LordranScene } from "@/components/LordranScene";
 
 const FEATURES = [
-  { n: "I", icon: Flame, t: "Steam нэвтрэлт", d: "Steam OpenID-ээр аюулгүй нэвтэрч, 41 achievement-ээ синк хийнэ." },
-  { n: "II", icon: ScrollText, t: "Save файл уншигч", d: "DRAKS0005.sl2-ийг зөвхөн уншиж: түвшин, статистик, үхэл, bonfire, inventory." },
-  { n: "III", icon: Compass, t: "Windows Companion", d: "Тоглоом save хийх бүрт таны аяллыг автоматаар илгээнэ." },
-  { n: "IV", icon: MapIcon, t: "Lordran газрын зураг", d: "Бүсүүдийн бодит холболт, дараагийн бүс рүү хөдөлгөөнт маршрут." },
-  { n: "V", icon: Swords, t: "Boss & 100% хөтөч", d: "Boss бүрийн стратеги, сүүл тасдах анхааруулга, дараагийн зорилт." },
-  { n: "VI", icon: Hammer, t: "Зэвсэг сайжруулах", d: "Баталгаажсан жороор материал, ember, дарханг тооцоолно." },
+  { n: "01", icon: MapIcon, en: "A WORLD, CONNECTED", t: "Lordran газрын зураг", d: "Бүсүүдийн бодит холболт, дараагийн бүс рүү хөдөлгөөнт маршрут.", href: "/map", name: "World map" },
+  { n: "02", icon: Swords, en: "KNOW YOUR ENEMY", t: "Boss & 100% хөтөч", d: "Boss бүрийн стратеги, сүүл тасдах анхааруулга, дараагийн зорилт.", href: "/bosses", name: "Boss archive" },
+  { n: "03", icon: Hammer, en: "FORGE YOUR LEGACY", t: "Зэвсэг сайжруулах", d: "Баталгаажсан жороор материал, ember, дарханг тооцоолно.", href: "/upgrades", name: "Upgrade planner" },
+  { n: "04", icon: Flame, en: "EVERY VICTORY COUNTS", t: "Steam нэвтрэлт", d: "Steam OpenID-ээр аюулгүй нэвтэрч, 41 achievement-ээ синк хийнэ.", href: "/achievements", name: "Achievements" },
+  { n: "05", icon: ScrollText, en: "YOUR STORY, PRESERVED", t: "Save файл уншигч", d: "DRAKS0005.sl2-ийг зөвхөн уншиж: түвшин, статистик, үхэл, bonfire, inventory.", href: "/characters", name: "Save reader" },
+  { n: "06", icon: Compass, en: "NEVER WALK ALONE", t: "Windows Companion", d: "Тоглоом save хийх бүрт таны аяллыг автоматаар илгээнэ.", href: "/settings", name: "Companion setup" },
 ];
-
-/** Original silhouette of a distant gothic citadel. */
-function Citadel() {
-  return (
-    <svg viewBox="0 0 1440 320" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 h-[42vh] w-full" aria-hidden>
-      <defs>
-        <linearGradient id="cit" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2a2430" />
-          <stop offset="1" stopColor="#050506" />
-        </linearGradient>
-        <linearGradient id="cit2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0e0d10" />
-          <stop offset="1" stopColor="#050506" />
-        </linearGradient>
-      </defs>
-      <path fill="url(#cit)" opacity="0.95" d="M0 260 L120 250 L160 200 L175 200 L180 150 L186 120 L192 150 L198 200 L240 205 L300 230 L380 220 L420 170 L432 170 L436 110 L444 60 L452 110 L456 170 L470 170 L500 210 L560 200 L600 150 L608 150 L612 90 L620 40 L628 90 L632 150 L640 150 L660 120 L668 120 L672 70 L680 20 L688 70 L692 120 L700 120 L720 150 L760 160 L790 120 L796 120 L800 80 L806 50 L812 80 L816 120 L822 120 L860 180 L940 190 L980 160 L986 160 L990 120 L996 95 L1002 120 L1006 160 L1040 200 L1120 210 L1180 230 L1260 220 L1320 240 L1440 245 L1440 320 L0 320Z" />
-      <path fill="url(#cit2)" d="M0 290 L200 280 L320 290 L460 270 L620 285 L760 272 L900 288 L1060 276 L1220 290 L1440 280 L1440 320 L0 320Z" />
-    </svg>
-  );
-}
+const reveal = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 
 export default function Landing() {
-  const { status, setDemo } = useTracker();
+  const { status, demo, setDemo } = useTracker();
+  const router = useRouter();
+  const reduced = useReducedMotion();
+  const { scrollY } = useScroll();
+  const sceneryY = useTransform(scrollY, [0, 900], [0, 160]);
+  const enter = (href: string) => {
+    if (status !== "ready") setDemo(true);
+    router.push(href);
+  };
   return (
-    <div className="relative z-10 min-h-screen overflow-hidden">
-      <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pb-24 text-center">
-        <div className="pointer-events-none absolute left-1/2 top-[38%] h-[70vh] w-[70vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(242,106,27,0.28)_0%,rgba(242,106,27,0.06)_40%,transparent_70%)] glow-pulse" />
-        <Citadel />
-        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 2.2, ease: "easeOut" }} className="relative">
-          <BonfireMark className="mx-auto h-40 w-28 md:h-52 md:w-36" />
+    <main id="main-content" className="landing relative z-10 overflow-hidden">
+      <header className="landing-nav">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Lordran Tracker home"><BonfireMark className="h-10 w-7" /><span className="font-display text-[13px] tracking-[.2em] text-gold-200">LORDRAN <span className="text-ash-400">/ TRACKER</span></span></Link>
+        <nav aria-label="Main navigation" className="flex items-center gap-6 md:gap-9">
+          <a href="#discover" className="landing-nav-link hidden sm:block">THE COMPANION</a><a href="#journey" className="landing-nav-link hidden md:block">YOUR JOURNEY</a>
+          <button onClick={() => enter("/dashboard")} className="landing-nav-link flex items-center gap-2">{status === "ready" ? "DASHBOARD" : "EXPLORE DEMO"}<ArrowUpRight size={14} /></button>
+        </nav>
+      </header>
+      <section className="landing-hero" aria-labelledby="hero-title">
+        <motion.div className="hero-art" style={{ y: reduced ? 0 : sceneryY }}><LordranScene /></motion.div><div className="hero-shade" />
+        <motion.div className="hero-copy" initial="hidden" animate="visible" transition={{ staggerChildren: .12 }}>
+          <motion.p variants={reveal} transition={{ duration: .7 }} className="eyebrow flex items-center gap-3"><span className="h-px w-8 bg-ember-400" /> A DARK SOULS REMASTERED COMPANION</motion.p>
+          <motion.h1 variants={reveal} transition={{ duration: .85 }} id="hero-title" className="hero-title">EVERY DEATH.<br />EVERY SOUL.<br /><span>YOUR LEGEND.</span></motion.h1>
+          <motion.p variants={reveal} transition={{ duration: .7 }} className="hero-subtitle">The flame fades. Your journey remains.</motion.p>
+          <motion.p variants={reveal} transition={{ duration: .7 }} className="hero-description">Lordran дахь аяллын тань хамтрагч. Boss, achievement, зэвсэг, save — таны бүх явц нэг дор.</motion.p>
+          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-8 flex flex-wrap gap-3">
+            {status === "ready" && !demo ? <Link className="btn btn-ember hero-cta" href="/dashboard">Аяллаа үргэлжлүүлэх <ArrowUpRight size={17} /></Link> : <a className="btn btn-ember hero-cta" href="/api/auth/steam/login"><Flame size={17} /> Sign in through Steam <ArrowUpRight size={16} /></a>}
+            <button className="btn hero-cta" onClick={() => { setDemo(true); router.push("/dashboard"); }}>Explore demo <ChevronRight size={16} /></button>
+          </motion.div>
+          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-[10px] tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
         </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, letterSpacing: "0.6em", filter: "blur(8px)" }}
-          animate={{ opacity: 1, letterSpacing: "0.22em", filter: "blur(0px)" }}
-          transition={{ duration: 2.4, delay: 0.4, ease: "easeOut" }}
-          className="font-display shimmer-title relative mt-6 text-[2.6rem] font-bold leading-none sm:text-6xl md:text-8xl"
-        >
-          LORDRAN
-        </motion.h1>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 1.4 }} className="relative mt-3 flex items-center gap-4">
-          <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold-400 md:w-24" />
-          <span className="font-display text-sm font-semibold tracking-[0.8em] text-gold-400 md:text-lg">TRACKER</span>
-          <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold-400 md:w-24" />
-        </motion.div>
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.9, duration: 1.2 }} className="font-serif relative mt-8 text-xl italic text-ash-300 md:text-2xl">
-          Your Journey Through Lordran, Tracked.
-        </motion.p>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.3, duration: 1.2 }} className="relative mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ash-400">
-          Steam achievement болон save файлаас таны аяллыг найдвартай хянана. Мэдэгдэхгүй утгыг хэзээ ч зохиохгүй — бүх тоо эх сурвалжтай.
-        </motion.p>
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.7, duration: 1 }} className="relative mt-10 flex flex-wrap justify-center gap-4">
-          {status === "ready" ? (
-            <Link className="btn btn-ember !px-8 !py-3.5 !text-sm" href="/dashboard">Аяллаа үргэлжлүүлэх</Link>
-          ) : (
-            <a className="btn btn-ember !px-8 !py-3.5 !text-sm" href="/api/auth/steam/login">Sign in through Steam</a>
-          )}
-          <button className="btn !px-8 !py-3.5 !text-sm" onClick={() => { setDemo(true); window.location.href = "/dashboard"; }}>Demo Mode</button>
-        </motion.div>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.2 }} className="relative mt-4 text-[11px] text-ash-500">
-          Steam-ийн нууц үгийг бид хэзээ ч асуухгүй — нэвтрэлт steamcommunity.com дээр явагдана.
-        </motion.p>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0] }} transition={{ delay: 4, duration: 2.6, repeat: Infinity }} className="font-display absolute bottom-8 text-[10px] tracking-[0.5em] text-ash-500">
-          ▼ SCROLL
-        </motion.div>
+        <div className="hero-location"><span className="status-spark" /><span>FIRELINK SHRINE</span><span className="text-ash-500">/ THE FIRST FLAME</span></div>
+        <a href="#discover" className="hero-scroll"><span>DESCEND INTO LORDRAN</span><ArrowDown size={15} /></a>
+        <div className="hero-edition">EST. AGE OF FIRE <span>01 / LORDRAN</span></div>
       </section>
-
-      <section className="relative mx-auto max-w-6xl px-4 py-24">
-        <div className="mb-14 text-center">
-          <h2 className="font-display gold-text text-3xl font-bold tracking-[0.2em] md:text-4xl">THE PATH OF THE UNDEAD</h2>
-          <div className="ornament mx-auto mt-5 max-w-md" />
-        </div>
-        <div className="grid gap-5 md:grid-cols-3">
-          {FEATURES.map((f, i) => (
-            <motion.div key={f.n} className="panel panel-hover group p-7" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ delay: (i % 3) * 0.12, duration: 0.7 }}>
-              <div className="flex items-center justify-between">
-                <f.icon className="h-7 w-7 text-gold-500 transition group-hover:text-ember-300 group-hover:drop-shadow-[0_0_10px_#ff9142]" strokeWidth={1.3} />
-                <span className="font-display text-3xl font-bold text-gold-600/40 transition group-hover:text-gold-500/70">{f.n}</span>
-              </div>
-              <h3 className="font-display mt-6 text-lg font-semibold tracking-[0.08em] text-gold-200">{f.t}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-ash-400">{f.d}</p>
-            </motion.div>
-          ))}
-        </div>
+      <div className="chronicle-strip" aria-label="Companion features"><span><Flame size={15} /> SAVE-BY-SAVE TRACKING</span><span><Swords size={15} /> BOSS STRATEGIES</span><span><Compass size={15} /> A PATH TO 100%</span><span><ShieldCheck size={15} /> YOUR SAVE, UNTOUCHED</span></div>
+      <section id="discover" className="discovery-section">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: .3 }} variants={reveal} transition={{ duration: .7 }} className="discovery-heading">
+          <div><p className="eyebrow">01 / THE COMPANION</p><h2 className="section-title">A little guidance.<br /><span>A greater journey.</span></h2></div><p className="max-w-sm text-sm leading-7 text-ash-400">Хаашаа явах, юу цуглуулах, хэнийг ялах вэ?<br />Таны дараагийн алхам бүрт хэрэгтэй мэдээлэл.</p>
+        </motion.div>
+        <div className="feature-grid">{FEATURES.map((f, i) => (
+          <motion.button key={f.n} onClick={() => enter(f.href)} className="feature-card group" aria-label={`Open ${f.name}${status === "ready" ? "" : " in demo mode"}`} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .15 }} variants={reveal} transition={{ duration: .55, delay: (i % 3) * .08 }}>
+            <div className="flex items-center justify-between"><f.icon size={25} strokeWidth={1.3} className="feature-icon" /><span className="font-display text-xs tracking-widest text-ash-500">{f.n} /</span></div>
+            <p className="eyebrow mt-8 !text-[9px] !tracking-[.18em]">{f.en}</p><h3 className="mt-3 text-lg font-medium text-gold-200">{f.t}</h3><p className="mt-3 text-[13px] leading-6 text-ash-400">{f.d}</p><div className="feature-link"><span>{f.name}</span><ArrowUpRight size={17} /></div>
+          </motion.button>
+        ))}</div>
       </section>
-
-      <section className="relative mx-auto max-w-4xl px-4 pb-28 text-center">
-        <p className="font-serif text-2xl italic leading-relaxed text-ash-300 md:text-3xl">&ldquo;Хэдэн ч удаа үхсэн бай — гал хэзээ ч унтрахгүй.&rdquo;</p>
-        <div className="ornament mx-auto mt-10 max-w-xs" />
+      <section id="journey" className="journey-section">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: .25 }} variants={reveal} transition={{ duration: .8 }} className="relative z-10">
+          <p className="eyebrow">02 / YOUR NEXT CHAPTER</p><BonfireMark className="mx-auto my-8 h-24 w-16" /><h2 className="section-title">Don’t you dare<br /><span>go hollow.</span></h2><p className="mx-auto mt-5 max-w-md text-sm leading-7 text-ash-400">Хэдэн ч удаа үхсэн бай — гал хэзээ ч унтрахгүй.<br />Аяллаа үргэлжлүүл. Бид замыг тань санана.</p><button className="btn btn-ember mt-8 !px-7 !py-3.5" onClick={() => enter("/dashboard")}>Begin your journey <ArrowUpRight size={16} /></button>
+        </motion.div><span className="journey-ring" aria-hidden="true" />
       </section>
-
-      <footer className="relative pb-10 text-center text-[11px] text-ash-500">
-        Fan-made, unofficial. DARK SOULS is a trademark of Bandai Namco / FromSoftware. Энэ сайт тэдэнтэй холбоогүй.
-      </footer>
-    </div>
+      <footer className="landing-footer"><Link href="/" className="font-display text-xs tracking-[.22em] text-gold-400">LORDRAN TRACKER</Link><p>Fan-made & unofficial. DARK SOULS © Bandai Namco / FromSoftware.</p><a href="#main-content" className="flex items-center gap-2">BACK TO THE FLAME <ArrowUpRight size={13} /></a></footer>
+    </main>
   );
 }

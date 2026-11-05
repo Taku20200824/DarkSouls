@@ -13,6 +13,7 @@ import "./globals.css";
 import { TrackerProvider } from "@/components/TrackerProvider";
 import { Shell } from "@/components/Shell";
 import { Embers } from "@/components/Embers";
+import { MotionProvider } from "@/components/MotionProvider";
 
 export const metadata: Metadata = {
   title: "LORDRAN TRACKER — Your Journey Through Lordran, Tracked.",
@@ -24,10 +25,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="mn">
       <body className="antialiased">
-        <Embers />
-        <TrackerProvider>
-          <Shell>{children}</Shell>
-        </TrackerProvider>
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        <MotionProvider>
+          <Embers />
+          <TrackerProvider>
+            <Shell>{children}</Shell>
+          </TrackerProvider>
+        </MotionProvider>
       </body>
     </html>
   );

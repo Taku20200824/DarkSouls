@@ -1,10 +1,11 @@
 "use client";
 import clsx from "clsx";
+import { motion } from "motion/react";
 import type { Certainty } from "@/lib/save/types";
 
 export function Panel({ children, className, title, right, hover }: { children: React.ReactNode; className?: string; title?: React.ReactNode; right?: React.ReactNode; hover?: boolean }) {
   return (
-    <section className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
+    <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .5 }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
       {title && (
         <header className="mb-4 flex items-center justify-between gap-3 border-b border-gold-600/15 pb-3">
           <h2 className="font-display flex items-center gap-2 text-[15px] font-semibold uppercase tracking-[0.18em] text-gold-300 md:text-base">
@@ -15,7 +16,7 @@ export function Panel({ children, className, title, right, hover }: { children: 
         </header>
       )}
       {children}
-    </section>
+    </motion.section>
   );
 }
 
