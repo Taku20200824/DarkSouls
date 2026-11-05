@@ -1,0 +1,22 @@
+LORDRAN TRACKER
+Fan-made, unofficial. Not affiliated with Bandai Namco Entertainment or FromSoftware.
+
+This product includes data and ports of code from third parties:
+
+* sl2-analyzer — Copyright 2026 Jubair Hasan (DarthDemono). Apache License 2.0.
+  https://github.com/darthdemono/sl2-analyzer
+  - src/lib/data/ds1db/*.json and companion/ds1db/*.json (item, bonfire, boss-flag,
+    boss-soul, known-flag tables) are copied unmodified.
+  - src/lib/save/ds1.ts and companion/ds1parser.py port its DS1 offsets and
+    validation logic (sl2/ds1.py, sl2/bnd4.py, sl2/crypto.py, sl2/progress.py).
+  Full license: src/lib/data/ds1db/LICENSE-sl2-analyzer.txt
+
+* dsfp — Copyright (c) 2014 Tarvitz. MIT License.
+  https://github.com/tarvitz/dsfp
+  - tests/fixtures/ptde-dsfp.sl2 (test save) and its expected values.
+  Full license: tests/fixtures/LICENSE-dsfp.txt
+
+* Dark-Souls-Remastered-SL2-Unpacker — Copyright (c) 2018 pawREP. MIT License
+  (reference for the DSR container/encryption layout; no code copied).
+
+Weapon reinforcement quantities: Dark Souls Wiki (darksouls.wikidot.com), CC BY-SA 3.0.

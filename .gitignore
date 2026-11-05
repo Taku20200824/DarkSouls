@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.env
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.dev-store.json
+companion/dist
+companion/build
+companion/__pycache__
+companion/**/__pycache__
+*.sl2
+!tests/fixtures/*.sl2
+.vercel
