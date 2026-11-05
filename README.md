@@ -144,7 +144,7 @@ The upgrade recipes come from the Dark Souls Wiki path pages. Boss, Unique and D
 - **There is no real DSR save in this repo.** The DSR path is tested with synthetic encrypted files built at the documented offsets. Testing with a real `DRAKS0005.sl2` is still needed.
 - Live updates use 15-second polling instead of SSE/WebSockets. Vercel serverless functions do not hold long connections, and updates only happen when the game writes its save anyway. Tracking is save-by-save, not frame-by-frame.
 - "Deaths between bonfires" and boss attribution are not available from the save, so they are marked **Unconfirmed** and the user can tag deaths manually.
-- Boss artwork and official item icons are not bundled because of copyright. Bosses use monogram sigils. Achievement icons load from Steam's CDN when Steam data is available.
+- Official game screenshots and item icons are not bundled. The cinematic landing and Artorias spotlight use original AI-generated fan illustrations (see `public/artwork/README.md`); boss cards use monogram sigils. Achievement icons load from Steam's CDN when Steam data is available.
 - The world map is illustrative. Its connections follow the real game, but positions are not real coordinates.
 - Rate limiting is per instance. For strict global limits, add a shared store such as Upstash.
 - Account deletion is not built in the UI yet. To remove a user, delete `users/{steamId}` in the Firebase console.

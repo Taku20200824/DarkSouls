@@ -6,6 +6,7 @@ import { Badge, PageTitle, Sigil } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { bossStatus } from "@/lib/guide/engine";
+import { BossSpotlight } from "@/components/BossSpotlight";
 
 export default function Bosses() {
   const { tracker, demo } = useTracker();
@@ -14,6 +15,7 @@ export default function Bosses() {
   return (
     <>
       <PageTitle title="Boss Encyclopedia" sub="Үндсэн, сонголтот болон DLC boss-ууд. Төлөв нь save/Steam нотолгоонд суурилна." />
+      <BossSpotlight compact />
       <div className="mb-4 flex flex-wrap gap-2">
         {(["all", "defeated", "alive", "unknown"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)} className={`btn !py-1 text-xs ${filter === f ? "btn-ember" : ""}`}>{{ all: "Бүгд", defeated: "Defeated", alive: "Alive", unknown: "Unknown" }[f]}</button>
@@ -36,7 +38,7 @@ export default function Bosses() {
         ))}
       </div>
       <p className="mt-6 text-xs text-ash-500">NG+ анхааруулга: boss soul ба NG тойргийн нотолгоо нь өмнөх тойрогт ялсныг илэрхийлж болно; “Alive” нь зөвхөн одоогийн тойргийн verified flag дээр суурилна.</p>
-      <p className="mt-2 text-xs text-ash-500">Зураг: зохиогчийн эрхтэй boss-ийн зургийг ашиглахгүйн тулд монограм тэмдэг ашигласан.</p>
+      <p className="mt-2 text-xs text-ash-500">Boss картууд монограм тэмдэг ашиглана. Artorias-ийн онцлох зураг нь AI-аар бүтээсэн албан бус fan art.</p>
     </>
   );
 }
