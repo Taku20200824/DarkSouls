@@ -1,19 +1,84 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 
-export function Embers({ count = 22 }: { count?: number }) {
-  const [items, setItems] = useState<{ left: number; dur: number; delay: number; dx: number }[]>([]);
+/** Canvas ember field: glowing sparks drifting up with sway and flicker. */
+export function Embers({ density = 1 }: { density?: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    setItems(Array.from({ length: count }, () => ({ left: Math.random() * 100, dur: 9 + Math.random() * 12, delay: Math.random() * 12, dx: (Math.random() - 0.5) * 120 })));
-  }, [count]);
+    const c = ref.current;
+    if (!c) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = c.getContext("2d")!;
+    let w = 0, h = 0, raf = 0;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    type P = { x: number; y: number; r: number; vy: number; vx: number; life: number; max: number; ph: number; hue: number };
+    let ps: P[] = [];
+    const spawn = (initial = false): P => ({
+      x: Math.random() * w,
+      y: initial ? Math.random() * h : h + 10,
+      r: 0.6 + Math.random() * 1.8,
+      vy: 0.25 + Math.random() * 0.9,
+      vx: (Math.random() - 0.5) * 0.3,
+      life: 0,
+      max: 400 + Math.random() * 700,
+      ph: Math.random() * Math.PI * 2,
+      hue: 18 + Math.random() * 22,
+    });
+    const resize = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      c.width = w * dpr;
+      c.height = h * dpr;
+      c.style.width = `${w}px`;
+      c.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(Math.min(90, (w * h) / 18000) * density);
+      ps = Array.from({ length: n }, () => spawn(true));
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const tick = () => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < ps.length; i++) {
+        const p = ps[i];
+        p.life++;
+        p.ph += 0.02;
+        p.x += p.vx + Math.sin(p.ph) * 0.35;
+        p.y -= p.vy;
+        const t = p.life / p.max;
+        const a = Math.max(0, Math.min(1, t * 6) * (1 - t)) * (0.6 + 0.4 * Math.sin(p.ph * 3));
+        if (t >= 1 || p.y < -20) {
+          ps[i] = spawn();
+          continue;
+        }
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+        g.addColorStop(0, `hsla(${p.hue + 15},100%,78%,${a})`);
+        g.addColorStop(0.25, `hsla(${p.hue},100%,58%,${a * 0.6})`);
+        g.addColorStop(1, `hsla(${p.hue},100%,40%,0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const vis = () => {
+      cancelAnimationFrame(raf);
+      if (document.visibilityState === "visible") raf = requestAnimationFrame(tick);
+    };
+    document.addEventListener("visibilitychange", vis);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", vis);
+    };
+  }, [density]);
   return (
     <>
-      <div className="fog" />
-      <div className="embers" aria-hidden>
-        {items.map((e, i) => (
-          <span key={i} style={{ left: `${e.left}%`, animationDuration: `${e.dur}s`, animationDelay: `${e.delay}s`, ["--dx" as string]: `${e.dx}px` }} />
-        ))}
-      </div>
+      <div className="fog" aria-hidden />
+      <canvas ref={ref} className="pointer-events-none fixed inset-0 z-0" aria-hidden />
     </>
   );
 }

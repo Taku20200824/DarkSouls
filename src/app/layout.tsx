@@ -1,4 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource/cinzel/500.css";
+import "@fontsource/cinzel/600.css";
+import "@fontsource/cinzel/700.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/cormorant-garamond/600.css";
+import "@fontsource/cormorant-garamond/700.css";
+import "@fontsource/cormorant-garamond/500-italic.css";
+import "@fontsource/noto-sans/400.css";
+import "@fontsource/noto-sans/500.css";
+import "@fontsource/noto-sans/600.css";
 import "./globals.css";
 import { TrackerProvider } from "@/components/TrackerProvider";
 import { Shell } from "@/components/Shell";

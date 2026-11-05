@@ -7,20 +7,22 @@ import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
 import { fmtAgo } from "./ui";
 import { BOSSES } from "@/lib/data/bosses";
+import { Backpack, Compass, Hammer, LayoutDashboard, Map as MapIcon, Milestone, ScrollText, Settings, Skull, Swords, Trophy, Users, Menu, X } from "lucide-react";
+import { BonfireMark } from "./BonfireMark";
 
 const NAV = [
-  { href: "/dashboard", label: "Хяналтын самбар", en: "Dashboard" },
-  { href: "/characters", label: "Дүр сонгох", en: "Characters" },
-  { href: "/map", label: "Lordran газрын зураг", en: "World Map" },
-  { href: "/bosses", label: "Boss-ууд", en: "Bosses" },
-  { href: "/guide", label: "100% хөтөч", en: "Guide" },
-  { href: "/upgrades", label: "Зэвсэг сайжруулах", en: "Upgrades" },
-  { href: "/inventory", label: "Эд зүйлс", en: "Inventory" },
-  { href: "/achievements", label: "Achievement", en: "Achievements" },
-  { href: "/deaths", label: "Үхлийн статистик", en: "Deaths" },
-  { href: "/quests", label: "NPC quest", en: "Quests" },
-  { href: "/roadmap", label: "NG → NG++", en: "Roadmap" },
-  { href: "/settings", label: "Тохиргоо / Companion", en: "Settings" },
+  { href: "/dashboard", label: "Хяналтын самбар", en: "Dashboard", icon: LayoutDashboard },
+  { href: "/characters", label: "Дүр сонгох", en: "Characters", icon: Users },
+  { href: "/map", label: "Lordran газрын зураг", en: "World Map", icon: MapIcon },
+  { href: "/bosses", label: "Boss-ууд", en: "Bosses", icon: Swords },
+  { href: "/guide", label: "100% хөтөч", en: "Guide", icon: Compass },
+  { href: "/upgrades", label: "Зэвсэг сайжруулах", en: "Upgrades", icon: Hammer },
+  { href: "/inventory", label: "Эд зүйлс", en: "Inventory", icon: Backpack },
+  { href: "/achievements", label: "Achievement", en: "Achievements", icon: Trophy },
+  { href: "/deaths", label: "Үхлийн статистик", en: "Deaths", icon: Skull },
+  { href: "/quests", label: "NPC quest", en: "Quests", icon: ScrollText },
+  { href: "/roadmap", label: "NG → NG++", en: "Roadmap", icon: Milestone },
+  { href: "/settings", label: "Тохиргоо / Companion", en: "Settings", icon: Settings },
 ];
 
 export function LiveStatus() {
@@ -44,8 +46,8 @@ export function LiveStatus() {
 
 function Pill({ main, sub, color, pulse }: { main: string; sub?: string; color: "ember" | "ash" | "fuchsia"; pulse?: boolean }) {
   return (
-    <div className={clsx("rounded border px-3 py-2 text-xs", color === "ember" ? "border-ember-500/60 bg-ember-600/10" : color === "fuchsia" ? "border-fuchsia-600/60 bg-fuchsia-900/20" : "border-ash-500/40 bg-stone-900/60")}>
-      <div className="flex items-center gap-2 font-semibold tracking-widest text-gold-300">
+    <div className={clsx("border px-3 py-2.5 text-xs", color === "ember" ? "border-ember-500/50 bg-[linear-gradient(90deg,rgba(242,106,27,0.15),transparent)] shadow-[0_0_24px_-10px_#f26a1b]" : color === "fuchsia" ? "border-fuchsia-600/60 bg-fuchsia-900/20" : "border-ash-500/30 bg-black/40")}>
+      <div className="font-display flex items-center gap-2 text-[10px] font-semibold tracking-[0.2em] text-gold-300">
         <span className={clsx("h-2 w-2 rounded-full", color === "ember" ? "bg-ember-400" : color === "fuchsia" ? "bg-fuchsia-400" : "bg-ash-500", pulse && "animate-pulse")} />
         {main}
       </div>
@@ -93,39 +95,55 @@ export function Shell({ children }: { children: React.ReactNode }) {
   if (bare) return <>{children}</>;
   return (
     <div className="relative z-10 flex min-h-screen">
-      <aside className={clsx("fixed inset-y-0 left-0 z-40 w-64 transform border-r border-gold-600/20 bg-stone-950/95 p-4 transition-transform md:static md:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}>
-        <Link href="/" className="block">
-          <div className="font-display gold-text text-2xl font-bold tracking-[0.2em]">LORDRAN</div>
-          <div className="font-display text-xs tracking-[0.5em] text-ash-500">TRACKER</div>
-        </Link>
-        <div className="ornament my-4" />
-        <nav className="space-y-0.5">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={clsx("block rounded px-3 py-2 text-sm transition", path.startsWith(n.href) ? "bg-ember-600/15 text-gold-300 shadow-[inset_2px_0_0_#ff8a3d]" : "text-ash-400 hover:bg-stone-800 hover:text-gold-300")}>
-              <div>{n.label}</div>
-              <div className="text-[10px] uppercase tracking-widest text-ash-500">{n.en}</div>
-            </Link>
-          ))}
-        </nav>
-        <div className="mt-6"><LiveStatus /></div>
-        {status === "ready" && state && !demo && (
-          <div className="mt-4 flex items-center gap-2 text-xs text-ash-400">
-            {state.user.avatar && <img src={state.user.avatar} alt="" className="h-8 w-8 rounded border border-gold-600/40" />}
-            <div className="min-w-0">
-              <div className="truncate text-gold-300">{state.user.personaName ?? state.user.steamId}</div>
-              <div className="text-[10px] text-ash-500">SteamID {state.user.steamId}</div>
-            </div>
+      {open && <div className="fixed inset-0 z-30 bg-black/70 md:hidden" onClick={() => setOpen(false)} />}
+      <aside className={clsx("scrollbar-thin fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col overflow-y-auto border-r border-gold-600/15 bg-[linear-gradient(180deg,rgba(11,11,14,0.98),rgba(5,5,6,0.98))] px-4 py-5 transition-transform duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}>
+        <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gold-500/40 to-transparent" />
+        <Link href="/" className="group flex items-center gap-3 px-2">
+          <BonfireMark className="h-12 w-9" />
+          <div>
+            <div className="font-display gold-text text-xl font-bold tracking-[0.28em]">LORDRAN</div>
+            <div className="font-display text-[10px] tracking-[0.6em] text-ash-500 group-hover:text-ember-300">TRACKER</div>
           </div>
-        )}
-        {state?.storeKind === "dev-file" && <div className="mt-3 rounded border border-amber-600/50 p-2 text-[10px] text-amber-300">DEV STORE — Firebase тохируулаагүй (local file)</div>}
+        </Link>
+        <div className="ornament my-5" />
+        <nav className="space-y-0.5">
+          {NAV.map((n) => {
+            const active = path.startsWith(n.href);
+            const Icon = n.icon;
+            return (
+              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={clsx("group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "text-gold-200" : "text-ash-400 hover:text-gold-300")}>
+                {active && <motion.span layoutId="nav-active" className="absolute inset-0 border-l-2 border-ember-400 bg-[linear-gradient(90deg,rgba(242,106,27,0.18),transparent)]" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
+                <Icon className={clsx("relative h-4 w-4 shrink-0 transition", active ? "text-ember-300 drop-shadow-[0_0_6px_#ff9142]" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
+                <span className="relative min-w-0">
+                  <span className="block truncate text-[13px]">{n.label}</span>
+                  <span className="font-display block text-[9px] uppercase tracking-[0.25em] text-ash-500">{n.en}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-auto pt-6">
+          <LiveStatus />
+          {status === "ready" && state && !demo && (
+            <div className="mt-3 flex items-center gap-3 border border-gold-600/15 bg-black/30 p-2.5 text-xs text-ash-400">
+              {state.user.avatar && <img src={state.user.avatar} alt="" className="h-9 w-9 border border-gold-500/50" />}
+              <div className="min-w-0">
+                <div className="truncate text-gold-300">{state.user.personaName ?? state.user.steamId}</div>
+                <div className="font-display text-[9px] tracking-widest text-ash-500">STEAM · {state.user.steamId}</div>
+              </div>
+            </div>
+          )}
+          {state?.storeKind === "dev-file" && <div className="mt-3 border border-amber-600/50 p-2 text-[10px] text-amber-300">DEV STORE — Firebase тохируулаагүй</div>}
+        </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gold-600/10 bg-stone-950/80 px-4 py-2 backdrop-blur md:hidden">
-          <button className="btn !px-3 !py-1" onClick={() => setOpen(!open)} aria-label="Цэс">☰</button>
-          <span className="font-display gold-text tracking-[0.2em]">LORDRAN TRACKER</span>
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gold-600/15 bg-stone-950/85 px-4 py-2.5 backdrop-blur md:hidden">
+          <button className="btn !px-2.5 !py-1.5" onClick={() => setOpen(!open)} aria-label="Цэс">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
+          <span className="font-display gold-text text-sm font-bold tracking-[0.3em]">LORDRAN TRACKER</span>
+          <BonfireMark className="h-7 w-5" />
         </div>
         {demo && <div className="bg-fuchsia-900/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-fuchsia-200">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
-        <main className="mx-auto max-w-7xl p-4 md:p-8">{children}</main>
+        <motion.main key={path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
       <VictoryOverlay />
     </div>

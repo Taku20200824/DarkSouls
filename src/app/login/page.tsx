@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { BonfireMark } from "@/components/BonfireMark";
 
 const REASONS: Record<string, string> = {
   cancelled: "Steam нэвтрэлтийг цуцалсан.",
@@ -17,7 +18,8 @@ function Inner() {
   return (
     <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
       <div className="panel w-full max-w-md p-8 text-center">
-        <h1 className="font-display gold-text text-3xl font-bold tracking-[0.2em]">НЭВТРЭХ</h1>
+        <BonfireMark className="mx-auto mb-4 h-24 w-16" />
+        <h1 className="font-display shimmer-title text-3xl font-bold tracking-[0.2em]">НЭВТРЭХ</h1>
         <div className="ornament my-4" />
         <p className="text-sm text-ash-400">Steam-ийн албан ёсны хуудсанд шилжиж нэвтэрнэ. Энэ сайт таны нууц үгийг хэзээ ч харахгүй. Зөвхөн SteamID64, нэр, avatar-ыг хадгална.</p>
         {err && <p className="mt-4 rounded border border-blood-500/60 bg-blood-500/10 p-2 text-sm text-red-300">{REASONS[err] ?? `Алдаа: ${err}`}</p>}
