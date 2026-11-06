@@ -4,6 +4,7 @@ import { Gate } from "@/components/Shell";
 import { useTracker } from "@/components/TrackerProvider";
 import { SaveUpload } from "@/components/SaveUpload";
 import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
+import { DESKTOP_DOWNLOAD_URL, DESKTOP_APP_VERSION } from "@/lib/downloads";
 
 export default function Settings() {
   const { demo, setDemo, status } = useTracker();
@@ -44,6 +45,11 @@ function Connected() {
         <button className="btn btn-ember mt-4" onClick={makeCode}>Холбох код үүсгэх</button>
         {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-[0.4em] text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
         <button className="btn mt-4 text-xs" onClick={() => post("/api/companion/revoke", {})}>Бүх companion-ий эрхийг цуцлах</button>
+      </Panel>
+      <Panel title="Desktop App (Windows)">
+        <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>
+        <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_URL} download>v{DESKTOP_APP_VERSION} татах (.exe)</a>
+        <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>
       </Panel>
       <Panel title="Manual upload"><SaveUpload /></Panel>
       <Panel title="Steam">

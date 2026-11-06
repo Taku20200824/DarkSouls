@@ -3,12 +3,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type PointerEvent } from "react";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { ArrowDown, ArrowUpRight, ChevronRight, Compass, Flame, Hammer, Map as MapIcon, ScrollText, ShieldCheck, Swords } from "lucide-react";
+import { ArrowDown, ArrowUpRight, ChevronRight, Compass, Download, Flame, Hammer, Map as MapIcon, ScrollText, ShieldCheck, Swords } from "lucide-react";
 import { useTracker } from "@/components/TrackerProvider";
 import { BonfireMark } from "@/components/BonfireMark";
 import { LordranScene } from "@/components/LordranScene";
 import { RelicCard } from "@/components/RelicCard";
 import { BossSpotlight } from "@/components/BossSpotlight";
+import { DESKTOP_DOWNLOAD_URL } from "@/lib/downloads";
 
 const FEATURES = [
   { n: "01", icon: MapIcon, en: "A WORLD, CONNECTED", t: "Lordran газрын зураг", d: "Бүсүүдийн бодит холболт, дараагийн бүс рүү хөдөлгөөнт маршрут.", href: "/map", name: "World map" },
@@ -63,6 +64,7 @@ export default function Landing() {
           <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-8 flex flex-wrap gap-3">
             {status === "ready" && !demo ? <Link className="btn btn-ember hero-cta" href="/dashboard">Аяллаа үргэлжлүүлэх <ArrowUpRight size={17} /></Link> : <a className="btn btn-ember hero-cta" href="/api/auth/steam/login"><Flame size={17} /> Sign in through Steam <ArrowUpRight size={16} /></a>}
             <button className="btn hero-cta" onClick={() => { setDemo(true); router.push("/dashboard"); }}>Explore demo <ChevronRight size={16} /></button>
+            <a className="btn hero-cta" href={DESKTOP_DOWNLOAD_URL} download><Download size={16} /> Windows-д татах</a>
           </motion.div>
           <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-[10px] tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
         </motion.div>
