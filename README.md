@@ -102,7 +102,9 @@ python lordran_companion.py status
 python lordran_companion.py once --print          REM parse locally and print JSON, send nothing
 ```
 
-Steam achievements refresh on their own while the site is open, at most every 10 minutes. Save data cannot come from Steam, so it still needs the companion on the PC: pair once, run `autostart on`, and there is nothing more to do.
+Steam achievements refresh on their own while the site is open, at most every 10 minutes. Save data cannot come from Steam, so the hosted site still needs the companion on the PC: pair once, run `autostart on`, and there is nothing more to do.
+
+The desktop app needs none of this. It runs on the same PC as the game, so it checks the signed-in account's save every 10 seconds while it is open, with the same read-only and checksum rules. Progress made while it is closed is picked up the next time it opens.
 
 Run `build_windows.bat` to build a standalone `dist\lordran-companion.exe` with PyInstaller.
 
