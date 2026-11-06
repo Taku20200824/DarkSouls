@@ -74,6 +74,8 @@ async function startServer() {
       APP_URL: appUrl,
       LORDRAN_DESKTOP: "1",
       LORDRAN_DATA_DIR: app.getPath("userData"),
+      // The real Documents folder, including a OneDrive or other redirect, for save discovery.
+      LORDRAN_DOCUMENTS_DIR: app.getPath("documents"),
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
@@ -104,6 +106,8 @@ function createWindow(url) {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Save sync runs from the page and must keep its pace behind the fullscreen game.
+      backgroundThrottling: false,
     },
   });
 
@@ -126,7 +130,17 @@ function createWindow(url) {
   mainWindow.loadURL(url);
 }
 
+// Two instances would run two servers over one local data file, each overwriting the other.
+if (!app.requestSingleInstanceLock()) app.quit();
+
+app.on("second-instance", () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
+});
+
 app.whenReady().then(async () => {
+  if (!app.hasSingleInstanceLock()) return;
   try {
     currentUrl = await startServer();
     createWindow(currentUrl);

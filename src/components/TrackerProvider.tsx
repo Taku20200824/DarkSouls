@@ -22,6 +22,7 @@ interface Ctx {
 const C = createContext<Ctx | null>(null);
 const POLL_MS = 15_000;
 const ACHIEVEMENTS_TTL = 10 * 60_000;
+const DESKTOP_SYNC_MS = 10_000;
 
 function readFlag(k: string): string | null {
   try {
@@ -123,6 +124,28 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     achievementsTriedAt.current = now;
     post("/api/achievements/sync", {}).catch(() => {});
   }, [status, demo, state, post]);
+
+  // The desktop build reads the save itself, so the game's autosaves appear with no setup.
+  const desktopSync = status === "ready" && !demo && state?.desktop === true;
+  useEffect(() => {
+    if (!desktopSync) return;
+    let busy = false;
+    const tick = async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        const r = await fetch("/api/desktop/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        if (r.ok && (await r.json()).changed) await refresh();
+      } catch {
+        /* the next tick retries */
+      } finally {
+        busy = false;
+      }
+    };
+    tick();
+    const t = setInterval(tick, DESKTOP_SYNC_MS);
+    return () => clearInterval(t);
+  }, [desktopSync, refresh]);
 
   const tracker = useMemo<TrackerContext>(() => {
     const chars = state?.characters ?? [];

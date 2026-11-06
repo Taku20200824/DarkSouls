@@ -30,6 +30,19 @@ function Connected() {
   }
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      {state?.desktop ? (
+      <Panel title="Автомат sync">
+        <div className="text-sm">
+          <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : <span className="text-ash-500">Эхэлж байна…</span>}</p>
+          {c?.saveFound === false && <p className="text-amber-300">Save файл олдсонгүй. Тоглоомыг нэг удаа ажиллуулж хадгална уу, эсвэл Manual upload ашиглана уу.</p>}
+          {c?.saveFound && c.message && <p className="text-amber-300">{c.message}</p>}
+          {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
+          {c?.lastSyncAt && <p className="text-ash-400">Сүүлийн sync: {fmtAgo(c.lastSyncAt)}</p>}
+        </div>
+        <p className="mt-4 text-sm text-ash-300">App нээлттэй үед save файлыг энэ компьютерээс шууд уншина. Холбох код эсвэл companion шаардлагагүй. App хаалттай үед тоглосон ахиц дараагийн нээхэд автоматаар орж ирнэ.</p>
+      </Panel>
+      ) : (
+      <>
       <Panel title="Windows Companion">
         <div className="text-sm">
           <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : c?.lastHeartbeat ? <span>OFFLINE — LAST SYNC {fmtAgo(c.lastSyncAt ?? c.lastHeartbeat)}</span> : <span className="text-ash-500">Not connected</span>}</p>
@@ -51,6 +64,8 @@ function Connected() {
         <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_URL} download>v{DESKTOP_APP_VERSION} татах (.exe)</a>
         <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>
       </Panel>
+      </>
+      )}
       <Panel title="Manual upload"><SaveUpload /></Panel>
       <Panel title="Steam">
         <p className="text-sm text-ash-400">SteamID64: {state?.user.steamId}</p>
