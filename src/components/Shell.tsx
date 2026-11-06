@@ -134,7 +134,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           )}
-          {state?.storeKind === "dev-file" && <div className="mt-3 border border-amber-600/50 p-2 text-[10px] text-amber-300">DEV STORE — Firebase тохируулаагүй</div>}
+          {state?.storeKind === "dev-file" && (
+            <div className={clsx("mt-3 border p-2 text-[10px]", state.desktop ? "border-ash-500/30 text-ash-500" : "border-amber-600/50 text-amber-300")}>
+              {state.desktop ? "LOCAL STORAGE — энэ компьютер дээр хадгалагдана" : "DEV STORE — Firebase тохируулаагүй"}
+            </div>
+          )}
         </div>
       </aside>
       <div className="min-w-0 flex-1">

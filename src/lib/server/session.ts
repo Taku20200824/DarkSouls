@@ -1,7 +1,7 @@
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { isProduction, sessionSecret } from "./env";
+import { isDesktopApp, isProduction, sessionSecret } from "./env";
 
 export const SESSION_COOKIE = "lt_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
@@ -37,5 +37,7 @@ export async function getSession(): Promise<Session | null> {
 }
 
 export function sessionCookieOptions() {
-  return { httpOnly: true, secure: isProduction(), sameSite: "lax" as const, path: "/", maxAge: MAX_AGE };
+  // Desktop builds only ever serve http://127.0.0.1; a Secure cookie there is unnecessary
+  // friction, not a protection (nothing crosses the network).
+  return { httpOnly: true, secure: isProduction() && !isDesktopApp(), sameSite: "lax" as const, path: "/", maxAge: MAX_AGE };
 }

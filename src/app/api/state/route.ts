@@ -1,4 +1,5 @@
 import { withUser, ok } from "@/lib/server/api";
+import { isDesktopApp } from "@/lib/server/env";
 import type { StoredCharacter, TrackerEvent } from "@/lib/server/progress";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export const GET = withUser(async ({ steamId, store }) => {
   return ok({
     now,
     storeKind: store.kind,
+    desktop: isDesktopApp(),
     user: user ?? { steamId },
     characters: chars,
     events,

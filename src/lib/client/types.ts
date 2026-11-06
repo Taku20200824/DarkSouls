@@ -15,6 +15,7 @@ export interface ClientEvent {
 export interface ClientState {
   now: number;
   storeKind: "firestore" | "dev-file" | "demo";
+  desktop?: boolean;
   user: { steamId: string; personaName?: string | null; avatar?: string | null; profileUrl?: string | null; ownsGame?: boolean | null; profilePublic?: boolean | null; playtimeMinutes?: number | null };
   characters: { id: string; character: ParsedCharacter; source: string; updatedAt: number; saveModifiedAt?: number; checksumsValid: boolean; parserVersion: string }[];
   events: ClientEvent[];

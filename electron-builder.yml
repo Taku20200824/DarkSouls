@@ -1,0 +1,44 @@
+# Packages the Electron shell (electron/) + the already-built Next.js standalone
+# server (.next/standalone, copied into app-server/) into a single Windows installer.
+# Run via `npm run dist:win` (builds Next.js first, then this).
+appId: mn.lordrantracker.desktop
+productName: Lordran Tracker
+copyright: Copyright (c) 2026 Lordran Tracker contributors
+
+directories:
+  app: electron
+  output: dist
+  buildResources: build
+
+# The Electron shell has zero npm dependencies (see electron/package.json), so there is
+# nothing to rebuild for Electron's Node ABI.
+npmRebuild: false
+
+files:
+  - "main.js"
+  - "package.json"
+
+# Plain directory instead of a packed archive: simpler, and afterPack needs to freely
+# add/remove files in resources/ without unpacking/repacking an asar.
+asar: false
+
+# electron-builder's automatic node_modules collection gets confused by this project's
+# layout (walks up to the web app's own node_modules and mis-places things); afterPack
+# places resources/app-server (the Next.js standalone server) by hand instead — see
+# build/after-pack.cjs.
+afterPack: build/after-pack.cjs
+
+icon: build/icon.png
+
+win:
+  target: nsis
+  icon: build/icon.ico
+  artifactName: "${productName}-Setup-${version}.${ext}"
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  deleteAppDataOnUninstall: false

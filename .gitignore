@@ -13,3 +13,10 @@ companion/**/__pycache__
 *.sl2
 !tests/fixtures/*.sl2
 .vercel
+
+# Electron desktop build (see npm run dist:win)
+/dist
+/release*
+/build/icon.png
+/build/icon.ico
+electron/node_modules

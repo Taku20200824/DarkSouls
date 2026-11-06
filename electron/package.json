@@ -1,0 +1,6 @@
+{
+  "name": "lordran-tracker-shell",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js"
+}

@@ -1,7 +1,7 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
-import { env, firebaseConfigured, isProduction } from "./env";
+import { dataDir, env, firebaseConfigured, isDesktopApp, isProduction } from "./env";
 
 /**
  * Minimal document store used by the app. Backed by Firestore (Admin SDK) in
@@ -87,7 +87,7 @@ class FirestoreStore implements Store {
 
 class DevFileStore implements Store {
   kind = "dev-file" as const;
-  private file = path.join(process.cwd(), ".dev-store.json");
+  private file = path.join(dataDir(), ".dev-store.json");
   private read(): Record<string, object> {
     try {
       return JSON.parse(fs.readFileSync(this.file, "utf8"));
@@ -145,7 +145,7 @@ export class StoreUnavailableError extends Error {}
 export function getStore(): Store {
   if (store) return store;
   if (firebaseConfigured()) store = new FirestoreStore();
-  else if (!isProduction() && env("DISABLE_DEV_STORE") !== "1") store = new DevFileStore();
+  else if ((isDesktopApp() || !isProduction()) && env("DISABLE_DEV_STORE") !== "1") store = new DevFileStore();
   else throw new StoreUnavailableError("Firebase is not configured (FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY).");
   return store;
 }

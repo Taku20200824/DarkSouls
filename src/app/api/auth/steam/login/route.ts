@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { buildLoginUrl } from "@/lib/steam/openid";
-import { appUrl, isProduction } from "@/lib/server/env";
+import { appUrl, isDesktopApp, isProduction } from "@/lib/server/env";
 import { clientIp, rateLimit, randomToken } from "@/lib/server/security";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +12,6 @@ export async function GET(req: NextRequest) {
   const base = appUrl();
   const returnTo = `${base}/api/auth/steam/callback?state=${state}`;
   const res = NextResponse.redirect(buildLoginUrl(returnTo, base));
-  res.cookies.set("lt_oid_state", state, { httpOnly: true, secure: isProduction(), sameSite: "lax", path: "/api/auth/steam", maxAge: 600 });
+  res.cookies.set("lt_oid_state", state, { httpOnly: true, secure: isProduction() && !isDesktopApp(), sameSite: "lax", path: "/api/auth/steam", maxAge: 600 });
   return res;
 }
