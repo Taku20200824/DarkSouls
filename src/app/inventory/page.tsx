@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { useTracker } from "@/components/TrackerProvider";
 import { Badge, Empty, PageTitle, Panel } from "@/components/ui";
+import { ItemIcon } from "@/components/ItemIcon";
 import { ALL_RING_NAMES, ALL_SPELL_NAMES, BOSS_SOUL_DB } from "@/lib/save/itemdb";
 import type { InventoryItem } from "@/lib/save/types";
 
@@ -53,9 +54,12 @@ export default function Inventory() {
             {items.length === 0 ? <p className="text-sm text-ash-500">Хоосон.</p> : (
               <ul className="max-h-[60vh] space-y-1 overflow-y-auto text-sm">
                 {items.map((i) => (
-                  <li key={`${i.category}-${i.id}`} className="flex justify-between gap-2 border-b border-gold-600/5 py-1">
-                    <span className="text-gold-300">{i.name}</span>
-                    <span className="text-ash-500">×{i.quantity}</span>
+                  <li key={`${i.category}-${i.id}`} className="flex items-center justify-between gap-2 border-b border-gold-600/5 py-1.5">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <ItemIcon name={i.name} category={i.category} size={26} />
+                      <span className="truncate text-gold-300">{i.name}</span>
+                    </span>
+                    <span className="shrink-0 text-ash-500">×{i.quantity}</span>
                   </li>
                 ))}
               </ul>
@@ -65,7 +69,15 @@ export default function Inventory() {
           {collection && (
             <Panel title={`Цуглуулга: ${collection.filter((n) => ownedNames.has(n)).length} / ${collection.length}`}>
               <ul className="max-h-[60vh] space-y-1 overflow-y-auto text-sm">
-                {collection.map((n) => <li key={n} className="flex justify-between"><span className={ownedNames.has(n) ? "text-gold-300" : "text-ash-500"}>{n}</span><span>{ownedNames.has(n) ? "✓" : "—"}</span></li>)}
+                {collection.map((n) => (
+                  <li key={n} className="flex items-center justify-between gap-2 py-0.5">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <ItemIcon name={n} category={tab === "spells" ? "spells" : "rings"} size={24} />
+                      <span className={`truncate ${ownedNames.has(n) ? "text-gold-300" : "text-ash-500"}`}>{n}</span>
+                    </span>
+                    <span className="shrink-0">{ownedNames.has(n) ? "✓" : "—"}</span>
+                  </li>
+                ))}
               </ul>
               <p className="mt-2 text-xs text-ash-500">Энэ жагсаалт зөвхөн save-ийн inventory хэсгийг шалгана; өөр хэсэгт хадгалагдсан зүйлс орхигдож болзошгүй.</p>
             </Panel>

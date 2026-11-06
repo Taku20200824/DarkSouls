@@ -19,9 +19,11 @@
   --color-ash-300: #c2bdb1;
   --color-ash-400: #918c82;
   --color-ash-500: #66625b;
-  /* Latin glyphs use Cinzel; Cyrillic falls through to Cormorant Garamond */
-  --font-display: "Cinzel", "Cormorant Garamond", Georgia, serif;
-  --font-serif: "Cormorant Garamond", Georgia, serif;
+  /* Latin glyphs use Cinzel/Cormorant Garamond; those ship no Cyrillic, so Mongolian
+     text falls through to Yeseva One / Alegreya (both carry full Cyrillic + Cyrillic-ext,
+     which covers Ө/Ү) before hitting the plain system serif. */
+  --font-display: "Cinzel", "Yeseva One", Georgia, serif;
+  --font-serif: "Cormorant Garamond", "Alegreya", Georgia, serif;
   --font-sans: "Noto Sans", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -126,6 +128,31 @@ body::after {
     0 0 0 1px rgba(255, 145, 66, 0.15),
     0 0 40px -10px rgba(242, 106, 27, 0.35),
     0 20px 50px -20px rgba(0, 0, 0, 0.9);
+}
+
+/* ---------- Item glyphs (original vector badges, see ItemIcon.tsx) ---------- */
+.item-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--ic-color) 32%, transparent), transparent 72%),
+    linear-gradient(160deg, #1d1b21, #0a0a0c);
+  border: 1px solid color-mix(in srgb, var(--ic-color) 55%, #19171c 45%);
+  box-shadow:
+    inset 0 0 8px rgba(0, 0, 0, 0.65),
+    0 0 10px -3px color-mix(in srgb, var(--ic-color) 60%, transparent);
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+li:hover > .item-icon,
+.item-icon-hover:hover {
+  box-shadow:
+    inset 0 0 8px rgba(0, 0, 0, 0.5),
+    0 0 16px -2px color-mix(in srgb, var(--ic-color) 75%, transparent);
+  transform: translateY(-1px);
 }
 
 .ornament {

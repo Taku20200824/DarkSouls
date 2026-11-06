@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Gate } from "@/components/Shell";
 import { useSelected, useTracker } from "@/components/TrackerProvider";
 import { Badge, Empty, PageTitle, Panel, Stat, fmtAgo, fmtDuration, fmtNum } from "@/components/ui";
+import { ItemIcon } from "@/components/ItemIcon";
 import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { BonfireMark } from "@/components/BonfireMark";
@@ -111,11 +112,14 @@ function Inner() {
         <Panel title="Зэвсэг сайжруулах зөвлөмж" right={<Badge kind="inference" />}>
           {advice ? (
             <div className="text-sm">
-              <div className="text-gold-300">{advice.weapon.name} → +{advice.nextLevel}</div>
+              <div className="flex items-center gap-2 text-gold-300"><ItemIcon name={advice.weapon.name} category="weapons" size={28} />{advice.weapon.name} → +{advice.nextLevel}</div>
               <p className="text-xs text-ash-500">Хамгийн их сайжруулсан зэвсэг (зүүсэн зэвсэг save-ээс уншигддаггүй).</p>
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-2 space-y-1.5">
                 {advice.needs.map((n) => (
-                  <li key={n.material} className="flex justify-between"><span>{n.material} ×{n.qty}</span><span className={n.missing ? "text-red-300" : "text-emerald-300"}>{n.missing ? `дутуу ${n.missing}` : "хангалттай"} (байгаа {n.have ?? "?"})</span></li>
+                  <li key={n.material} className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2"><ItemIcon name={n.material} category="goods" size={22} />{n.material} ×{n.qty}</span>
+                    <span className={n.missing ? "text-red-300" : "text-emerald-300"}>{n.missing ? `дутуу ${n.missing}` : "хангалттай"} (байгаа {n.have ?? "?"})</span>
+                  </li>
                 ))}
               </ul>
               {advice.smith && <p className="mt-1 text-xs text-ash-400">Дархан: {advice.smith}{advice.ember ? ` · ${advice.ember}` : ""}</p>}

@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { useTracker } from "@/components/TrackerProvider";
 import { Badge, PageTitle, Panel } from "@/components/ui";
+import { ItemIcon } from "@/components/ItemIcon";
 import { ALL_WEAPON_NAMES } from "@/lib/save/itemdb";
 import { FARMING_MN, INFUSION_TO_PATH, SOULS_COST_NOTE_MN, UPGRADE_PATHS, planUpgrade, totalMaterials } from "@/lib/data/upgrades";
 import { itemQty } from "@/lib/guide/engine";
@@ -71,7 +72,7 @@ export default function Upgrades() {
                       const miss = have === null ? null : Math.max(0, t.qty - have);
                       return (
                         <tr key={t.material} className="border-t border-gold-600/10">
-                          <td className="py-1.5 text-gold-300">{t.material}</td><td>{t.qty}</td>
+                          <td className="py-1.5 text-gold-300"><span className="flex items-center gap-2"><ItemIcon name={t.material} category="goods" size={24} />{t.material}</span></td><td>{t.qty}</td>
                           <td>{have ?? <span className="text-ash-500">Not connected</span>}</td>
                           <td className={miss ? "text-red-300" : "text-emerald-300"}>{miss === null ? "—" : miss}</td>
                         </tr>
@@ -86,15 +87,18 @@ export default function Upgrades() {
               <Panel title="Алхам алхмаар">
                 <ol className="space-y-1 text-sm">
                   {plan.map((l, i) => (
-                    <li key={i} className="flex flex-wrap justify-between gap-2 border-b border-gold-600/5 py-1">
+                    <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-b border-gold-600/5 py-1">
                       <span>{UPGRADE_PATHS.find((p) => p.id === l.path)?.name} +{l.level}</span>
-                      <span className="text-ash-300">{l.material} ×{l.qty}{l.ember ? ` · ${l.ember}` : ""}{l.smith ? ` · ${l.smith}` : ""}</span>
+                      <span className="flex items-center gap-2 text-ash-300">
+                        <ItemIcon name={l.material} category="goods" size={22} />
+                        {l.material} ×{l.qty}{l.ember ? ` · ${l.ember}` : ""}{l.smith ? ` · ${l.smith}` : ""}
+                      </span>
                     </li>
                   ))}
                 </ol>
               </Panel>
               <Panel title="Farm хийх газар">
-                <ul className="space-y-1 text-sm">{totals.map((t) => <li key={t.material}><span className="text-gold-300">{t.material}:</span> {FARMING_MN[t.material] ?? "Мэдээлэл алга."}</li>)}</ul>
+                <ul className="space-y-1.5 text-sm">{totals.map((t) => <li key={t.material} className="flex items-start gap-2"><ItemIcon name={t.material} category="goods" size={22} /><span><span className="text-gold-300">{t.material}:</span> {FARMING_MN[t.material] ?? "Мэдээлэл алга."}</span></li>)}</ul>
               </Panel>
             </>
           )}

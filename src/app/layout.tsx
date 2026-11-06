@@ -6,6 +6,13 @@ import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/cormorant-garamond/600.css";
 import "@fontsource/cormorant-garamond/700.css";
 import "@fontsource/cormorant-garamond/500-italic.css";
+// Cyrillic companions: Cinzel/Cormorant Garamond ship Latin glyphs only, so Mongolian
+// text in .font-display/.font-serif needs its own faces (see globals.css font stacks).
+import "@fontsource/yeseva-one/400.css";
+import "@fontsource/alegreya/500.css";
+import "@fontsource/alegreya/600.css";
+import "@fontsource/alegreya/700.css";
+import "@fontsource/alegreya/500-italic.css";
 import "@fontsource/noto-sans/400.css";
 import "@fontsource/noto-sans/500.css";
 import "@fontsource/noto-sans/600.css";
