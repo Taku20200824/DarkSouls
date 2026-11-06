@@ -102,7 +102,7 @@ function Inner() {
                   <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span>☠ +{delta(d)} <span className="text-ash-500">({String(d.data.from)} → {String(d.data.to)}) · {fmtDate(d.at)}</span></span>
                     <span className="flex items-center gap-2">
-                      <Badge kind={d.attribution?.label === "User confirmation" ? "manual" : "unknown"}>{d.attribution?.label ?? "Unconfirmed"}</Badge>
+                      <Badge kind={d.attribution?.label === "User confirmation" ? "manual" : "unknown"}>{d.attribution?.label === "User confirmation" ? "Хэрэглэгч баталсан" : "Баталгаажаагүй"}</Badge>
                       <select className="input !py-0.5 text-xs" value={d.attribution?.bossId ?? ""} onChange={(e) => post("/api/events/tag", { id: d.id, bossId: e.target.value || null, areaId: null })}>
                         <option value="">— шалтгаан —</option>
                         {BOSSES.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
