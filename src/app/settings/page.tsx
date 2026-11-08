@@ -38,6 +38,7 @@ function Connected() {
           {c?.saveFound && c.message && <p className="text-amber-300">{c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
           {c?.lastSyncAt && <p className="text-ash-400">Сүүлийн sync: {fmtAgo(c.lastSyncAt)}</p>}
+          <p className="text-ash-400">Хувилбар: {process.env.NEXT_PUBLIC_APP_VERSION}</p>
         </div>
         <p className="mt-4 text-sm text-ash-300">App нээлттэй үед save файлыг энэ компьютерээс шууд уншина. Холбох код эсвэл companion шаардлагагүй. App хаалттай үед тоглосон ахиц дараагийн нээхэд автоматаар орж ирнэ.</p>
       </Panel>

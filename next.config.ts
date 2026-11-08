@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
 import type { NextConfig } from "next";
+
+const { version } = JSON.parse(readFileSync("./package.json", "utf8")) as { version: string };
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,6 +13,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Shown in the sidebar and settings, so users can tell which build they are running.
+  env: { NEXT_PUBLIC_APP_VERSION: version },
   // Standalone output is how the Electron desktop build packages a minimal,
   // self-contained server (see electron/main.js, build/copy-standalone.mjs and the
   // "dist:win" script). Only enabled for that build — Vercel has its own output
