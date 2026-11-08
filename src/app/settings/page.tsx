@@ -4,7 +4,7 @@ import { Gate } from "@/components/Shell";
 import { useTracker } from "@/components/TrackerProvider";
 import { SaveUpload } from "@/components/SaveUpload";
 import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
-import { DESKTOP_DOWNLOAD_URL, DESKTOP_APP_VERSION } from "@/lib/downloads";
+import { DESKTOP_DOWNLOAD_URL } from "@/lib/downloads";
 
 export default function Settings() {
   const { demo, setDemo, status } = useTracker();
@@ -38,6 +38,7 @@ function Connected() {
           {c?.saveFound && c.message && <p className="text-amber-300">{c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
           {c?.lastSyncAt && <p className="text-ash-400">Сүүлийн sync: {fmtAgo(c.lastSyncAt)}</p>}
+          <p className="text-ash-400">Хувилбар: {process.env.NEXT_PUBLIC_APP_VERSION}</p>
         </div>
         <p className="mt-4 text-sm text-ash-300">App нээлттэй үед save файлыг энэ компьютерээс шууд уншина. Холбох код эсвэл companion шаардлагагүй. App хаалттай үед тоглосон ахиц дараагийн нээхэд автоматаар орж ирнэ.</p>
       </Panel>
@@ -61,7 +62,7 @@ function Connected() {
       </Panel>
       <Panel title="Desktop App (Windows)">
         <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>
-        <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_URL} download>v{DESKTOP_APP_VERSION} татах (.exe)</a>
+        <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">Хамгийн сүүлийн хувилбарыг татах (.exe)</a>
         <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>
       </Panel>
       </>

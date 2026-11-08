@@ -161,6 +161,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
               {state.desktop ? "LOCAL STORAGE — энэ компьютер дээр хадгалагдана" : "DEV STORE — Firebase тохируулаагүй"}
             </div>
           )}
+          <div className="font-display mt-3 text-center text-[9px] tracking-widest text-ash-500">
+            v{process.env.NEXT_PUBLIC_APP_VERSION}{state?.desktop ? " · Desktop" : ""}
+          </div>
         </div>
       </aside>
       <div className="min-w-0 flex-1">
