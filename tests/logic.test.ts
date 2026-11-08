@@ -7,7 +7,7 @@ import { QUESTS } from "@/lib/data/npcs";
 import { UPGRADE_PATHS, planUpgrade, totalMaterials } from "@/lib/data/upgrades";
 import { BOSS_FLAG_DB, BOSS_SOUL_DB, KNOWN_FLAG_DB } from "@/lib/save/itemdb";
 import { bossStatus, computeObjectives, type TrackerContext } from "@/lib/guide/engine";
-import { diffCharacters, charKey } from "@/lib/server/progress";
+import { diffCharacters, charKey, withoutSeenBosses } from "@/lib/server/progress";
 import { parseSave } from "@/lib/save/ds1";
 import { demoState } from "@/lib/client/demo";
 
@@ -95,6 +95,15 @@ describe("boss status + objectives", () => {
 
 describe("snapshot diff", () => {
   const base = real.characters[1];
+  it("does not celebrate a boss again when it drops out of one parse and returns", () => {
+    const back = structuredClone(base);
+    back.bosses = { ...back.bosses, "Capra Demon": ["flag"] };
+    const ev = diffCharacters(base, back, 1, "k", "Companion");
+    expect(ev.some((e) => e.type === "boss")).toBe(true);
+    expect(withoutSeenBosses(ev, new Set(["Capra Demon"])).some((e) => e.type === "boss")).toBe(false);
+    expect(withoutSeenBosses(ev, new Set())).toEqual(ev);
+  });
+
   it("detects death increases, level ups and new bosses — and nothing when unchanged", () => {
     expect(diffCharacters(base, base, 1, "k", "Companion")).toEqual([]);
     const next = structuredClone(base);

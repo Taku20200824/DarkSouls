@@ -7,7 +7,7 @@ export function Panel({ children, className, title, right, hover }: { children: 
   return (
     <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .5 }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
       {title && (
-        <header className="mb-4 flex items-center justify-between gap-3 border-b border-gold-600/15 pb-3">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-gold-600/15 pb-3">
           <h2 className="font-display flex items-center gap-2 text-[15px] font-semibold uppercase tracking-[0.18em] text-gold-300 md:text-base">
             <span className="inline-block h-1.5 w-1.5 rotate-45 bg-ember-400 shadow-[0_0_8px_#ff9142]" />
             {title}
@@ -50,21 +50,21 @@ export function PageTitle({ title, sub }: { title: string; sub?: string }) {
 }
 
 const BADGE: Record<string, { label: string; cls: string; title: string }> = {
-  verified: { label: "Verified", cls: "border-emerald-700/60 text-emerald-300", title: "Тоглоомын өгөгдлөөс шууд уншсан" },
-  inferred: { label: "Inferred", cls: "border-amber-600/60 text-amber-300", title: "Бусад нотолгоонд үндэслэн дүгнэсэн" },
-  unknown: { label: "Unknown", cls: "border-ash-500/60 text-ash-400", title: "Найдвартай тодорхойлох боломжгүй" },
-  manual: { label: "User confirmation", cls: "border-sky-700/60 text-sky-300", title: "Хэрэглэгч гараар баталгаажуулсан" },
+  verified: { label: "Баталгаажсан", cls: "border-emerald-700/60 text-emerald-300", title: "Тоглоомын өгөгдлөөс шууд уншсан" },
+  inferred: { label: "Дүгнэсэн", cls: "border-amber-600/60 text-amber-300", title: "Бусад нотолгоонд үндэслэн дүгнэсэн" },
+  unknown: { label: "Тодорхойгүй", cls: "border-ash-500/60 text-ash-400", title: "Найдвартай тодорхойлох боломжгүй" },
+  manual: { label: "Хэрэглэгч баталсан", cls: "border-sky-700/60 text-sky-300", title: "Хэрэглэгч гараар баталгаажуулсан" },
   steam: { label: "Steam API", cls: "border-indigo-600/60 text-indigo-300", title: "Steam Web API-аас" },
-  save: { label: "Parsed save file", cls: "border-emerald-700/60 text-emerald-300", title: "Save файлаас" },
+  save: { label: "Save файл", cls: "border-emerald-700/60 text-emerald-300", title: "Save файлаас" },
   companion: { label: "Companion", cls: "border-emerald-700/60 text-emerald-300", title: "Windows companion-аас" },
-  demo: { label: "DEMO", cls: "border-fuchsia-600/70 text-fuchsia-300", title: "Жишээ өгөгдөл — бодит биш" },
-  inference: { label: "Inference", cls: "border-amber-600/60 text-amber-300", title: "Тооцоолсон" },
+  demo: { label: "Жишээ", cls: "border-fuchsia-600/70 text-fuchsia-300", title: "Жишээ өгөгдөл — бодит биш" },
+  inference: { label: "Тооцоолсон", cls: "border-amber-600/60 text-amber-300", title: "Тооцоолсон" },
 };
 
 export function Badge({ kind, children }: { kind: keyof typeof BADGE | Certainty | string; children?: React.ReactNode }) {
   const b = BADGE[kind] ?? BADGE.unknown;
   return (
-    <span title={b.title} className={clsx("inline-flex items-center rounded-[1px] border bg-black/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em]", b.cls)}>
+    <span title={b.title} className={clsx("inline-flex shrink-0 items-center whitespace-nowrap rounded-[1px] border bg-black/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em]", b.cls)}>
       {children ?? b.label}
     </span>
   );
@@ -72,12 +72,12 @@ export function Badge({ kind, children }: { kind: keyof typeof BADGE | Certainty
 
 export function Stat({ label, value, certainty, demo, hint }: { label: string; value: React.ReactNode; certainty?: Certainty; demo?: boolean; hint?: string }) {
   return (
-    <div className="panel panel-hover group p-4">
-      <div className="flex items-start justify-between gap-2">
+    <div className="panel panel-hover group flex flex-col p-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
         <span className="font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-ash-500">{label}</span>
         {demo ? <Badge kind="demo" /> : certainty && <Badge kind={certainty} />}
       </div>
-      <div className="font-display mt-2 text-3xl font-semibold text-gold-200 transition group-hover:text-white group-hover:[text-shadow:0_0_18px_rgba(255,145,66,0.6)]">
+      <div className="font-display mt-auto pt-2 text-2xl font-semibold leading-tight text-gold-200 transition [overflow-wrap:anywhere] xl:text-3xl group-hover:text-white group-hover:[text-shadow:0_0_18px_rgba(255,145,66,0.6)]">
         {value ?? <span className="text-ash-500">—</span>}
       </div>
       {hint && <div className="mt-1 text-xs text-ash-500">{hint}</div>}

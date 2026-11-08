@@ -69,7 +69,7 @@ function Inner() {
       {!ch ? <Empty>Save өгөгдөл алга (Waiting for save data).</Empty> : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Нийт үхэл" value={total ?? "Unknown"} certainty={ch.deaths.certainty} demo={demo} />
+            <Stat label="Нийт үхэл" value={total ?? "Тодорхойгүй"} certainty={ch.deaths.certainty} demo={demo} />
             <Stat label="Энэ session" value={snaps.length ? sessionDeaths : "—"} certainty={snaps.length ? "inferred" : "unknown"} demo={demo} hint="2+ цагийн завсаргүй синкүүд" />
             <Stat label="Өнөөдөр" value={todayDeaths} certainty="inferred" demo={demo} hint="Илрүүлсэн үхлийн event-ээс" />
             <Stat label="Үхэлгүй хамгийн урт" value={bestStreak ? `${Math.round(bestStreak / 60000)} мин` : "—"} certainty={bestStreak ? "inferred" : "unknown"} demo={demo} hint="Save-ийн давтамжаар ойролцоогоор" />
@@ -102,7 +102,7 @@ function Inner() {
                   <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span>☠ +{delta(d)} <span className="text-ash-500">({String(d.data.from)} → {String(d.data.to)}) · {fmtDate(d.at)}</span></span>
                     <span className="flex items-center gap-2">
-                      <Badge kind={d.attribution?.label === "User confirmation" ? "manual" : "unknown"}>{d.attribution?.label ?? "Unconfirmed"}</Badge>
+                      <Badge kind={d.attribution?.label === "User confirmation" ? "manual" : "unknown"}>{d.attribution?.label === "User confirmation" ? "Хэрэглэгч баталсан" : "Баталгаажаагүй"}</Badge>
                       <select className="input !py-0.5 text-xs" value={d.attribution?.bossId ?? ""} onChange={(e) => post("/api/events/tag", { id: d.id, bossId: e.target.value || null, areaId: null })}>
                         <option value="">— шалтгаан —</option>
                         {BOSSES.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}

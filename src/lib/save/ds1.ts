@@ -22,7 +22,7 @@ import {
  * saves, combined with tarvitz/dsfp (MIT) for the PtDE death counter. Each value is
  * only reported when its sanity gate passes; otherwise it is `unknown`.
  */
-export const PARSER_VERSION = "ds1-1.0.2";
+export const PARSER_VERSION = "ds1-1.0.3";
 
 const SLOT_COUNT = 10;
 const MENU_ENTRY = 10;
@@ -56,7 +56,8 @@ const GENDER: Record<number, string> = { 0: "Female", 1: "Male" };
 const DEATHS_OFF: Record<GameVariant, number> = { ptde: 0x1f118, dsr: 0x1f2d8 };
 const DEATHS_SENTINEL = 0xffffffff;
 // Some DSR saves place this struct elsewhere, so it is also located by its constant tail.
-const DEATHS_TAIL = [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00];
+// The byte after these varies between saves (0x00 and 0x50 seen), so it is not part of it.
+const DEATHS_TAIL = [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80];
 const DEATHS_TAIL_D = 12;
 const DEATHS_SEARCH = 0x400;
 
@@ -251,8 +252,11 @@ function locateDeaths(buf: Uint8Array, game: GameVariant): number | null {
   return null;
 }
 
-/** How far this save's death/flag structs sit from the calibrated layout. */
-const layoutShift = (buf: Uint8Array, game: GameVariant) => (locateDeaths(buf, game) ?? DEATHS_OFF[game]) - DEATHS_OFF[game];
+/** How far this save's death/flag structs sit from the calibrated layout, or null when they were not found. */
+function layoutShift(buf: Uint8Array, game: GameVariant): number | null {
+  const off = locateDeaths(buf, game);
+  return off === null ? null : off - DEATHS_OFF[game];
+}
 
 export function readDeaths(buf: Uint8Array, game: GameVariant): Field<number> {
   const off = locateDeaths(buf, game);
@@ -302,7 +306,9 @@ function popcount8(b: number) {
 
 /** Event-flag region: boss kills + world state. Disabled when the region does not read sparse. */
 export function readFlags(buf: Uint8Array, game: GameVariant) {
-  const base = FLAG_BASE[game] + layoutShift(buf, game);
+  const shift = layoutShift(buf, game);
+  if (shift === null) return null;
+  const base = FLAG_BASE[game] + shift;
   if (base + FLAG_SPAN > buf.length) return null;
   let bits = 0;
   for (let i = base; i < base + FLAG_SPAN; i++) bits += popcount8(buf[i]);
