@@ -16,7 +16,7 @@ from typing import Any
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-PARSER_VERSION = "ds1-1.0.2"
+PARSER_VERSION = "ds1-1.0.3"
 DSR_KEY = bytes.fromhex("0123456789ABCDEFFEDCBA9876543210")
 MAX_SAVE_BYTES = 16 * 1024 * 1024
 HEADER_LEN, ENTRY_LEN = 0x40, 0x20
@@ -33,7 +33,8 @@ CLASS_K = {0: 82, 1: 81, 2: 83, 3: 81, 4: 82, 5: 82, 6: 79, 7: 83, 8: 82, 9: 82}
 GENDER = {0: "Female", 1: "Male"}
 DEATHS_OFF = {"ptde": 0x1F118, "dsr": 0x1F2D8}
 # Some DSR saves place this struct elsewhere, so it is also located by its constant tail.
-DEATHS_TAIL = bytes.fromhex("0008000000008000")
+# The byte after these varies between saves (0x00 and 0x50 seen), so it is not part of it.
+DEATHS_TAIL = bytes.fromhex("00080000000080")
 DEATHS_TAIL_D = 12
 DEATHS_SEARCH = 0x400
 FLAG_BASE = {"dsr": 127721, "ptde": 127273}
@@ -295,9 +296,9 @@ def locate_deaths(buf, game):
 
 
 def layout_shift(buf, game):
-    """How far this save's death/flag structs sit from the calibrated layout."""
+    """How far this save's death/flag structs sit from the calibrated layout, or None when they were not found."""
     off = locate_deaths(buf, game)
-    return 0 if off is None else off - DEATHS_OFF[game]
+    return None if off is None else off - DEATHS_OFF[game]
 
 
 def read_deaths(buf, game):
@@ -332,7 +333,10 @@ def read_bonfires(buf):
 
 
 def read_flags(buf, game):
-    base = FLAG_BASE[game] + layout_shift(buf, game)
+    shift = layout_shift(buf, game)
+    if shift is None:
+        return None
+    base = FLAG_BASE[game] + shift
     if base + FLAG_SPAN > len(buf):
         return None
     region = buf[base:base + FLAG_SPAN]

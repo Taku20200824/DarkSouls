@@ -72,12 +72,12 @@ export function Badge({ kind, children }: { kind: keyof typeof BADGE | Certainty
 
 export function Stat({ label, value, certainty, demo, hint }: { label: string; value: React.ReactNode; certainty?: Certainty; demo?: boolean; hint?: string }) {
   return (
-    <div className="panel panel-hover group p-4">
+    <div className="panel panel-hover group flex flex-col p-4">
       <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
         <span className="font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-ash-500">{label}</span>
         {demo ? <Badge kind="demo" /> : certainty && <Badge kind={certainty} />}
       </div>
-      <div className="font-display mt-2 text-3xl font-semibold text-gold-200 transition group-hover:text-white group-hover:[text-shadow:0_0_18px_rgba(255,145,66,0.6)]">
+      <div className="font-display mt-auto pt-2 text-2xl font-semibold leading-tight text-gold-200 transition [overflow-wrap:anywhere] xl:text-3xl group-hover:text-white group-hover:[text-shadow:0_0_18px_rgba(255,145,66,0.6)]">
         {value ?? <span className="text-ash-500">—</span>}
       </div>
       {hint && <div className="mt-1 text-xs text-ash-500">{hint}</div>}

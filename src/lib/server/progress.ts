@@ -22,6 +22,13 @@ export interface StoredCharacter {
   saveModifiedAt?: number;
   checksumsValid: boolean;
   parserVersion: string;
+  /** Every boss ever recorded as defeated, so a boss that drops out of one parse and returns is not celebrated twice. */
+  bossesSeen?: string[];
+}
+
+/** Drops boss events for bosses that were already recorded before. */
+export function withoutSeenBosses(events: TrackerEvent[], seen: ReadonlySet<string>): TrackerEvent[] {
+  return events.filter((e) => e.type !== "boss" || !seen.has(String(e.data.boss)));
 }
 
 export function charKey(c: Pick<ParsedCharacter, "slot" | "name">): string {
@@ -56,6 +63,13 @@ export function diffCharacters(prev: ParsedCharacter, next: ParsedCharacter, at:
   return ev;
 }
 
+/** Seeds `bossesSeen` for characters stored before it existed, from their past boss events. */
+async function bossesFromEvents(steamId: string, key: string, prev: ParsedCharacter): Promise<string[]> {
+  const past = await getStore().list<TrackerEvent>(`users/${steamId}/events`, { orderBy: "at", desc: true, limit: 500 });
+  const fromEvents = past.filter((e) => e.type === "boss" && e.charKey === key).map((e) => String(e.data.boss));
+  return [...Object.keys(prev.bosses), ...fromEvents];
+}
+
 export async function ingest(steamId: string, payload: SyncPayload, now = Date.now()) {
   const store = getStore();
   const source: TrackerEvent["source"] = payload.client === "companion" ? "Companion" : "Parsed save file";
@@ -64,7 +78,8 @@ export async function ingest(steamId: string, payload: SyncPayload, now = Date.n
     const key = charKey(c);
     const path = `users/${steamId}/characters/${key}`;
     const prev = await store.get<StoredCharacter>(path);
-    const events = prev ? diffCharacters(prev.character, c, now, key, source) : [];
+    const seen = new Set(prev?.bossesSeen ?? (prev ? await bossesFromEvents(steamId, key, prev.character) : []));
+    const events = prev ? withoutSeenBosses(diffCharacters(prev.character, c, now, key, source), seen) : [];
     for (const e of events) await store.add(`users/${steamId}/events`, e);
     const doc: StoredCharacter = {
       character: c,
@@ -73,6 +88,7 @@ export async function ingest(steamId: string, payload: SyncPayload, now = Date.n
       saveModifiedAt: payload.saveModifiedAt,
       checksumsValid: payload.checksumsValid,
       parserVersion: payload.parserVersion,
+      bossesSeen: [...new Set([...seen, ...Object.keys(c.bosses)])],
     };
     await store.set(path, doc);
     await store.add(`users/${steamId}/snapshots`, {

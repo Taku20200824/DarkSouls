@@ -109,6 +109,25 @@ describe("DSR synthetic save (encryption + anchor)", () => {
     expect(c.bosses["Gwyn, Lord of Cinder"]).toBeUndefined();
   });
 
+  it("finds the death struct when the byte after its tail changes", () => {
+    const shift = -144; // measured on a later save of the same real DSR character
+    const [flagOff, flagMask] = bossFlags["Taurus Demon"];
+    const s = parseSave(
+      buildDsr((slot) => {
+        const dv = new DataView(slot.buffer);
+        dv.setUint32(0x1f2d8 + 4, 0, true);
+        const off = 0x1f2d8 + shift;
+        dv.setUint32(off, 203, true);
+        dv.setUint32(off + 4, 0xffffffff, true);
+        slot.set([0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x80, 0x50], off + 12);
+        dv.setUint32(127721 + shift + flagOff, flagMask, true);
+      }),
+    );
+    const c = s.characters[0];
+    expect(c.deaths).toEqual({ value: 203, certainty: "verified" });
+    expect(c.bosses["Taurus Demon"]).toContain("flag");
+  });
+
   it("keeps reading the inventory past empty slots", () => {
     const start = 0xa58;
     const build = (hole: boolean) =>
@@ -135,6 +154,9 @@ describe("DSR synthetic save (encryption + anchor)", () => {
     const s = parseSave(buildDsr((slot) => new DataView(slot.buffer).setUint32(0x1f2d8 + 4, 0, true)));
     expect(s.characters[0].deaths.certainty).toBe("unknown");
     expect(s.characters[0].deaths.value).toBeNull();
+    // Without the struct the layout is unknown, so neither NG nor flags are trusted.
+    expect(s.characters[0].ngCycle.certainty).toBe("inferred");
+    expect(s.characters[0].worldFlags.certainty).toBe("unknown");
   });
 });
 

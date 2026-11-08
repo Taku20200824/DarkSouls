@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
@@ -56,21 +56,42 @@ function Pill({ main, sub, color, pulse }: { main: string; sub?: string; color: 
   );
 }
 
+const VICTORY_MS = 8000;
+const ACK_BATCH = 50; // the ack route accepts at most 50 ids per request
+
 function VictoryOverlay() {
   const { state, post, demo } = useTracker();
+  // Hidden locally at once, so a failed or slow acknowledgement can never leave the overlay up.
+  const [dismissed, setDismissed] = useState<ReadonlySet<string>>(() => new Set());
   const pending = useMemo(
-    () => (state?.events ?? []).filter((e) => e.type === "boss" && !e.ackedAt && Date.now() - e.at < 24 * 3600_000),
-    [state],
+    () => (state?.events ?? []).filter((e) => e.type === "boss" && !e.ackedAt && !dismissed.has(e.id) && Date.now() - e.at < 24 * 3600_000),
+    [state, dismissed],
   );
-  const [shown, setShown] = useState<string | null>(null);
   const ev = pending[0];
+  const dismiss = useCallback(() => {
+    const ids = pending.map((p) => p.id);
+    setDismissed((prev) => new Set([...prev, ...ids]));
+    void (async () => {
+      for (let i = 0; i < ids.length; i += ACK_BATCH) {
+        await post("/api/events/ack", { ids: ids.slice(i, i + ACK_BATCH) }).catch(() => null);
+      }
+    })();
+  }, [pending, post]);
   useEffect(() => {
-    if (ev && shown !== ev.id) setShown(ev.id);
-  }, [ev, shown]);
+    if (demo || !ev) return;
+    const timer = setTimeout(dismiss, VICTORY_MS);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [demo, ev, dismiss]);
   if (demo || !ev) return null;
   const bossName = String(ev.data.boss ?? "");
   const boss = BOSSES.find((b) => b.evidence.includes(bossName));
-  const dismiss = () => post("/api/events/ack", { ids: pending.map((p) => p.id) });
   return (
     <AnimatePresence>
       <motion.div key={ev.id} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={dismiss}>
@@ -79,8 +100,9 @@ function VictoryOverlay() {
           <h2 className="font-display gold-text py-6 text-4xl font-bold md:text-7xl">VICTORY ACHIEVED</h2>
           <div className="h-px w-[80vw] max-w-3xl bg-gradient-to-r from-transparent via-gold-400 to-transparent" />
           <p className="font-display mt-6 text-2xl text-gold-300">{boss?.name ?? bossName}</p>
+          {pending.length > 1 && <p className="mt-2 text-sm text-gold-400">+{pending.length - 1} boss</p>}
           <p className="mt-2 text-xs text-ash-400">Нотолгоо: {(ev.data.evidence as string[] | undefined)?.join(", ")} · {ev.source}</p>
-          <p className="mt-6 text-xs text-ash-500">Хаах бол дарна уу</p>
+          <p className="mt-6 text-xs text-ash-500">Хаах бол дарна уу (Esc) — автоматаар хаагдана</p>
         </motion.div>
       </motion.div>
     </AnimatePresence>

@@ -69,7 +69,7 @@ function Inner() {
       {!ch ? <Empty>Save өгөгдөл алга (Waiting for save data).</Empty> : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Нийт үхэл" value={total ?? "Unknown"} certainty={ch.deaths.certainty} demo={demo} />
+            <Stat label="Нийт үхэл" value={total ?? "Тодорхойгүй"} certainty={ch.deaths.certainty} demo={demo} />
             <Stat label="Энэ session" value={snaps.length ? sessionDeaths : "—"} certainty={snaps.length ? "inferred" : "unknown"} demo={demo} hint="2+ цагийн завсаргүй синкүүд" />
             <Stat label="Өнөөдөр" value={todayDeaths} certainty="inferred" demo={demo} hint="Илрүүлсэн үхлийн event-ээс" />
             <Stat label="Үхэлгүй хамгийн урт" value={bestStreak ? `${Math.round(bestStreak / 60000)} мин` : "—"} certainty={bestStreak ? "inferred" : "unknown"} demo={demo} hint="Save-ийн давтамжаар ойролцоогоор" />

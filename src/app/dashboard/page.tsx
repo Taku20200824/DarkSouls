@@ -48,9 +48,9 @@ function Inner() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <Stat label="Soul Level" value={ch.level.value} certainty={ch.level.certainty} demo={demo} />
           <Stat label="Souls" value={fmtNum(ch.souls.value)} certainty={ch.souls.certainty} demo={demo} />
-          <Stat label="Нийт үхэл" value={fmtNum(ch.deaths.value) ?? "Unknown"} certainty={ch.deaths.certainty} demo={demo} />
-          <Stat label="Тоглосон хугацаа" value={fmtDuration(ch.playTimeSeconds.value) ?? "Unknown"} certainty={ch.playTimeSeconds.certainty} demo={demo} />
-          <Stat label="NG тойрог" value={ch.ngCycle.value === null ? "Unknown" : ch.ngCycle.value === 0 ? "NG" : `NG+${ch.ngCycle.value}`} certainty={ch.ngCycle.certainty} demo={demo} />
+          <Stat label="Нийт үхэл" value={fmtNum(ch.deaths.value) ?? "Тодорхойгүй"} certainty={ch.deaths.certainty} demo={demo} />
+          <Stat label="Тоглосон хугацаа" value={fmtDuration(ch.playTimeSeconds.value) ?? "Тодорхойгүй"} certainty={ch.playTimeSeconds.certainty} demo={demo} />
+          <Stat label="NG тойрог" value={ch.ngCycle.value === null ? "Тодорхойгүй" : ch.ngCycle.value === 0 ? "NG" : `NG+${ch.ngCycle.value}`} certainty={ch.ngCycle.certainty} demo={demo} />
           <Stat label="Humanity" value={ch.humanity.value} certainty={ch.humanity.certainty} demo={demo} />
         </div>
       )}
