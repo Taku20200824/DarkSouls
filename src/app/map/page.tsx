@@ -26,7 +26,7 @@ function WorldMap() {
   const svgRef = useRef<SVGSVGElement>(null);
   const markerRef = useRef<SVGCircleElement>(null);
   const vb = useRef({ ...FULL });
-  const [selected, setSelected] = useState<string | null>(focusParam);
+  const [selected, setSelected] = useState<string | null>(focusParam ?? "firelink-shrine");
   const [route, setRoute] = useState<string[]>([]);
   const [animating, setAnimating] = useState(false);
 
@@ -74,7 +74,7 @@ function WorldMap() {
 
   function reset() {
     setRoute([]);
-    setSelected(null);
+    setSelected("firelink-shrine");
     gsap.to(vb.current, { ...FULL, duration: 0.9, ease: "power2.inOut", onUpdate: applyVb });
   }
 
@@ -84,6 +84,7 @@ function WorldMap() {
   return (
     <>
       <PageTitle title="Lordran World Map" sub="Interactive map — бүсүүдийн холболт бодит тоглоомынх; байрлал нь чимэглэлийн (illustrative), координат биш." />
+      <p className="mb-3 text-xs text-ash-500">💡 Доорх зангилааг (бүс) дээр дарж дэлгэрэнгүйг баруун талд харна уу. Шугам = холбогдсон зам, тасархай шугам = нөхцөлтэй (түлхүүр/boss шаардана), улбар өнгийн гэрэлтсэн зам = &ldquo;Go to Next Area&rdquo;-ийн маршрут.</p>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button className="btn btn-ember" onClick={goNext} disabled={!nextObjective || animating}>Go to Next Area{nextObjective ? ` → ${areaById(nextObjective.area)?.name}` : ""}</button>
         <button className="btn" onClick={reset}>Бүтэн зураг</button>
@@ -111,16 +112,19 @@ function WorldMap() {
             {AREAS.map((a) => {
               const lit = a.bonfireArea && foundAreas.has(a.bonfireArea);
               const isCur = a.id === current;
-              const bossStates = a.bosses.map((id) => bossStatus(BOSSES.find((b) => b.id === id)!, tracker).state);
+              const bosses = a.bosses.map((id) => BOSSES.find((b) => b.id === id)!);
+              const bossStates = bosses.map((b) => bossStatus(b, tracker).state);
+              const label = a.shortName ?? (a.name.length > 26 ? a.name.slice(0, 24) + "…" : a.name);
               return (
                 <g key={a.id} transform={`translate(${a.x},${a.y})`} className="cursor-pointer" onClick={() => selectArea(a.id)}>
+                  <title>{a.name}{a.dlc ? " (DLC)" : ""} — {a.mn}</title>
                   {isCur && <circle r="22" fill="none" stroke="#ff8a3d" strokeWidth="1.5" className="animate-pulse" />}
                   <circle r={selected === a.id ? 12 : 9} fill={a.dlc ? "#2a1f3a" : "#15151a"} stroke={selected === a.id ? "#ffb36b" : "#d4b97a"} strokeWidth="1.5" />
                   {lit && <path d="M0 -6 C3 -2 5 0 3 5 C2 7 -2 7 -3 5 C-5 0 -3 -2 0 -6Z" fill="#ff8a3d" className="bonfire-flicker" />}
-                  {bossStates.map((s, i) => (
-                    <rect key={i} x={12 + i * 9} y={-14} width="7" height="7" transform={`rotate(45 ${15.5 + i * 9} -10.5)`} fill={s === "defeated" ? "#d4b97a" : s === "alive" ? "#9b1c1c" : "#3a3640"} stroke="#07070a" />
+                  {bosses.map((b, i) => (
+                    <rect key={b.id} x={12 + i * 9} y={-14} width="7" height="7" transform={`rotate(45 ${15.5 + i * 9} -10.5)`} fill={bossStates[i] === "defeated" ? "#d4b97a" : bossStates[i] === "alive" ? "#9b1c1c" : "#3a3640"} stroke="#07070a"><title>{b.name}: {bossStates[i] === "defeated" ? "ялсан" : bossStates[i] === "alive" ? "амьд" : "тодорхойгүй"}</title></rect>
                   ))}
-                  <text y="26" textAnchor="middle" fontSize="11" fill={lit ? "#e9d7a5" : "#8f8a80"} fontFamily="Cormorant Garamond, serif" fontWeight="600">{a.name.length > 26 ? a.name.slice(0, 24) + "…" : a.name}</text>
+                  <text y="26" textAnchor="middle" fontSize="11" fill={lit ? "#e9d7a5" : "#b8b2a4"} stroke="#07070a" strokeWidth="3" strokeLinejoin="round" fontFamily="Cormorant Garamond, serif" fontWeight="600" style={{ paintOrder: "stroke" }}>{label}</text>
                 </g>
               );
             })}
