@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useTracker } from "./TrackerProvider";
+import { AreaScene } from "./AreaScene";
 import { Badge } from "./ui";
 import { AREAS, CONNECTIONS, type Area } from "@/lib/data/areas";
 import { BOSSES } from "@/lib/data/bosses";
@@ -19,6 +20,7 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
   const mapSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:darksouls.wiki.fextralife.com ${mapSearchName} map`)}`;
   return (
     <div className="space-y-4 text-sm">
+      <AreaScene areaId={area.id} name={area.name} />
       <div>
         <h3 className="font-display text-2xl text-gold-300">{area.name.toUpperCase()}</h3>
         {area.dlc && <Badge kind="inferred">DLC</Badge>}
