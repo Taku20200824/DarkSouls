@@ -15,12 +15,17 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
   const bonfiresKnown = ch?.bonfires.certainty === "verified";
   const objective = computeObjectives(tracker).find((o) => o.area === area.id);
   const neighbours = CONNECTIONS.filter((c) => c.from === area.id || c.to === area.id).map((c) => ({ id: c.from === area.id ? c.to : c.from, requires: c.requires }));
+  const mapSearchName = (area.shortName ?? area.name).replace(/\s*\(DLC\)\s*/, "");
+  const mapSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:darksouls.wiki.fextralife.com ${mapSearchName} map`)}`;
   return (
     <div className="space-y-4 text-sm">
       <div>
         <h3 className="font-display text-2xl text-gold-300">{area.name.toUpperCase()}</h3>
         {area.dlc && <Badge kind="inferred">DLC</Badge>}
         <p className="mt-1 text-ash-300">{area.mn}</p>
+        <a href={mapSearchUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-ember-300 hover:text-ember-200 hover:underline">
+          🗺️ Дэлгэрэнгүй байршлын зураг (Fextralife) ↗
+        </a>
       </div>
       <div>
         <h4 className="text-xs uppercase tracking-widest text-ash-500">Bonfire-ууд {bonfiresKnown ? `(${allBonfires.filter(([id]) => found.has(id)).length}/${allBonfires.length})` : ""}</h4>
