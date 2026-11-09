@@ -10,12 +10,14 @@ directories:
   output: dist
   buildResources: build
 
-# The Electron shell has zero npm dependencies (see electron/package.json), so there is
-# nothing to rebuild for Electron's Node ABI.
+# The shell (main.js + electron-updater) is bundled into dist/main.js by
+# build/bundle-electron.mjs before packaging, so there's no node_modules to rebuild here —
+# and, not incidentally, electron-builder's hard-coded `!**/node_modules/**` default ignore
+# (which an explicit "files" entry cannot override) can't strip anything out.
 npmRebuild: false
 
 files:
-  - "main.js"
+  - "dist/main.js"
   - "package.json"
 
 # Plain directory instead of a packed archive: simpler, and afterPack needs to freely
@@ -29,6 +31,14 @@ asar: false
 afterPack: build/after-pack.cjs
 
 icon: build/icon.png
+
+# Where electron-updater looks for new versions: the same public Vercel Blob store the
+# installer itself is uploaded to (see src/lib/downloads.ts). electron-builder writes
+# latest.yml here on every build; it — and the installer + .blockmap — get uploaded to
+# this store by hand (no CI publish step) — see build/PUBLISHING.md.
+publish:
+  provider: generic
+  url: https://bpcne2nkaruzhq1b.public.blob.vercel-storage.com/
 
 win:
   target: nsis

@@ -20,3 +20,6 @@ companion/**/__pycache__
 /build/icon.png
 /build/icon.ico
 electron/node_modules
+electron/dist
+
+.env*

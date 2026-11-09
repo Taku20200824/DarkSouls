@@ -4,6 +4,7 @@
 // see src/lib/server/env.ts (isDesktopApp/dataDir/sessionSecret) for the
 // zero-config local-storage + session-secret behavior this relies on.
 const { app, BrowserWindow, dialog, shell } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const { spawn } = require("node:child_process");
 const net = require("node:net");
 const path = require("node:path");
@@ -130,6 +131,47 @@ function createWindow(url) {
   mainWindow.loadURL(url);
 }
 
+// Checks the public Blob store (electron-builder.yml "publish") for a newer version, asks
+// before downloading anything, and only restarts to install once the user agrees again.
+// Silent about anything short of an actual update — no releases yet, no network, etc. are
+// not errors worth interrupting someone over.
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = false;
+
+function setUpAutoUpdate() {
+  autoUpdater.on("update-available", async (info) => {
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "LORDRAN TRACKER",
+      message: `Шинэ хувилбар бэлэн байна: v${info.version}`,
+      detail: "Татаж аваад шинэчлэх үү?",
+      buttons: ["Шинэчлэх", "Дараа нь"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) autoUpdater.downloadUpdate();
+  });
+
+  autoUpdater.on("update-downloaded", async () => {
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "LORDRAN TRACKER",
+      message: "Шинэчлэл татагдлаа. Апп-ыг дахин эхлүүлж суулгах уу?",
+      buttons: ["Одоо дахин эхлүүлэх", "Дараа нь"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) autoUpdater.quitAndInstall();
+  });
+
+  autoUpdater.on("error", (err) => {
+    const logFile = path.join(app.getPath("userData"), "server.log");
+    fs.appendFileSync(logFile, `\n--- auto-update error ${new Date().toISOString()} ---\n${err.stack ?? err}\n`);
+  });
+
+  if (app.isPackaged) autoUpdater.checkForUpdates().catch(() => {});
+}
+
 // Two instances would run two servers over one local data file, each overwriting the other.
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -144,6 +186,7 @@ app.whenReady().then(async () => {
   try {
     currentUrl = await startServer();
     createWindow(currentUrl);
+    setUpAutoUpdate();
   } catch (err) {
     console.error(err);
     const logFile = path.join(app.getPath("userData"), "server.log");
