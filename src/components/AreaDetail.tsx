@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useTracker } from "./TrackerProvider";
 import { AreaScene } from "./AreaScene";
 import { Badge } from "./ui";
-import { AREAS, CONNECTIONS, type Area } from "@/lib/data/areas";
+import { areaById, areaHasBonfire, CONNECTIONS, type Area } from "@/lib/data/areas";
 import { BOSSES } from "@/lib/data/bosses";
 import { BONFIRE_DB } from "@/lib/save/itemdb";
 import { bossStatus, computeObjectives, hasItem } from "@/lib/guide/engine";
@@ -11,11 +11,11 @@ import { bossStatus, computeObjectives, hasItem } from "@/lib/guide/engine";
 export function AreaDetail({ area, compact }: { area: Area; compact?: boolean }) {
   const { tracker, demo } = useTracker();
   const ch = tracker.character;
-  const allBonfires = [...BONFIRE_DB.entries()].filter(([, [, a]]) => a === area.bonfireArea);
+  const allBonfires = [...BONFIRE_DB.entries()].filter(([id, [, group]]) => areaHasBonfire(area, id, group));
   const found = new Set((ch?.bonfires.value ?? []).map((b) => b.id));
   const bonfiresKnown = ch?.bonfires.certainty === "verified";
   const objective = computeObjectives(tracker).find((o) => o.area === area.id);
-  const neighbours = CONNECTIONS.filter((c) => c.from === area.id || c.to === area.id).map((c) => ({ id: c.from === area.id ? c.to : c.from, requires: c.requires }));
+  const neighbours = CONNECTIONS.filter((c) => c.from === area.id || c.to === area.id);
   const mapSearchName = (area.shortName ?? area.name).replace(/\s*\(DLC\)\s*/, "");
   const mapSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:darksouls.wiki.fextralife.com ${mapSearchName} map`)}`;
   return (
@@ -82,9 +82,17 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
       <div>
         <h4 className="text-xs uppercase tracking-widest text-ash-500">Холбогдох бүсүүд</h4>
         <ul className="mt-1 space-y-0.5">
-          {neighbours.map((n) => (
-            <li key={n.id}><Link className="text-gold-300 hover:text-ember-300" href={`/areas/${n.id}`}>{AREAS.find((a) => a.id === n.id)?.name}</Link>{n.requires && <span className="text-ash-500"> — {n.requires}</span>}</li>
-          ))}
+          {neighbours.map((connection) => {
+            const outgoing = connection.from === area.id;
+            const id = outgoing ? connection.to : connection.from;
+            const direction = connection.oneWay ? (outgoing ? "→" : "←") : "↔";
+            return (
+              <li key={`${connection.from}:${connection.to}`}>
+                {direction} <Link className="text-gold-300 hover:text-ember-300" href={`/areas/${id}`}>{areaById(id)?.name}</Link>
+                {connection.requires && <span className="text-ash-500"> · {connection.requires}</span>}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

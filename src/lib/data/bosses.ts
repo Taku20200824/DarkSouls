@@ -185,7 +185,7 @@ export const BOSSES: Boss[] = [
     strategyMn: "Хоёр талын үндсийг (бөмбөлөг) устгасны дараа голын модоор гүйж зүрхийг цохи.",
   },
   {
-    id: "gwyn", name: "Gwyn, Lord of Cinder", area: "firelink-altar", optional: false, sigil: "GW",
+    id: "gwyn", name: "Gwyn, Lord of Cinder", area: "kiln-of-the-first-flame", optional: false, sigil: "GW",
     evidence: ["Gwyn, Lord of Cinder"], soul: "Soul of Gwyn, Lord of Cinder", achievementEvidence: ["To Link the Fire", "Dark Lord"],
     attacksMn: ["Галт сэлэм — хурдан комбо", "Барьж шатаах"],
     strategyMn: "Parry боломжтой — бамбай/сэлмээр parry → riposte. Ялсны дараа галыг асаах (To Link the Fire) эсвэл орхих (Dark Lord).",
@@ -198,13 +198,13 @@ export const BOSSES: Boss[] = [
     strategyMn: "DLC-ийн анхны boss. Толгой талаас нь бус хажуугаас цохи. Сүүлийг тасдаж Guardian Tail ав.",
   },
   {
-    id: "artorias", name: "Knight Artorias", area: "oolacile", optional: false, dlc: true, sigil: "KA",
+    id: "artorias", name: "Knight Artorias", area: "royal-wood", optional: false, dlc: true, sigil: "KA",
     evidence: ["Knight Artorias"], soul: "Soul of Artorias", soulWeapons: ["Abyss Greatsword", "Greatshield of Artorias"],
     attacksMn: ["Урт комбо", "Abyss эрч хүчээ цуглуулах (buff)"],
     strategyMn: "Buff цуглуулах үед нь тасалдуул. Комбоны дараах цонхонд цохи. Ялсны дараа Hawkeye Gough-тай ярь.",
   },
   {
-    id: "kalameet", name: "Black Dragon Kalameet", area: "oolacile", optional: true, dlc: true, sigil: "BK",
+    id: "kalameet", name: "Black Dragon Kalameet", area: "royal-wood", optional: true, dlc: true, sigil: "BK",
     evidence: ["Black Dragon Kalameet"], tailCut: "Obsidian Greatsword",
     attacksMn: ["Галт амьсгал", "Curse харц (Mark)"],
     strategyMn: "Artorias-ийн дараа Hawkeye Gough-тай ярьвал Kalameet-ийг газарт унагаана. Хөлийнх нь ард байрла.",

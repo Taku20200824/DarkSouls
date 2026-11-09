@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENTS } from "@/lib/data/achievements";
-import { AREAS, CONNECTIONS, routeBetween } from "@/lib/data/areas";
+import { AREAS, CONNECTIONS, areaById, areaHasBonfire, connectionBetween, routeBetween } from "@/lib/data/areas";
 import { BOSSES } from "@/lib/data/bosses";
 import { QUESTS } from "@/lib/data/npcs";
 import { UPGRADE_PATHS, planUpgrade, totalMaterials } from "@/lib/data/upgrades";
@@ -22,7 +22,8 @@ describe("static data integrity", () => {
     const ids = new Set(AREAS.map((a) => a.id));
     for (const c of CONNECTIONS) expect(ids.has(c.from) && ids.has(c.to), `${c.from}->${c.to}`).toBe(true);
     for (const b of BOSSES) expect(ids.has(b.area), b.id).toBe(true);
-    for (const a of AREAS) for (const b of a.bosses) expect(BOSSES.some((x) => x.id === b), b).toBe(true);
+    for (const boss of BOSSES) expect(areaById(boss.area)?.bosses, boss.id).toContain(boss.id);
+    for (const a of AREAS) for (const b of a.bosses) expect(BOSSES.some((x) => x.id === b && x.area === a.id), b).toBe(true);
   });
   it("boss evidence names line up with the save tables", () => {
     const canon = new Set([...Object.keys(BOSS_FLAG_DB), ...Object.values(BOSS_SOUL_DB)]);
@@ -42,6 +43,22 @@ describe("static data integrity", () => {
   it("whole world is connected", () => {
     for (const a of AREAS) expect(routeBetween("firelink-shrine", a.id).length, a.id).toBeGreaterThan(0);
     expect(routeBetween("firelink-shrine", "anor-londo")).toEqual(["firelink-shrine", "undead-parish", "sens-fortress", "anor-londo"]);
+  });
+  it("routes follow one-way transitions and show the standard progression without optional shortcuts", () => {
+    expect(connectionBetween("the-abyss", "new-londo-ruins")).toBeUndefined();
+    expect(routeBetween("the-abyss", "new-londo-ruins")).toEqual(["the-abyss", "firelink-shrine", "new-londo-ruins"]);
+    expect(routeBetween("firelink-shrine", "blighttown", false)).toEqual(["firelink-shrine", "undead-burg", "lower-undead-burg", "depths", "blighttown"]);
+    expect(routeBetween("firelink-shrine", "blighttown")).toEqual(["firelink-shrine", "new-londo-ruins", "valley-of-drakes", "blighttown"]);
+    expect(routeBetween("oolacile", "chasm-of-the-abyss", false)).toEqual(["oolacile", "royal-wood", "oolacile-township", "chasm-of-the-abyss"]);
+    expect(routeBetween("firelink-shrine", "kiln-of-the-first-flame")).toEqual(["firelink-shrine", "firelink-altar", "kiln-of-the-first-flame"]);
+  });
+  it("assigns shared Oolacile bonfires only to their own areas", () => {
+    const sanctuary = areaById("oolacile")!;
+    const township = areaById("oolacile-township")!;
+    expect(areaHasBonfire(sanctuary, 1211961, "Oolacile")).toBe(true);
+    expect(areaHasBonfire(sanctuary, 1211962, "Oolacile")).toBe(false);
+    expect(areaHasBonfire(township, 1211962, "Oolacile")).toBe(true);
+    expect(areaHasBonfire(township, 1211961, "Oolacile")).toBe(false);
   });
 });
 

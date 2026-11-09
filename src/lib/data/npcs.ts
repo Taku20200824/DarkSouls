@@ -33,7 +33,7 @@ export const QUESTS: Quest[] = [
       { id: "gargoyles", mn: "Bell Gargoyles-д summon хийх боломжтой", area: "undead-parish" },
       { id: "anor", mn: "Ornstein & Smough-д summon хийх боломжтой", area: "anor-londo" },
       { id: "izalith", mn: "Lost Izalith-ийн Sunlight Maggot-ыг Solaire-ээс түрүүлж устгах", area: "lost-izalith", decisionMn: "Хэрэв Solaire түрүүлж хүрвэл хий үзэгдэлд автаж дайсан болно." },
-      { id: "kiln", mn: "Gwyn-ийн тулаанд summon хийх", area: "firelink-altar" },
+      { id: "kiln", mn: "Gwyn-ийн тулаанд summon хийх", area: "kiln-of-the-first-flame" },
     ],
     failureMn: ["Lost Izalith-д Sunlight Maggot-ыг түрүүлж устгаагүй бол Solaire hollow болно.", "Solaire-ийг алах эсвэл түүнийг дайсагнуулах."],
     rewardsMn: ["Gwyn хүртэлх summon тусламж", "Warrior of Sunlight covenant-ийн тухай мэдээлэл"],

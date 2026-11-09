@@ -1,197 +1,256 @@
 "use client";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import gsap from "gsap";
-import clsx from "clsx";
-import { AREAS, CONNECTIONS, areaById, routeBetween } from "@/lib/data/areas";
-import { BOSSES } from "@/lib/data/bosses";
+import { AREAS, CONNECTIONS, areaById, areaHasBonfire, connectionBetween, routeBetween, type Area, type ConnectionKind } from "@/lib/data/areas";
+import { bossById } from "@/lib/data/bosses";
 import { useTracker } from "@/components/TrackerProvider";
 import { AreaDetail } from "@/components/AreaDetail";
-import { Badge, PageTitle, Panel } from "@/components/ui";
-import { bossStatus, computeObjectives, estimateArea } from "@/lib/guide/engine";
+import { PageTitle, Panel } from "@/components/ui";
+import { bossStatus, computeObjectives } from "@/lib/guide/engine";
 
-const FULL = { x: 0, y: 0, w: 1000, h: 700 };
+const FULL = { x: 0, y: 0, w: 1160, h: 740 };
+const FIRELINK = "firelink-shrine";
+const EDGE_STYLE: Record<ConnectionKind, { color: string; dash?: string; label: string }> = {
+  path: { color: "#ac9977", label: "Зам" },
+  lift: { color: "#76c7ac", label: "Лифт" },
+  shortcut: { color: "#81c6df", dash: "7 4", label: "Товч зам" },
+  gate: { color: "#e5b757", dash: "4 5", label: "Нөхцөлтэй хаалга" },
+  warp: { color: "#b498ec", dash: "3 5", label: "Warp" },
+  drop: { color: "#df9173", dash: "5 4", label: "Үсэрч буух" },
+};
 
-export default function MapPage() {
-  return (
-    <Suspense>
-      <WorldMap />
-    </Suspense>
-  );
+function focusedView(area: Area) {
+  const w = 540;
+  const h = w * FULL.h / FULL.w;
+  return {
+    x: Math.max(0, Math.min(FULL.w - w, area.x - w / 2)),
+    y: Math.max(0, Math.min(FULL.h - h, area.y - h / 2)),
+    w, h,
+  };
 }
 
-interface HoverInfo { x: number; y: number; eyebrow: string; title: string; sub?: string; accent: string; }
+export default function MapPage() {
+  return <Suspense><WorldMap /></Suspense>;
+}
 
 function WorldMap() {
   const { tracker } = useTracker();
-  const focusParam = useSearchParams().get("focus");
+  const focus = useSearchParams().get("focus");
   const svgRef = useRef<SVGSVGElement>(null);
   const markerRef = useRef<SVGCircleElement>(null);
-  const mapWrapRef = useRef<HTMLDivElement>(null);
-  const vb = useRef({ ...FULL });
-  const [selected, setSelected] = useState<string | null>(focusParam ?? "firelink-shrine");
+  const animation = useRef<gsap.core.Animation | null>(null);
+  const view = useRef({ ...FULL });
+  const [selected, setSelected] = useState(() => (focus && areaById(focus)?.id) || FIRELINK);
   const [route, setRoute] = useState<string[]>([]);
+  const [includeAlternates, setIncludeAlternates] = useState(false);
   const [animating, setAnimating] = useState(false);
-  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [notice, setNotice] = useState("");
+  const next = computeObjectives(tracker).find((objective) => !objective.done);
+  const area = areaById(selected)!;
 
-  function showHover(e: React.MouseEvent, info: Omit<HoverInfo, "x" | "y">) {
-    const wrap = mapWrapRef.current;
-    if (!wrap) return;
-    const rect = wrap.getBoundingClientRect();
-    setHover({ ...info, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  function applyView() {
+    const { x, y, w, h } = view.current;
+    svgRef.current?.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
   }
 
-  const current = estimateArea(tracker).areaId;
-  const nextObjective = computeObjectives(tracker).find((o) => !o.done);
-  const foundAreas = useMemo(() => new Set((tracker.character?.bonfires.value ?? []).map((b) => b.area)), [tracker.character]);
-
-  const applyVb = () => svgRef.current?.setAttribute("viewBox", `${vb.current.x} ${vb.current.y} ${vb.current.w} ${vb.current.h}`);
-  const zoomTo = (x: number, y: number, w: number, duration = 1.2) => {
-    const h = w * 0.7;
-    return gsap.to(vb.current, { x: Math.max(-100, x - w / 2), y: Math.max(-80, y - h / 2), w, h, duration, ease: "power2.inOut", onUpdate: applyVb });
-  };
-
-  useEffect(() => {
-    if (focusParam) {
-      const a = areaById(focusParam);
-      if (a) zoomTo(a.x, a.y, 520, 1.4);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusParam]);
+  function moveTo(nextView: typeof FULL) {
+    animation.current?.kill();
+    markerRef.current?.setAttribute("opacity", "0");
+    setAnimating(false);
+    setRoute([]);
+    setNotice("");
+    animation.current = gsap.to(view.current, { ...nextView, duration: 0.55, onUpdate: applyView });
+  }
 
   function selectArea(id: string) {
+    const destination = areaById(id);
+    if (!destination) return;
     setSelected(id);
-    const a = areaById(id)!;
-    zoomTo(a.x, a.y, 560, 0.9);
+    moveTo(focusedView(destination));
   }
+
+  useEffect(() => {
+    const destination = focus && areaById(focus);
+    if (destination) selectArea(destination.id);
+    else {
+      setSelected(FIRELINK);
+      moveTo(FULL);
+    }
+    return () => { animation.current?.kill(); };
+    // The camera follows changes to the URL, including client-side navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
 
   function goNext() {
-    if (!nextObjective || animating) return;
-    const path = routeBetween(current ?? "firelink-shrine", nextObjective.area);
-    const pts = path.map((id) => areaById(id)!);
-    if (!pts.length) return;
+    if (!next || animating) return;
+    const marker = markerRef.current;
+    if (!marker) return;
+    const path = routeBetween(selected, next.area, includeAlternates);
     setRoute(path);
-    setAnimating(true);
-    const m = markerRef.current!;
-    gsap.set(m, { attr: { cx: pts[0].x, cy: pts[0].y }, opacity: 1 });
-    const tl = gsap.timeline({ onComplete: () => { setAnimating(false); setSelected(nextObjective.area); } });
-    tl.add(gsap.to(vb.current, { ...FULL, duration: 1.0, ease: "power2.inOut", onUpdate: applyVb }));
-    for (let i = 1; i < pts.length; i++) {
-      tl.to(m, { attr: { cx: pts[i].x, cy: pts[i].y }, duration: 0.8, ease: "sine.inOut" });
+    if (path.length < 2) {
+      setNotice(path.length ? "Сонгосон бүс дараагийн зорилтын байршил мөн." : "Энэ чиглэлд тохирох маршрут олдсонгүй.");
+      return;
     }
-    const dest = pts[pts.length - 1];
-    tl.add(gsap.to(vb.current, { x: dest.x - 280, y: dest.y - 196, w: 560, h: 392, duration: 1.2, ease: "power2.inOut", onUpdate: applyVb }));
+
+    const destination = areaById(next.area)!;
+    animation.current?.kill();
+    setNotice("");
+    setAnimating(true);
+    gsap.set(marker, { attr: { cx: area.x, cy: area.y, opacity: 1 } });
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        setSelected(destination.id);
+        setAnimating(false);
+      },
+    });
+    animation.current = timeline;
+    timeline.to(view.current, { ...FULL, duration: 0.55, onUpdate: applyView });
+    path.slice(1).forEach((to, index) => {
+      const edge = connectionBetween(path[index], to)!;
+      const line = svgRef.current?.querySelector<SVGPathElement>(`[data-edge="${edge.from}:${edge.to}"]`);
+      if (!line) return;
+      const length = line.getTotalLength();
+      const progress = { value: edge.to === to ? 0 : length };
+      timeline.to(progress, {
+        value: edge.to === to ? length : 0,
+        duration: 0.55,
+        ease: "none",
+        onUpdate: () => {
+          const point = line.getPointAtLength(progress.value);
+          gsap.set(marker, { attr: { cx: point.x, cy: point.y } });
+        },
+      });
+    });
+    timeline.to(view.current, { ...focusedView(destination), duration: 0.55, onUpdate: applyView });
   }
 
-  function reset() {
-    setRoute([]);
-    setSelected("firelink-shrine");
-    gsap.to(vb.current, { ...FULL, duration: 0.9, ease: "power2.inOut", onUpdate: applyVb });
-  }
-
-  const routeEdges = new Set(route.slice(1).map((id, i) => [route[i], id].sort().join("|")));
-  const sel = selected ? areaById(selected) : null;
+  const steps = route.slice(1).map((id, index) => connectionBetween(route[index], id));
+  const routeEdges = new Set(steps);
 
   return (
     <>
-      <PageTitle title="Lordran World Map" sub="Interactive map — бүсүүдийн холболт бодит тоглоомынх; байрлал нь чимэглэлийн (illustrative), координат биш." />
-      <p className="mb-3 text-xs text-ash-500">💡 Доорх зангилааг (бүс) дээр дарж дэлгэрэнгүйг баруун талд харна уу. Шугам = холбогдсон зам, тасархай шугам = нөхцөлтэй (түлхүүр/boss шаардана), улбар өнгийн гэрэлтсэн зам = &ldquo;Go to Next Area&rdquo;-ийн маршрут.</p>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <button className="btn btn-ember" onClick={goNext} disabled={!nextObjective || animating}>Go to Next Area{nextObjective ? ` → ${areaById(nextObjective.area)?.name}` : ""}</button>
-        <button className="btn" onClick={reset}>Бүтэн зураг</button>
-        <span className="text-xs text-ash-500">Одоогийн (тооцоолсон): {current ? areaById(current)?.name : "Unknown"} <Badge kind="inference" /></span>
+      <PageTitle title="Lordran World Map" sub="Lordran ба Artorias of the Abyss-ийн бүс, зам, нэвтрэх нөхцөл. Байрлал, зайг тоймлон дүрсэлсэн." />
+      <div className="mb-3 flex flex-wrap items-end gap-2">
+        <label className="flex flex-col gap-1 text-xs text-ash-400">
+          Бүс хайх / маршрутын эхлэл
+          <select className="btn max-w-full bg-[#14110d]" value={selected} onChange={(e) => selectArea(e.target.value)}>
+            {AREAS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+          </select>
+        </label>
+        <button className="btn btn-ember" onClick={goNext} disabled={!next || animating}>
+          Go to Next Area{next && ` → ${areaById(next.area)?.name}`}
+        </button>
+        <button className="btn" onClick={() => { setSelected(FIRELINK); moveTo(FULL); }}>Бүтэн зураг</button>
+        <a className="btn" href="https://dsmap.link/en/#/ds1" target="_blank" rel="noreferrer">3D · DS Map ↗</a>
+        <label className="flex min-h-9 items-center gap-2 px-2 text-xs text-ash-300">
+          <input type="checkbox" checked={includeAlternates} onChange={(e) => { moveTo(FULL); setIncludeAlternates(e.target.checked); }} />
+          Товч замыг тооцох
+        </label>
       </div>
-      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-        <div className="relative" ref={mapWrapRef}>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="panel overflow-hidden p-0">
-          <svg ref={svgRef} viewBox="0 0 1000 700" className="h-[62vh] w-full touch-none select-none bg-[radial-gradient(ellipse_at_center,#1c1b21_0%,#07070a_75%)]" role="img" aria-label="Lordran map">
+          <svg ref={svgRef} viewBox={`0 0 ${FULL.w} ${FULL.h}`} className="h-auto w-full select-none bg-[radial-gradient(ellipse_at_center,#241a10_0%,#0b0907_78%)]" role="group" aria-label="Lordran map">
             <defs>
-              <filter id="glow"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-              <pattern id="parch" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M0 40 L40 0" stroke="rgba(184,153,90,0.04)" /></pattern>
+              <pattern id="map-grid" width="48" height="30" patternUnits="userSpaceOnUse">
+                <path d="M0 15 L24 0 L48 15 L24 30 Z" fill="none" stroke="#9f8253" opacity=".15" />
+              </pattern>
+              <marker id="map-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+                <path d="M0 0 L8 4 L0 8 Z" fill="context-stroke" />
+              </marker>
+              <filter id="map-glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             </defs>
-            <rect x="-200" y="-200" width="1400" height="1100" fill="url(#parch)" />
-            <text x="40" y="690" fill="rgba(184,153,90,0.35)" fontSize="12" fontFamily="Cormorant Garamond">Illustrative map — verified connections</text>
-            {CONNECTIONS.map((c) => {
-              const a = areaById(c.from)!;
-              const b = areaById(c.to)!;
-              const onRoute = routeEdges.has([c.from, c.to].sort().join("|"));
+            <rect width={FULL.w} height={FULL.h} fill="url(#map-grid)" />
+            {[false, true].flatMap((active) => CONNECTIONS.filter((c) => routeEdges.has(c) === active).map((c) => {
+              const from = areaById(c.from)!;
+              const to = areaById(c.to)!;
+              const dx = to.x - from.x;
+              const dy = to.y - from.y;
+              const length = Math.hypot(dx, dy);
+              const x1 = from.x + dx * 13 / length;
+              const y1 = from.y + dy * 13 / length;
+              const x2 = to.x - dx * 17 / length;
+              const y2 = to.y - dy * 17 / length;
+              const offset = c.oneWay && c.kind === "warp" ? 32 : c.oneWay && c.kind === "drop" ? 14 : 0;
+              const controlX = (x1 + x2) / 2 - dy * offset / length;
+              const controlY = (y1 + y2) / 2 + dx * offset / length;
+              const style = EDGE_STYLE[c.kind ?? "path"];
               return (
-                <line key={`${c.from}-${c.to}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={onRoute ? "#ff8a3d" : c.requires ? "rgba(184,153,90,0.28)" : "rgba(184,153,90,0.45)"} strokeWidth={onRoute ? 4 : 1.5} strokeDasharray={c.requires && !onRoute ? "5 5" : undefined} filter={onRoute ? "url(#glow)" : undefined}>
-                  <title>{c.requires ?? "Нээлттэй зам"}</title>
-                </line>
-              );
-            })}
-            {AREAS.map((a) => {
-              const lit = a.bonfireArea && foundAreas.has(a.bonfireArea);
-              const isCur = a.id === current;
-              const bosses = a.bosses.map((id) => BOSSES.find((b) => b.id === id)!);
-              const bossStates = bosses.map((b) => bossStatus(b, tracker).state);
-              const label = a.shortName ?? (a.name.length > 26 ? a.name.slice(0, 24) + "…" : a.name);
-              return (
-                <g
-                  key={a.id}
-                  transform={`translate(${a.x},${a.y})`}
-                  className="cursor-pointer"
-                  role="button"
-                  aria-label={`${a.name}${a.dlc ? " (DLC)" : ""} — ${a.mn}`}
-                  onClick={() => selectArea(a.id)}
-                  onMouseMove={(e) => showHover(e, { eyebrow: "БҮС", title: a.name, sub: a.mn, accent: "#d4b97a" })}
-                  onMouseLeave={() => setHover(null)}
+                <path key={`${c.from}:${c.to}`} data-edge={`${c.from}:${c.to}`}
+                  d={`M${x1} ${y1} Q${controlX} ${controlY} ${x2} ${y2}`}
+                  fill="none" stroke={active ? "#ff9f56" : style.color} strokeWidth={active ? 4 : 2}
+                  strokeDasharray={active ? undefined : style.dash} opacity={active ? 1 : 0.72}
+                  markerEnd={c.oneWay ? "url(#map-arrow)" : undefined}
                 >
-                  {isCur && <circle r="22" fill="none" stroke="#ff8a3d" strokeWidth="1.5" className="animate-pulse" />}
-                  <circle r={selected === a.id ? 12 : 9} fill={a.dlc ? "#2a1f3a" : "#15151a"} stroke={selected === a.id ? "#ffb36b" : "#d4b97a"} strokeWidth="1.5" />
-                  {lit && <path d="M0 -6 C3 -2 5 0 3 5 C2 7 -2 7 -3 5 C-5 0 -3 -2 0 -6Z" fill="#ff8a3d" className="bonfire-flicker" />}
-                  {bosses.map((b, i) => {
-                    const st = bossStates[i];
-                    const color = st === "defeated" ? "#d4b97a" : st === "alive" ? "#9b1c1c" : "#3a3640";
+                  <title>{`${from.name} ${c.oneWay ? "→" : "↔"} ${to.name} · ${c.requires ?? style.label}`}</title>
+                </path>
+              );
+            }))}
+            {AREAS.map((entry) => {
+              const lit = tracker.character?.bonfires.value?.some((b) => areaHasBonfire(entry, b.id, b.area));
+              const active = selected === entry.id;
+              return (
+                <g key={entry.id} transform={`translate(${entry.x},${entry.y})`} role="button" tabIndex={0}
+                  aria-label={entry.name} aria-pressed={active} className="group cursor-pointer outline-none"
+                  onClick={() => selectArea(entry.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectArea(entry.id); } }}
+                >
+                  <title>{entry.name}</title>
+                  <circle r="22" fill="transparent" />
+                  <circle r="14" fill="none" stroke="#ffb76e" opacity={active ? 1 : 0} className="group-focus-visible:opacity-100" />
+                  <circle r="9" fill={entry.dlc ? "#2a2037" : "#19120b"} stroke={active ? "#ffae66" : "#e0c184"} strokeWidth="2" />
+                  {lit && <path d="M0 -6 C3 -2 5 0 3 5 C2 7 -2 7 -3 5 C-5 0 -3 -2 0 -6Z" fill="#ff8a3d" />}
+                  {entry.bosses.map((id, index) => {
+                    const boss = bossById(id)!;
+                    const { state } = bossStatus(boss, tracker);
+                    const color = state === "defeated" ? "#e0c184" : state === "alive" ? "#ee6d60" : "#928895";
                     return (
-                      <rect
-                        key={b.id}
-                        x={12 + i * 9}
-                        y={-14}
-                        width="7"
-                        height="7"
-                        transform={`rotate(45 ${15.5 + i * 9} -10.5)`}
-                        fill={color}
-                        stroke="#07070a"
-                        onMouseMove={(e) => { e.stopPropagation(); showHover(e, { eyebrow: "BOSS", title: b.name, sub: st === "defeated" ? "Ялсан" : st === "alive" ? "Амьд" : "Тодорхойгүй", accent: color === "#3a3640" ? "#8f8a80" : color }); }}
-                        onMouseLeave={(e) => e.stopPropagation()}
-                      />
+                      <g key={id} transform={`translate(${15 + index * 11},-12)`}>
+                        <circle r="6" fill="#17100b" stroke={color} strokeWidth="1.5" />
+                        <path d="M-2 0 L0 -2 L2 0 L0 2 Z" fill={color} />
+                        <title>{`${boss.name} · ${state}`}</title>
+                      </g>
                     );
                   })}
-                  <text y="26" textAnchor="middle" fontSize="11" fill={lit ? "#e9d7a5" : "#b8b2a4"} stroke="#07070a" strokeWidth="3" strokeLinejoin="round" fontFamily="Cormorant Garamond, serif" fontWeight="600" style={{ paintOrder: "stroke" }}>{label}</text>
+                  <text y="29" textAnchor="middle" fontSize="17" fill={active ? "#ffbd81" : entry.dlc ? "#dac9f5" : "#edd5a1"}
+                    stroke="#120e09" strokeWidth="4" strokeLinejoin="round" fontFamily="Cinzel, Georgia, serif" fontWeight="600"
+                    style={{ paintOrder: "stroke" }}
+                  >{entry.shortName ?? entry.name}</text>
                 </g>
               );
             })}
-            <circle ref={markerRef} r="7" fill="#ffe2b0" filter="url(#glow)" opacity="0" />
+            <circle ref={markerRef} r="5" fill="#fff0c8" filter="url(#map-glow)" opacity="0" pointerEvents="none" />
           </svg>
-          <div className="flex flex-wrap gap-4 border-t border-gold-600/10 px-4 py-2 text-[11px] text-ash-500">
-            <span><span className="text-ember-400">🔥</span> Bonfire олсон (save)</span>
-            <span><span className="inline-block h-2 w-2 rotate-45 bg-gold-400" /> Boss ялсан</span>
-            <span><span className="inline-block h-2 w-2 rotate-45 bg-blood-500" /> Boss амьд (verified flag)</span>
-            <span><span className="inline-block h-2 w-2 rotate-45 bg-stone-700" /> Тодорхойгүй</span>
-            <span>- - - нөхцөлтэй зам</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-gold-600/20 px-4 py-3 text-xs text-ash-300">
+            {Object.entries(EDGE_STYLE).map(([kind, style]) => (
+              <span key={kind} className="inline-flex items-center gap-1.5">
+                <svg width="22" height="6" aria-hidden="true"><path d="M0 3 H22" stroke={style.color} strokeWidth="2" strokeDasharray={style.dash} /></svg>
+                {style.label}
+              </span>
+            ))}
+            <span>→ Нэг чиглэл</span>
+            <span className="text-ember-300">◆ Сонгосон маршрут</span>
+            <span>🔥 Bonfire олсон (save)</span>
+            <span><span className="text-gold-300">●</span> Ялсан · <span className="text-red-400">●</span> Амьд · <span className="text-ash-400">●</span> Тодорхойгүй</span>
           </div>
         </div>
-        {hover && (
-          <div
-            className="pointer-events-none absolute z-20 min-w-[160px] max-w-[240px] -translate-y-full rounded-sm border border-gold-600/40 bg-[#0b0a0dee] px-3 py-2 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.9)] backdrop-blur-sm"
-            style={{ left: Math.min(hover.x + 14, (mapWrapRef.current?.clientWidth ?? 9999) - 250), top: Math.max(hover.y - 10, 8) }}
-          >
-            <div className="text-[9px] font-semibold uppercase tracking-[0.2em]" style={{ color: hover.accent }}>{hover.eyebrow}</div>
-            <div className="font-display text-sm font-semibold text-gold-100">{hover.title}</div>
-            {hover.sub && <div className="mt-0.5 text-xs leading-snug text-ash-400">{hover.sub}</div>}
-          </div>
-        )}
-        </div>
-        <Panel className={clsx("max-h-[70vh] overflow-y-auto")}>
-          {sel ? <AreaDetail area={sel} compact /> : <p className="text-sm text-ash-400">Газрын зураг дээрх бүсийг дарж дэлгэрэнгүйг харна уу. &ldquo;Go to Next Area&rdquo; нь таны явцад тулгуурласан маршрутыг анимэйшнээр харуулна.</p>}
+        <Panel className="xl:max-h-[75vh] xl:overflow-y-auto">
+          <div aria-live="polite">{notice && <p className="mb-3 text-sm text-ash-300">{notice}</p>}</div>
           {route.length > 1 && (
-            <div className="mt-4 border-t border-gold-600/20 pt-3 text-sm">
-              <div className="text-xs uppercase tracking-widest text-ash-500">Маршрут</div>
-              <ol className="mt-1 list-decimal pl-5">{route.map((r) => <li key={r}>{areaById(r)?.name}</li>)}</ol>
+            <div className="mb-4 border-b border-gold-600/20 pb-3 text-sm">
+              <h2 className="text-xs uppercase tracking-widest text-ember-300">Маршрут</h2>
+              <p className="my-1 text-xs text-ash-400">Замын нөхцөлийг өөрийн явцтай тулгаж шалгана уу.</p>
+              <ol className="list-decimal space-y-1 pl-5">
+                {route.map((id, index) => (
+                  <li key={id}>
+                    {areaById(id)?.name}
+                    {steps[index - 1]?.requires && <p className="text-xs text-ash-400">{steps[index - 1]?.requires}</p>}
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
+          <AreaDetail area={area} compact />
         </Panel>
       </div>
     </>
