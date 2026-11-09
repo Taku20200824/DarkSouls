@@ -20,15 +20,26 @@ export default function MapPage() {
   );
 }
 
+interface HoverInfo { x: number; y: number; eyebrow: string; title: string; sub?: string; accent: string; }
+
 function WorldMap() {
   const { tracker } = useTracker();
   const focusParam = useSearchParams().get("focus");
   const svgRef = useRef<SVGSVGElement>(null);
   const markerRef = useRef<SVGCircleElement>(null);
+  const mapWrapRef = useRef<HTMLDivElement>(null);
   const vb = useRef({ ...FULL });
   const [selected, setSelected] = useState<string | null>(focusParam ?? "firelink-shrine");
   const [route, setRoute] = useState<string[]>([]);
   const [animating, setAnimating] = useState(false);
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+
+  function showHover(e: React.MouseEvent, info: Omit<HoverInfo, "x" | "y">) {
+    const wrap = mapWrapRef.current;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    setHover({ ...info, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
 
   const current = estimateArea(tracker).areaId;
   const nextObjective = computeObjectives(tracker).find((o) => !o.done);
@@ -91,6 +102,7 @@ function WorldMap() {
         <span className="text-xs text-ash-500">Одоогийн (тооцоолсон): {current ? areaById(current)?.name : "Unknown"} <Badge kind="inference" /></span>
       </div>
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <div className="relative" ref={mapWrapRef}>
         <div className="panel overflow-hidden p-0">
           <svg ref={svgRef} viewBox="0 0 1000 700" className="h-[62vh] w-full touch-none select-none bg-[radial-gradient(ellipse_at_center,#1c1b21_0%,#07070a_75%)]" role="img" aria-label="Lordran map">
             <defs>
@@ -116,14 +128,37 @@ function WorldMap() {
               const bossStates = bosses.map((b) => bossStatus(b, tracker).state);
               const label = a.shortName ?? (a.name.length > 26 ? a.name.slice(0, 24) + "…" : a.name);
               return (
-                <g key={a.id} transform={`translate(${a.x},${a.y})`} className="cursor-pointer" onClick={() => selectArea(a.id)}>
-                  <title>{a.name}{a.dlc ? " (DLC)" : ""} — {a.mn}</title>
+                <g
+                  key={a.id}
+                  transform={`translate(${a.x},${a.y})`}
+                  className="cursor-pointer"
+                  role="button"
+                  aria-label={`${a.name}${a.dlc ? " (DLC)" : ""} — ${a.mn}`}
+                  onClick={() => selectArea(a.id)}
+                  onMouseMove={(e) => showHover(e, { eyebrow: "БҮС", title: a.name, sub: a.mn, accent: "#d4b97a" })}
+                  onMouseLeave={() => setHover(null)}
+                >
                   {isCur && <circle r="22" fill="none" stroke="#ff8a3d" strokeWidth="1.5" className="animate-pulse" />}
                   <circle r={selected === a.id ? 12 : 9} fill={a.dlc ? "#2a1f3a" : "#15151a"} stroke={selected === a.id ? "#ffb36b" : "#d4b97a"} strokeWidth="1.5" />
                   {lit && <path d="M0 -6 C3 -2 5 0 3 5 C2 7 -2 7 -3 5 C-5 0 -3 -2 0 -6Z" fill="#ff8a3d" className="bonfire-flicker" />}
-                  {bosses.map((b, i) => (
-                    <rect key={b.id} x={12 + i * 9} y={-14} width="7" height="7" transform={`rotate(45 ${15.5 + i * 9} -10.5)`} fill={bossStates[i] === "defeated" ? "#d4b97a" : bossStates[i] === "alive" ? "#9b1c1c" : "#3a3640"} stroke="#07070a"><title>{b.name}: {bossStates[i] === "defeated" ? "ялсан" : bossStates[i] === "alive" ? "амьд" : "тодорхойгүй"}</title></rect>
-                  ))}
+                  {bosses.map((b, i) => {
+                    const st = bossStates[i];
+                    const color = st === "defeated" ? "#d4b97a" : st === "alive" ? "#9b1c1c" : "#3a3640";
+                    return (
+                      <rect
+                        key={b.id}
+                        x={12 + i * 9}
+                        y={-14}
+                        width="7"
+                        height="7"
+                        transform={`rotate(45 ${15.5 + i * 9} -10.5)`}
+                        fill={color}
+                        stroke="#07070a"
+                        onMouseMove={(e) => { e.stopPropagation(); showHover(e, { eyebrow: "BOSS", title: b.name, sub: st === "defeated" ? "Ялсан" : st === "alive" ? "Амьд" : "Тодорхойгүй", accent: color === "#3a3640" ? "#8f8a80" : color }); }}
+                        onMouseLeave={(e) => e.stopPropagation()}
+                      />
+                    );
+                  })}
                   <text y="26" textAnchor="middle" fontSize="11" fill={lit ? "#e9d7a5" : "#b8b2a4"} stroke="#07070a" strokeWidth="3" strokeLinejoin="round" fontFamily="Cormorant Garamond, serif" fontWeight="600" style={{ paintOrder: "stroke" }}>{label}</text>
                 </g>
               );
@@ -137,6 +172,17 @@ function WorldMap() {
             <span><span className="inline-block h-2 w-2 rotate-45 bg-stone-700" /> Тодорхойгүй</span>
             <span>- - - нөхцөлтэй зам</span>
           </div>
+        </div>
+        {hover && (
+          <div
+            className="pointer-events-none absolute z-20 min-w-[160px] max-w-[240px] -translate-y-full rounded-sm border border-gold-600/40 bg-[#0b0a0dee] px-3 py-2 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.9)] backdrop-blur-sm"
+            style={{ left: Math.min(hover.x + 14, (mapWrapRef.current?.clientWidth ?? 9999) - 250), top: Math.max(hover.y - 10, 8) }}
+          >
+            <div className="text-[9px] font-semibold uppercase tracking-[0.2em]" style={{ color: hover.accent }}>{hover.eyebrow}</div>
+            <div className="font-display text-sm font-semibold text-gold-100">{hover.title}</div>
+            {hover.sub && <div className="mt-0.5 text-xs leading-snug text-ash-400">{hover.sub}</div>}
+          </div>
+        )}
         </div>
         <Panel className={clsx("max-h-[70vh] overflow-y-auto")}>
           {sel ? <AreaDetail area={sel} compact /> : <p className="text-sm text-ash-400">Газрын зураг дээрх бүсийг дарж дэлгэрэнгүйг харна уу. &ldquo;Go to Next Area&rdquo; нь таны явцад тулгуурласан маршрутыг анимэйшнээр харуулна.</p>}
