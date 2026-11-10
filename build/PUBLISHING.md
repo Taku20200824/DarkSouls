@@ -11,7 +11,7 @@ release's `latest.yml`, so publishing a release is all it takes — no site depl
    - `latest.yml`
 3. Commit and push the version bump.
 4. On GitHub: **Releases → Draft a new release**
-   - **Tag**: `v<version>` (e.g. `v0.1.9`) — the `v` prefix is required, electron-updater looks the release up by it.
+   - **Tag**: `v<version>` or `<version>` (e.g. `v0.1.9`) — any name works as long as it's a new tag; the app and site read the newest published release.
    - **Title**: `Lordran Tracker <version>`
    - **Attach** the three files from step 2 (drag them onto the page).
    - Leave "Set as a pre-release" **unchecked** and click **Publish release** (a draft or pre-release is ignored).

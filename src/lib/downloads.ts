@@ -47,7 +47,8 @@ export async function latestDesktopRelease(): Promise<DesktopRelease> {
     if (res.ok) {
       const parsed = parseLatestYml(await res.text());
       if (parsed) {
-        const url = `${RELEASES}/download/v${encodeURIComponent(parsed.version)}/${encodeURIComponent(parsed.path)}`;
+        // Same release the manifest came from, whatever its tag is called ("v0.1.9" or "0.1.9").
+        const url = `${RELEASES}/latest/download/${encodeURIComponent(parsed.path)}`;
         return { version: parsed.version, url, releaseDate: parsed.releaseDate, fromManifest: true };
       }
     }
