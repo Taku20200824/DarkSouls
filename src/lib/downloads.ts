@@ -10,6 +10,20 @@
 export const DESKTOP_BLOB_BASE = "https://bpcne2nkaruzhq1b.public.blob.vercel-storage.com/";
 export const DESKTOP_DOWNLOAD_PATH = "/download";
 
+/** True in the Electron desktop build (set at build time in next.config.ts). */
+export const IS_DESKTOP_BUILD = process.env.NEXT_PUBLIC_DESKTOP_BUILD === "1";
+
+/** -1 / 0 / 1 comparing dotted numeric versions ("0.1.10" > "0.1.9"). */
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split(/[.-]/).map((n) => parseInt(n, 10) || 0);
+  const pb = b.split(/[.-]/).map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
 const FALLBACK_VERSION = "0.1.4";
 const FALLBACK_FILE = `Lordran-Tracker-Setup-${FALLBACK_VERSION}.exe`;
 

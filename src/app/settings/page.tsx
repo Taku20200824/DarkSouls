@@ -4,7 +4,7 @@ import { Gate } from "@/components/Shell";
 import { useTracker } from "@/components/TrackerProvider";
 import { SaveUpload } from "@/components/SaveUpload";
 import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
-import { DESKTOP_DOWNLOAD_PATH } from "@/lib/downloads";
+import { DESKTOP_DOWNLOAD_PATH, IS_DESKTOP_BUILD, compareVersions } from "@/lib/downloads";
 import { useLatestDesktop } from "@/components/useLatestDesktop";
 
 export default function Settings() {
@@ -61,10 +61,10 @@ function Connected() {
         {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-[0.4em] text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
         <button className="btn mt-4 text-xs" onClick={() => post("/api/companion/revoke", {})}>Бүх companion-ий эрхийг цуцлах</button>
       </Panel>
-      <Panel title="Desktop App (Windows)">
-        <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>
+      <Panel title={IS_DESKTOP_BUILD ? "App-ийн хувилбар" : "Desktop App (Windows)"}>
+        {!IS_DESKTOP_BUILD && <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>}
         <DesktopDownload />
-        <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>
+        {!IS_DESKTOP_BUILD && <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>}
       </Panel>
       </>
       )}
@@ -88,18 +88,27 @@ function Connected() {
 
 function DesktopDownload() {
   const latest = useLatestDesktop();
-  const { state } = useTracker();
-  const isDesktop = Boolean(state?.desktop);
-  const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+  const current = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+  if (IS_DESKTOP_BUILD) {
+    // Inside the installed app: no installer download — it updates itself on launch.
+    const newer = latest && current && compareVersions(latest.version, current) > 0;
+    return (
+      <div className="mt-3 text-sm">
+        <p>Энэ app: <span className="font-display text-gold-300">v{current}</span></p>
+        <p className={newer ? "mt-1 text-ember-300" : "mt-1 text-ash-400"}>
+          {!latest
+            ? "Шинэ хувилбар шалгаж байна…"
+            : newer
+              ? `Шинэ хувилбар v${latest.version} гарсан. App-ийг хаагаад дахин нээхэд шинэчлэх эсэхийг асууна.`
+              : "Хамгийн сүүлийн хувилбар. Шинэ хувилбар гарвал app нээх үед автоматаар асууна."}
+        </p>
+      </div>
+    );
+  }
   return (
     <>
       <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_PATH}>{latest ? `v${latest.version} татах (.exe)` : "Хамгийн сүүлийн хувилбарыг татах (.exe)"}</a>
       {latest?.releaseDate && <p className="mt-2 text-xs text-ash-500">Гаргасан: {new Date(latest.releaseDate).toLocaleDateString("mn-MN")}</p>}
-      {isDesktop && latest && (
-        <p className="mt-2 text-xs text-ash-400">
-          Энэ app: v{APP_VERSION}{latest.version !== APP_VERSION ? " — шинэ хувилбар байна. App-ийг дахин нээхэд шинэчлэх эсэхийг асууна." : " — хамгийн сүүлийн хувилбар."}
-        </p>
-      )}
     </>
   );
 }

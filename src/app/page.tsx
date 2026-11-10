@@ -9,7 +9,7 @@ import { BonfireMark } from "@/components/BonfireMark";
 import { LordranScene } from "@/components/LordranScene";
 import { RelicCard } from "@/components/RelicCard";
 import { BossSpotlight } from "@/components/BossSpotlight";
-import { DESKTOP_DOWNLOAD_PATH } from "@/lib/downloads";
+import { DESKTOP_DOWNLOAD_PATH, IS_DESKTOP_BUILD } from "@/lib/downloads";
 import { useLatestDesktop } from "@/components/useLatestDesktop";
 
 const FEATURES = [
@@ -66,7 +66,7 @@ export default function Landing() {
           <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-8 flex flex-wrap gap-3">
             {status === "ready" && !demo ? <Link className="btn btn-ember hero-cta" href="/dashboard">Аяллаа үргэлжлүүлэх <ArrowUpRight size={17} /></Link> : <a className="btn btn-ember hero-cta" href="/api/auth/steam/login"><Flame size={17} /> Sign in through Steam <ArrowUpRight size={16} /></a>}
             <button className="btn hero-cta" onClick={() => { setDemo(true); router.push("/dashboard"); }}>Explore demo <ChevronRight size={16} /></button>
-            <a className="btn hero-cta" href={DESKTOP_DOWNLOAD_PATH}><Download size={16} /> Windows-д татах{desktop ? ` v${desktop.version}` : ""}</a>
+            {!IS_DESKTOP_BUILD && <a className="btn hero-cta" href={DESKTOP_DOWNLOAD_PATH}><Download size={16} /> Windows-д татах{desktop ? ` v${desktop.version}` : ""}</a>}
           </motion.div>
           <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-[10px] tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
         </motion.div>

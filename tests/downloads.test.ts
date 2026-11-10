@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLatestYml } from "@/lib/downloads";
+import { compareVersions, parseLatestYml } from "@/lib/downloads";
 
 const YML = `version: 0.1.4
 files:
@@ -19,5 +19,13 @@ describe("latest.yml parsing", () => {
     expect(parseLatestYml("path: x.exe")).toBeNull();
     expect(parseLatestYml("version: 1.0.0\npath: ../evil.exe")).toBeNull();
     expect(parseLatestYml("version: 1.0.0\npath: https://evil.example/x.exe")).toBeNull();
+  });
+});
+
+describe("compareVersions", () => {
+  it("compares numerically, not as strings", () => {
+    expect(compareVersions("0.1.10", "0.1.9")).toBe(1);
+    expect(compareVersions("0.1.6", "0.1.7")).toBe(-1);
+    expect(compareVersions("0.1.7", "0.1.7")).toBe(0);
   });
 });

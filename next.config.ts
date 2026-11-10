@@ -14,7 +14,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Shown in the sidebar and settings, so users can tell which build they are running.
-  env: { NEXT_PUBLIC_APP_VERSION: version },
+  // NEXT_PUBLIC_DESKTOP_BUILD marks the Electron build, so pages can drop things that only
+  // make sense on the website (e.g. "download the desktop app" inside the app itself).
+  env: { NEXT_PUBLIC_APP_VERSION: version, NEXT_PUBLIC_DESKTOP_BUILD: process.env.ELECTRON_BUILD === "1" ? "1" : "" },
   // Standalone output is how the Electron desktop build packages a minimal,
   // self-contained server (see electron/main.js, build/copy-standalone.mjs and the
   // "dist:win" script). Only enabled for that build — Vercel has its own output
