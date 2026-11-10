@@ -9,6 +9,7 @@ import { BonfireMark } from "@/components/BonfireMark";
 import { LordranScene } from "@/components/LordranScene";
 import { RelicCard } from "@/components/RelicCard";
 import { BossSpotlight } from "@/components/BossSpotlight";
+import { BonfireAtlas } from "@/components/BonfireAtlas";
 import { DESKTOP_DOWNLOAD_PATH, IS_DESKTOP_BUILD } from "@/lib/downloads";
 import { useLatestDesktop } from "@/components/useLatestDesktop";
 
@@ -51,7 +52,7 @@ export default function Landing() {
       <header className="landing-nav">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Lordran Tracker home"><BonfireMark className="h-10 w-7" /><span className="font-display text-body-sm tracking-label text-gold-200">LORDRAN <span className="text-ash-400">/ TRACKER</span></span></Link>
         <nav aria-label="Main navigation" className="flex items-center gap-6 md:gap-9">
-          <a href="#discover" className="landing-nav-link hidden sm:block">THE COMPANION</a><a href="#journey" className="landing-nav-link hidden md:block">YOUR JOURNEY</a>
+          <a href="#bonfire-atlas" className="landing-nav-link hidden sm:block">BONFIRE ATLAS</a><a href="#discover" className="landing-nav-link hidden md:block">THE COMPANION</a>
           <button onClick={() => enter("/dashboard")} className="landing-nav-link flex items-center gap-2">{status === "ready" ? "DASHBOARD" : "EXPLORE DEMO"}<ArrowUpRight size={14} /></button>
         </nav>
       </header>
@@ -71,14 +72,15 @@ export default function Landing() {
           <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-micro tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
         </motion.div>
         <div className="hero-location"><span className="status-spark" /><span>REST AT THE BONFIRE</span><span className="text-ash-500">/ FIRELINK SHRINE</span></div>
-        <a href="#discover" className="hero-scroll"><span>DESCEND INTO LORDRAN</span><ArrowDown size={15} /></a>
+        <a href="#bonfire-atlas" className="hero-scroll"><span>DESCEND INTO LORDRAN</span><ArrowDown size={15} /></a>
         <button className="atmosphere-toggle" aria-pressed={effects} onClick={() => { setEffects(!effects); resetPointer(); }}><span className={effects ? "status-spark" : ""} /> ATMOSPHERE {effects ? "ON" : "PAUSED"}</button>
       </section>
       <div className="legend-strip"><div><span>26</span><p>LEGENDARY BOSSES</p></div><span className="legend-divider" /><div><span>41</span><p>ACHIEVEMENTS TO CLAIM</p></div><span className="legend-divider" /><div><span>∞</span><p>REASONS TO RISE AGAIN</p></div><p className="legend-quote">“The flame fades.<br /><em>The journey remains.”</em></p></div>
       <div className="chronicle-strip" aria-label="Companion features"><span><Flame size={15} /> SAVE-BY-SAVE TRACKING</span><span><Swords size={15} /> BOSS STRATEGIES</span><span><Compass size={15} /> A PATH TO 100%</span><span><ShieldCheck size={15} /> YOUR SAVE, UNTOUCHED</span></div>
+      <BonfireAtlas animated={effects && !reduced} />
       <section id="discover" className="discovery-section">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: .3 }} variants={reveal} transition={{ duration: .7 }} className="discovery-heading">
-          <div><p className="eyebrow">I / KNOW THE WORLD. DEFY YOUR FATE.</p><h2 className="section-title">Master the darkness.<br /><span>Write your own legend.</span></h2></div><p className="max-w-sm text-sm leading-7 text-ash-400">Хаашаа явах, юу цуглуулах, хэнийг ялах вэ?<br />Таны дараагийн алхам бүрт хэрэгтэй мэдээлэл.</p>
+          <div><p className="eyebrow">II / KNOW THE WORLD. DEFY YOUR FATE.</p><h2 className="section-title">Master the darkness.<br /><span>Write your own legend.</span></h2></div><p className="max-w-sm text-sm leading-7 text-ash-400">Хаашаа явах, юу цуглуулах, хэнийг ялах вэ?<br />Таны дараагийн алхам бүрт хэрэгтэй мэдээлэл.</p>
         </motion.div>
         <div className="feature-grid">{FEATURES.map((f, i) => (
           <RelicCard key={f.n} index={i} onClick={() => enter(f.href)} label={`Open ${f.name}${status === "ready" ? "" : " in demo mode"}`}>
