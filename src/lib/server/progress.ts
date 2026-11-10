@@ -1,7 +1,7 @@
 import "server-only";
 import type { ParsedCharacter } from "@/lib/save/types";
 import type { SyncPayload } from "@/lib/save/schema";
-import { getStore } from "./store";
+import { getStore, type TransactionStore } from "./store";
 
 export type EventType = "death" | "level" | "boss" | "bonfire" | "ng";
 export interface TrackerEvent {
@@ -63,22 +63,33 @@ export function diffCharacters(prev: ParsedCharacter, next: ParsedCharacter, at:
   return ev;
 }
 
-/** Seeds `bossesSeen` for characters stored before it existed, from their past boss events. */
-async function bossesFromEvents(steamId: string, key: string, prev: ParsedCharacter): Promise<string[]> {
-  const past = await getStore().list<TrackerEvent>(`users/${steamId}/events`, { orderBy: "at", desc: true, limit: 500 });
-  const fromEvents = past.filter((e) => e.type === "boss" && e.charKey === key).map((e) => String(e.data.boss));
-  return [...Object.keys(prev.bosses), ...fromEvents];
-}
-
 export async function ingest(steamId: string, payload: SyncPayload, now = Date.now()) {
   const store = getStore();
+  const operation = (tx: TransactionStore) => ingestProgress(tx, steamId, payload, now, store.kind === "firestore");
+  return store.atomic ? store.atomic(operation) : operation(store);
+}
+
+async function ingestProgress(store: TransactionStore, steamId: string, payload: SyncPayload, now: number, hosted: boolean) {
   const source: TrackerEvent["source"] = payload.client === "companion" ? "Companion" : "Parsed save file";
   const results: { key: string; events: number; baseline: boolean }[] = [];
-  for (const c of payload.characters as ParsedCharacter[]) {
+  const records = await Promise.all((payload.characters as ParsedCharacter[]).map(async (c) => {
     const key = charKey(c);
     const path = `users/${steamId}/characters/${key}`;
-    const prev = await store.get<StoredCharacter>(path);
-    const seen = new Set(prev?.bossesSeen ?? (prev ? await bossesFromEvents(steamId, key, prev.character) : []));
+    return { c, key, path, prev: await store.get<StoredCharacter>(path) };
+  }));
+  const pending = records.filter(({ prev }) => {
+    if (!hosted || payload.client !== "companion" || !prev?.saveModifiedAt || !payload.saveModifiedAt) return true;
+    return payload.saveModifiedAt > prev.saveModifiedAt ||
+      (payload.saveModifiedAt === prev.saveModifiedAt && payload.parserVersion !== prev.parserVersion);
+  });
+  const past = pending.some(({ prev }) => prev && !prev.bossesSeen)
+    ? await store.list<TrackerEvent>(`users/${steamId}/events`, { orderBy: "at", desc: true, limit: 500 })
+    : [];
+  for (const { c, key, path, prev } of pending) {
+    const seen = new Set(prev?.bossesSeen ?? (prev ? [
+      ...Object.keys(prev.character.bosses),
+      ...past.filter((e) => e.type === "boss" && e.charKey === key).map((e) => String(e.data.boss)),
+    ] : []));
     const events = prev ? withoutSeenBosses(diffCharacters(prev.character, c, now, key, source), seen) : [];
     for (const e of events) await store.add(`users/${steamId}/events`, e);
     const doc: StoredCharacter = {
@@ -104,6 +115,6 @@ export async function ingest(steamId: string, payload: SyncPayload, now = Date.n
     });
     results.push({ key, events: events.length, baseline: !prev });
   }
-  await store.set(`users/${steamId}/meta/sync`, { lastSyncAt: now, lastSource: source, saveModifiedAt: payload.saveModifiedAt ?? null }, true);
+  if (results.length) await store.set(`users/${steamId}/meta/sync`, { lastSyncAt: now, lastSource: source, saveModifiedAt: payload.saveModifiedAt ?? null }, true);
   return results;
 }

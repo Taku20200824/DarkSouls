@@ -6,6 +6,7 @@ import { SaveUpload } from "@/components/SaveUpload";
 import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
 import { DESKTOP_DOWNLOAD_PATH, IS_DESKTOP_BUILD, compareVersions } from "@/lib/downloads";
 import { useLatestDesktop } from "@/components/useLatestDesktop";
+import { DesktopCloudPanel } from "@/components/DesktopCloudPanel";
 
 export default function Settings() {
   const { demo, setDemo, status } = useTracker();
@@ -32,6 +33,7 @@ function Connected() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {state?.desktop ? (
+      <>
       <Panel title="Автомат sync">
         <div className="text-sm">
           <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : <span className="text-ash-500">Эхэлж байна…</span>}</p>
@@ -41,11 +43,13 @@ function Connected() {
           {c?.lastSyncAt && <p className="text-ash-400">Сүүлийн sync: {fmtAgo(c.lastSyncAt)}</p>}
           <p className="text-ash-400">Хувилбар: {process.env.NEXT_PUBLIC_APP_VERSION}</p>
         </div>
-        <p className="mt-4 text-sm text-ash-300">App нээлттэй үед save файлыг энэ компьютерээс шууд уншина. Холбох код эсвэл companion шаардлагагүй. App хаалттай үед тоглосон ахиц дараагийн нээхэд автоматаар орж ирнэ.</p>
+        <p className="mt-4 text-sm text-ash-300">App нээлттэй үед save файлыг энэ компьютерээс шууд уншина. App хаалттай үед тоглосон ахиц дараагийн нээхэд автоматаар орж ирнэ.</p>
       </Panel>
+      <DesktopCloudPanel />
+      </>
       ) : (
       <>
-      <Panel title="Windows Companion">
+      <Panel title="Windows App & Companion">
         <div className="text-sm">
           <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : c?.lastHeartbeat ? <span>OFFLINE — LAST SYNC {fmtAgo(c.lastSyncAt ?? c.lastHeartbeat)}</span> : <span className="text-ash-500">Not connected</span>}</p>
           {c?.deviceName && <p className="text-ash-400">Төхөөрөмж: {c.deviceName} {c.version ? `· v${c.version}` : ""}</p>}
@@ -53,9 +57,9 @@ function Connected() {
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
         </div>
         <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-ash-300">
-          <li>README-ийн дагуу <code>lordran-companion</code>-ийг Windows дээр суулга.</li>
-          <li>Доорх товчоор 8 оронтой холбох код үүсгэ (10 минут хүчинтэй, нэг удаагийн).</li>
-          <li>Companion-д <code>pair КОД</code> гэж оруул. Дараа нь <code>run</code>.</li>
+          <li>Windows App болон энэ сайтад ижил Steam бүртгэлээр нэвтэрнэ үү.</li>
+          <li>8 тэмдэгт холбох код үүсгэнэ үү (10 минут хүчинтэй, нэг удаагийн).</li>
+          <li>App-ийн тохиргооны «Вэбтэй синк хийх» хэсэгт кодыг оруулна уу. Тусдаа Companion ашиглавал <code>pair КОД</code>, дараа нь <code>run</code>.</li>
         </ol>
         <button className="btn btn-ember mt-4" onClick={makeCode}>Холбох код үүсгэх</button>
         {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-code text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}

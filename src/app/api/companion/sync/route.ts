@@ -15,6 +15,7 @@ export const POST = withCompanion(async ({ req, steamId, store }) => {
   const parsed = SyncPayloadSchema.safeParse(body);
   if (!parsed.success) return jsonError(422, "invalid_payload", { issues: parsed.error.issues.slice(0, 5) });
   if (parsed.data.client !== "companion") return jsonError(422, "invalid_client");
+  if (!parsed.data.checksumsValid) return jsonError(422, "invalid_save_checksum");
   const results = await ingest(steamId, parsed.data);
   await store.set(`users/${steamId}/meta/companion`, { lastHeartbeat: Date.now(), lastSyncAt: Date.now() }, true);
   return ok({ results });

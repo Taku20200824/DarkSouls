@@ -23,7 +23,10 @@ export interface Store {
   add(collectionPath: string, data: object): Promise<string>;
   list<T>(collectionPath: string, opts?: ListOpts): Promise<(T & { id: string })[]>;
   delete(docPath: string): Promise<void>;
+  atomic?<T>(operation: (store: TransactionStore) => Promise<T>): Promise<T>;
 }
+
+export type TransactionStore = Pick<Store, "get" | "set" | "add" | "list" | "delete">;
 
 class FirestoreStore implements Store {
   kind = "firestore" as const;
@@ -82,6 +85,28 @@ class FirestoreStore implements Store {
   }
   async delete(p: string) {
     await (await this.dbPromise).doc(p).delete();
+  }
+  async atomic<T>(operation: (store: TransactionStore) => Promise<T>): Promise<T> {
+    const db = await this.dbPromise as import("firebase-admin/firestore").Firestore;
+    return db.runTransaction(async (tx) => operation({
+      async get<V>(p: string) {
+        const snap = await tx.get(db.doc(p));
+        return snap.exists ? snap.data() as V : null;
+      },
+      async list<V>(p: string, opts: ListOpts = {}) {
+        let query: import("firebase-admin/firestore").Query = db.collection(p);
+        if (opts.orderBy) query = query.orderBy(opts.orderBy, opts.desc ? "desc" : "asc");
+        if (opts.limit) query = query.limit(opts.limit);
+        return (await tx.get(query)).docs.map((doc) => ({ ...doc.data() as V, id: doc.id }));
+      },
+      async set(p, data, merge = false) { tx.set(db.doc(p), data, { merge }); },
+      async add(p, data) {
+        const ref = db.collection(p).doc();
+        tx.create(ref, data);
+        return ref.id;
+      },
+      async delete(p) { tx.delete(db.doc(p)); },
+    }));
   }
 }
 

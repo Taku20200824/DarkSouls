@@ -5,12 +5,13 @@ import { MAX_SAVE_BYTES } from "@/lib/save/bnd4";
 import { PARSER_VERSION, parseSave } from "@/lib/save/ds1";
 import { SyncPayloadSchema } from "@/lib/save/schema";
 import { ingest } from "./progress";
+import { cloudLinkPath, uploadDesktopSave, type CloudLink } from "./desktop-cloud";
 import type { Store } from "./store";
 
 /**
  * Automatic save sync for the desktop build. The app runs on the same PC as the
- * game, so it reads DRAKS0005.sl2 directly (read-only) and needs no pairing code
- * and no separate companion process.
+ * game, so local tracking reads DRAKS0005.sl2 directly. An optional web link
+ * relays the same validated payload after confirming the save's account.
  */
 const STEAM_ID64_BASE = 76561197960265728n;
 const SAVE_NAME = "DRAKS0005.sl2";
@@ -67,6 +68,8 @@ export async function findSave(steamId: string, roots: string[]): Promise<string
 export async function syncDesktopSave(steamId: string, store: Store, now = Date.now(), roots = documentsRoots()): Promise<{ changed: boolean }> {
   const statusPath = `users/${steamId}/meta/companion`;
   const prev = (await store.get<DesktopStatus>(statusPath)) ?? {};
+  const linkPath = cloudLinkPath(steamId);
+  const link = store.kind === "dev-file" ? await store.get<CloudLink>(linkPath) : null;
 
   const report = async (next: Pick<DesktopStatus, "saveFound" | "saveModifiedAt" | "message">, synced?: Pick<DesktopStatus, "syncedSaveAt" | "syncedParser">) => {
     const changed = !!synced || prev.saveFound !== next.saveFound || prev.saveModifiedAt !== next.saveModifiedAt || prev.message !== next.message;
@@ -83,7 +86,16 @@ export async function syncDesktopSave(steamId: string, store: Store, now = Date.
   if (!st) return report({ saveFound: false, saveModifiedAt: null, message: `${SAVE_NAME} not found` });
   const saveModifiedAt = Math.floor(st.mtimeMs);
   const alreadySynced = prev.syncedSaveAt === saveModifiedAt && prev.syncedParser === PARSER_VERSION;
-  if (alreadySynced || now - saveModifiedAt < STABLE_MS) return report({ saveFound: true, saveModifiedAt, message: null });
+  const ownSave = path.basename(path.dirname(file)) === steamAccountId(steamId);
+  const pendingCloud = link && ownSave && link.error !== "invalid_token" && (
+    link.syncedSaveAt !== saveModifiedAt || link.syncedParser !== PARSER_VERSION || link.error
+  );
+  const accountMismatch = link && !ownSave && link.error !== "account_save_not_found" && link.error !== "invalid_token";
+  if (accountMismatch) await store.set(linkPath, { error: "account_save_not_found" }, true);
+  if ((alreadySynced && !pendingCloud) || now - saveModifiedAt < STABLE_MS) {
+    const result = await report({ saveFound: true, saveModifiedAt, message: null });
+    return { changed: result.changed || !!accountMismatch };
+  }
   if (st.size > MAX_SAVE_BYTES) return report({ saveFound: true, saveModifiedAt, message: "Save file is too large" });
 
   try {
@@ -104,8 +116,11 @@ export async function syncDesktopSave(steamId: string, store: Store, now = Date.
       consent: true,
     });
     if (!payload.success) return report({ saveFound: true, saveModifiedAt, message: "Save data failed validation" });
-    await ingest(steamId, payload.data, now);
-    return report({ saveFound: true, saveModifiedAt, message: null }, { syncedSaveAt: saveModifiedAt, syncedParser: PARSER_VERSION });
+    if (!alreadySynced) await ingest(steamId, payload.data, now);
+    const result = await report({ saveFound: true, saveModifiedAt, message: null },
+      alreadySynced ? undefined : { syncedSaveAt: saveModifiedAt, syncedParser: PARSER_VERSION });
+    const cloudChanged = link && pendingCloud ? await uploadDesktopSave(store, steamId, link, payload.data) : false;
+    return { changed: result.changed || cloudChanged || !!accountMismatch };
   } catch (e) {
     console.error(e);
     return report({ saveFound: true, saveModifiedAt, message: "Could not read the save file; will retry" });
