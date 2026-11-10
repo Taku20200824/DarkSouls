@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
   ...(process.env.ELECTRON_BUILD === "1" ? { output: "standalone" as const } : {}),
   serverExternalPackages: ["firebase-admin"],
   images: {
+    // Desktop build: serve images as-is. The optimizer caches into .next/cache/images
+    // inside the install folder, whose long hashed file names can pass Windows' 260-char
+    // path limit and make the NSIS uninstaller (run on every update) fail. All local art
+    // is already small WebP, so there's nothing to gain from optimizing on a local server.
+    ...(process.env.ELECTRON_BUILD === "1" ? { unoptimized: true } : {}),
     remotePatterns: [
       { protocol: "https", hostname: "avatars.steamstatic.com" },
       { protocol: "https", hostname: "avatars.akamai.steamstatic.com" },
