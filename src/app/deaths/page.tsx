@@ -4,6 +4,7 @@ import { Gate } from "@/components/Shell";
 import { useSelected, useTracker } from "@/components/TrackerProvider";
 import { Badge, Empty, PageTitle, Panel, Stat, fmtDate } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
+import { BossThumb } from "@/components/BossThumb";
 import type { ClientEvent } from "@/lib/client/types";
 
 const SESSION_GAP = 2 * 3600_000;
@@ -90,7 +91,10 @@ function Inner() {
             </Panel>
             <Panel title="Хамгийн хэцүү тулаан">
               {hardest.length === 0 ? <p className="text-sm text-ash-500">Unconfirmed — үхлийг boss-д хамааруулах найдвартай өгөгдөл save-д алга. Доорх жагсаалтаас өөрөө тэмдэглэж болно.</p> : (
-                <ul className="text-sm">{hardest.map(([id, n]) => <li key={id}>{BOSSES.find((b) => b.id === id)?.name}: {n} <Badge kind="manual" /></li>)}</ul>
+                <ul className="space-y-1.5 text-sm">{hardest.map(([id, n]) => {
+                  const b = BOSSES.find((x) => x.id === id);
+                  return <li key={id} className="flex items-center gap-2">{b && <BossThumb boss={b} defeated size={28} />}{b?.name}: {n} <Badge kind="manual" /></li>;
+                })}</ul>
               )}
               <p className="mt-2 text-xs text-ash-500">Bonfire хоорондын үхэл: save файл үхэл бүрийн байршлыг хадгалдаггүй тул <b>Unconfirmed</b>.</p>
             </Panel>

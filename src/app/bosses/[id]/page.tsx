@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTracker } from "@/components/TrackerProvider";
 import { Badge, PageTitle, Panel } from "@/components/ui";
 import { BossPortrait } from "@/components/BossPortrait";
+import { ItemIcon } from "@/components/ItemIcon";
 import { bossById } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { ACHIEVEMENTS } from "@/lib/data/achievements";
@@ -48,9 +49,14 @@ export default function BossPage({ params }: { params: Promise<{ id: string }> }
             </Panel>
             <Panel title="Тусламж (Summon)"><p className="text-sm">{b.summonMn ?? <span className="text-ash-500">Мэдээлэл оруулаагүй.</span>}</p></Panel>
             <Panel title="Шагнал">
-              <p className="text-sm">Boss Soul: {b.soul ?? <span className="text-ash-500">байхгүй / —</span>}</p>
-              {b.soulWeapons && <p className="mt-1 text-sm">Soul зэвсэг: {b.soulWeapons.join(", ")}</p>}
-              {b.tailCut && <p className="mt-1 text-sm text-amber-300">✂ Сүүл тасдахад: {b.tailCut} — boss-ыг алахаас өмнө!</p>}
+              <p className="flex items-center gap-2 text-sm">{b.soul && <ItemIcon name={b.soul} category="goods" size={30} />}<span>Boss Soul: {b.soul ?? <span className="text-ash-500">байхгүй / —</span>}</span></p>
+              {b.soulWeapons && (
+                <div className="mt-2 text-sm">
+                  <span className="text-ash-500">Soul зэвсэг:</span>
+                  <ul className="mt-1 space-y-1">{b.soulWeapons.map((w) => <li key={w} className="flex items-center gap-2"><ItemIcon name={w} size={26} />{w}</li>)}</ul>
+                </div>
+              )}
+              {b.tailCut && <p className="mt-2 flex items-center gap-2 text-sm text-amber-300"><ItemIcon name={b.tailCut} size={26} />✂ Сүүл тасдахад: {b.tailCut} — boss-ыг алахаас өмнө!</p>}
             </Panel>
             <Panel title="Achievement / NG+">
               {related.length ? <ul className="text-sm">{related.map((a) => <li key={a.name}><Link href="/achievements" className="text-gold-300 hover:text-ember-300">{a.name}</Link></li>)}</ul> : <p className="text-sm text-ash-500">Шууд холбоотой achievement алга.</p>}

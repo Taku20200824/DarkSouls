@@ -4,11 +4,12 @@ import { Gate } from "@/components/Shell";
 import { useSelected, useTracker } from "@/components/TrackerProvider";
 import { Badge, Empty, PageTitle, Panel, Stat, fmtAgo, fmtDuration, fmtNum } from "@/components/ui";
 import { ItemIcon } from "@/components/ItemIcon";
+import { BossThumb } from "@/components/BossThumb";
 import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { BonfireMark } from "@/components/BonfireMark";
 import { ArrowUpRight } from "lucide-react";
-import { bossStatus, completionPercent, computeObjectives, estimateArea, nextUpgradeAdvice } from "@/lib/guide/engine";
+import { bossStatus, completionPercent, computeObjectives, estimateArea, nextObjective, nextUpgradeAdvice } from "@/lib/guide/engine";
 
 export default function Dashboard() {
   return (
@@ -23,7 +24,8 @@ function Inner() {
   const sel = useSelected();
   const ch = tracker.character;
   const objectives = computeObjectives(tracker);
-  const next = objectives.find((o) => !o.done);
+  const next = nextObjective(objectives);
+  const skipped = objectives.filter((o) => o.status === "skipped");
   const area = estimateArea(tracker);
   const comp = completionPercent(tracker);
   const bosses = BOSSES.map((b) => ({ b, s: bossStatus(b, tracker) }));
@@ -70,13 +72,24 @@ function Inner() {
         <Panel title="Дараагийн зорилт" className="lg:col-span-2" right={<Badge kind="inference" />}>
           {next ? (
             <div>
-              <div className="font-display text-2xl text-gold-300">{next.title}</div>
-              <p className="mt-1 text-sm text-ash-300">{next.whyMn}</p>
+              <div className="flex items-center gap-3">
+                {next.bossIds.slice(0, 3).map((id) => {
+                  const b = BOSSES.find((x) => x.id === id)!;
+                  return <BossThumb key={id} boss={b} size={48} />;
+                })}
+                <div className="font-display text-2xl text-gold-300">{next.title}</div>
+              </div>
+              <p className="mt-2 text-sm text-ash-300">{next.whyMn}</p>
               <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                 <div><span className="text-ash-500">Хаана: </span>{next.whereMn}</div>
                 {next.achievement && <div><span className="text-ash-500">Achievement: </span>{next.achievement}</div>}
                 {next.avoidMissingMn.length > 0 && <div className="md:col-span-2 text-amber-300">⚠ {next.avoidMissingMn.join(" · ")}</div>}
               </div>
+              {skipped.length > 0 && (
+                <p className="mt-3 text-xs text-ash-400">
+                  <span className="text-amber-300">↷ Алгассан:</span> {skipped.map((o) => o.title).join(" · ")} — өөр замаар цааш явсан тул дараагийн зорилтод тооцохгүй.
+                </p>
+              )}
               <Link href="/guide" className="btn mt-3">Бүрэн хөтөч</Link>
             </div>
           ) : (
@@ -91,7 +104,10 @@ function Inner() {
           <p className="text-xs text-ash-500">Ялсан (verified + inferred + manual). Тодорхойгүй: {bosses.filter((x) => x.s.state === "unknown").length}</p>
           <ul className="mt-3 space-y-1 text-sm">
             {bosses.filter((x) => x.s.state === "defeated").slice(0, 6).map(({ b, s }) => (
-              <li key={b.id} className="flex items-center justify-between gap-2"><span>{b.name}</span><Badge kind={demo ? "demo" : s.certainty} /></li>
+              <li key={b.id} className="flex items-center justify-between gap-2">
+                <Link href={`/bosses/${b.id}`} className="flex min-w-0 items-center gap-2 hover:text-ember-300"><BossThumb boss={b} defeated size={28} /><span className="truncate">{b.name}</span></Link>
+                <Badge kind={demo ? "demo" : s.certainty} />
+              </li>
             ))}
           </ul>
         </Panel>
@@ -112,12 +128,12 @@ function Inner() {
         <Panel title="Зэвсэг сайжруулах зөвлөмж" right={<Badge kind="inference" />}>
           {advice ? (
             <div className="text-sm">
-              <div className="flex items-center gap-2 text-gold-300"><ItemIcon name={advice.weapon.name} category="weapons" size={28} />{advice.weapon.name} → +{advice.nextLevel}</div>
+              <div className="flex items-center gap-2 text-gold-300"><ItemIcon name={advice.weapon.name} category="weapons" size={36} />{advice.weapon.name} → +{advice.nextLevel}</div>
               <p className="text-xs text-ash-500">Хамгийн их сайжруулсан зэвсэг (зүүсэн зэвсэг save-ээс уншигддаггүй).</p>
               <ul className="mt-2 space-y-1.5">
                 {advice.needs.map((n) => (
                   <li key={n.material} className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2"><ItemIcon name={n.material} category="goods" size={22} />{n.material} ×{n.qty}</span>
+                    <span className="flex items-center gap-2"><ItemIcon name={n.material} category="goods" size={30} />{n.material} ×{n.qty}</span>
                     <span className={n.missing ? "text-red-300" : "text-emerald-300"}>{n.missing ? `дутуу ${n.missing}` : "хангалттай"} (байгаа {n.have ?? "?"})</span>
                   </li>
                 ))}
@@ -134,11 +150,11 @@ function Inner() {
       {ch && (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Panel title="Attributes">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Object.entries(ch.stats).map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between rounded bg-stone-900/60 px-3 py-2 text-sm">
-                  <span className="text-ash-400">{k}</span>
-                  <span className="font-display text-lg text-gold-300">{v.value ?? "?"}</span>
+                <div key={k} className="min-w-0 rounded bg-stone-900/60 px-3 py-2">
+                  <div className="truncate text-[10px] uppercase tracking-[0.12em] text-ash-400" title={k}>{k}</div>
+                  <div className="font-display text-2xl leading-tight tabular-nums text-gold-300">{v.value ?? "?"}</div>
                 </div>
               ))}
             </div>

@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useTracker } from "./TrackerProvider";
 import { AreaScene } from "./AreaScene";
+import { BossThumb } from "./BossThumb";
+import { ItemIcon } from "./ItemIcon";
 import { Badge } from "./ui";
 import { areaById, areaHasBonfire, CONNECTIONS, type Area } from "@/lib/data/areas";
 import { BOSSES } from "@/lib/data/bosses";
@@ -42,13 +44,13 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
       {area.bosses.length > 0 && (
         <div>
           <h4 className="text-xs uppercase tracking-widest text-ash-500">Boss-ууд</h4>
-          <ul className="mt-1 space-y-0.5">
+          <ul className="mt-1 space-y-1.5">
             {area.bosses.map((id) => {
               const b = BOSSES.find((x) => x.id === id)!;
               const s = bossStatus(b, tracker);
               return (
                 <li key={id} className="flex items-center justify-between gap-2">
-                  <Link href={`/bosses/${id}`} className="hover:text-ember-300">{b.name}</Link>
+                  <Link href={`/bosses/${id}`} className="flex min-w-0 items-center gap-2 hover:text-ember-300"><BossThumb boss={b} defeated={s.state === "defeated"} size={36} /><span className="truncate">{b.name}</span></Link>
                   <span className="flex items-center gap-1"><span className={s.state === "defeated" ? "text-emerald-300" : s.state === "alive" ? "text-red-300" : "text-ash-500"}>{s.state === "defeated" ? "Defeated" : s.state === "alive" ? "Alive" : "Unknown"}</span><Badge kind={demo ? "demo" : s.certainty} /></span>
                 </li>
               );
@@ -65,7 +67,7 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
           {area.items.map((it) => {
             const base = it.replace(/\s*\(.*\)$/, "");
             const owned = ch ? hasItem(ch, base) : null;
-            return <li key={it} className="flex justify-between gap-2"><span>{it}</span>{owned !== null && <span className={owned ? "text-emerald-300" : "text-ash-500"}>{owned ? "✓ эзэмшдэг" : "—"}</span>}</li>;
+            return <li key={it} className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2"><ItemIcon name={base} size={26} /><span className="truncate">{it}</span></span>{owned !== null && <span className={owned ? "text-emerald-300" : "text-ash-500"}>{owned ? "✓ эзэмшдэг" : "—"}</span>}</li>;
           })}
         </ul>
       </div>
@@ -73,9 +75,11 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
       {area.secrets.length > 0 && <div><h4 className="text-xs uppercase tracking-widest text-ash-500">Нууц</h4><p className="mt-1">{area.secrets.join(" · ")}</p></div>}
       {objective && (
         <div className="rounded border border-ember-500/40 bg-ember-600/10 p-3">
-          <div className="text-xs uppercase tracking-widest text-ember-300">Зорилт {objective.done ? "✓ биелсэн" : ""}</div>
+          <div className="text-xs uppercase tracking-widest text-ember-300">
+            Зорилт {objective.status === "skipped" ? "↷ алгассан" : objective.done ? "✓ биелсэн" : ""}
+          </div>
           <div className="font-display text-lg text-gold-300">{objective.title}</div>
-          <p className="text-ash-300">{objective.whyMn}</p>
+          <p className="text-ash-300">{objective.statusNoteMn ?? objective.whyMn}</p>
           {objective.avoidMissingMn.length > 0 && <p className="mt-1 text-amber-300">⚠ {objective.avoidMissingMn.join(" · ")}</p>}
         </div>
       )}

@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
 import { fmtAgo } from "./ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { Backpack, Compass, Hammer, LayoutDashboard, Map as MapIcon, Milestone, ScrollText, Settings, Skull, Swords, Trophy, Users, Menu, X } from "lucide-react";
 import { BonfireMark } from "./BonfireMark";
+import { BossThumb } from "./BossThumb";
 
 const NAV = [
   { href: "/dashboard", label: "Хяналтын самбар", en: "Dashboard", icon: LayoutDashboard },
@@ -99,6 +100,7 @@ function VictoryOverlay() {
           <div className="h-px w-[80vw] max-w-3xl bg-gradient-to-r from-transparent via-gold-400 to-transparent" />
           <h2 className="font-display gold-text py-6 text-4xl font-bold md:text-7xl">VICTORY ACHIEVED</h2>
           <div className="h-px w-[80vw] max-w-3xl bg-gradient-to-r from-transparent via-gold-400 to-transparent" />
+          {boss && <BossThumb boss={boss} defeated size={140} className="mx-auto mt-6 shadow-[0_0_40px_-8px_rgba(255,145,66,0.6)]" />}
           <p className="font-display mt-6 text-2xl text-gold-300">{boss?.name ?? bossName}</p>
           {pending.length > 1 && <p className="mt-2 text-sm text-gold-400">+{pending.length - 1} boss</p>}
           <p className="mt-2 text-xs text-ash-400">Нотолгоо: {(ev.data.evidence as string[] | undefined)?.join(", ")} · {ev.source}</p>
@@ -113,7 +115,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { state, demo, status } = useTracker();
   const [open, setOpen] = useState(false);
-  const reduced = useReducedMotion();
   const bare = path === "/" || path === "/login";
   if (bare) return <>{children}</>;
   return (
@@ -173,7 +174,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <BonfireMark className="h-7 w-5" />
         </div>
         {demo && <div className="bg-fuchsia-900/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-fuchsia-200">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
-        <motion.main id="main-content" key={path} initial={{ opacity: 0, y: reduced ? 0 : 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
+        <motion.main id="main-content" key={path} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
       <VictoryOverlay />
     </div>

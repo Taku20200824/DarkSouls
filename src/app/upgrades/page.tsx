@@ -72,7 +72,7 @@ export default function Upgrades() {
                       const miss = have === null ? null : Math.max(0, t.qty - have);
                       return (
                         <tr key={t.material} className="border-t border-gold-600/10">
-                          <td className="py-1.5 text-gold-300"><span className="flex items-center gap-2"><ItemIcon name={t.material} category="goods" size={24} />{t.material}</span></td><td>{t.qty}</td>
+                          <td className="py-1.5 text-gold-300"><span className="flex items-center gap-2"><ItemIcon name={t.material} category="goods" size={32} />{t.material}</span></td><td>{t.qty}</td>
                           <td>{have ?? <span className="text-ash-500">Not connected</span>}</td>
                           <td className={miss ? "text-red-300" : "text-emerald-300"}>{miss === null ? "—" : miss}</td>
                         </tr>
@@ -90,7 +90,7 @@ export default function Upgrades() {
                     <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-b border-gold-600/5 py-1">
                       <span>{UPGRADE_PATHS.find((p) => p.id === l.path)?.name} +{l.level}</span>
                       <span className="flex items-center gap-2 text-ash-300">
-                        <ItemIcon name={l.material} category="goods" size={22} />
+                        <ItemIcon name={l.material} category="goods" size={30} />
                         {l.material} ×{l.qty}{l.ember ? ` · ${l.ember}` : ""}{l.smith ? ` · ${l.smith}` : ""}
                       </span>
                     </li>
@@ -98,7 +98,7 @@ export default function Upgrades() {
                 </ol>
               </Panel>
               <Panel title="Farm хийх газар">
-                <ul className="space-y-1.5 text-sm">{totals.map((t) => <li key={t.material} className="flex items-start gap-2"><ItemIcon name={t.material} category="goods" size={22} /><span><span className="text-gold-300">{t.material}:</span> {FARMING_MN[t.material] ?? "Мэдээлэл алга."}</span></li>)}</ul>
+                <ul className="space-y-1.5 text-sm">{totals.map((t) => <li key={t.material} className="flex items-start gap-2"><ItemIcon name={t.material} category="goods" size={30} /><span><span className="text-gold-300">{t.material}:</span> {FARMING_MN[t.material] ?? "Мэдээлэл алга."}</span></li>)}</ul>
               </Panel>
             </>
           )}

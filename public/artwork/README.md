@@ -18,3 +18,9 @@ Prompts requested photorealistic materials, cinematic lighting, a charcoal or sl
 `areas/<area id>.webp` are original atmospheric scene illustrations for the World Map's area detail panel, named after the `id` in `src/lib/data/areas.ts`. Generated (via Figma's image generation) from written descriptions of each location's look and mood, not from official screenshots, extracted game assets, or any third-party wiki's map images — they are moodboard-style establishing shots, not navigable layout diagrams, since no accurate level-geometry data is available to this project.
 
 Same prompt formula as the boss portraits (photorealistic materials, cinematic lighting, charcoal/slate palette with accent colors suited to the area, landscape composition, no text/logos/watermark), encoded as WebP at 1024 × 768, quality 82. Currently covers 6 of 26 areas (Firelink Shrine, Undead Burg, Blighttown, Anor Londo, Sen's Fortress, Darkroot Garden); `src/components/AreaScene.tsx` lists which areas have art and silently omits the image block for the rest.
+
+## Item art
+
+`items/<type>.webp` are 17 original item-type illustrations (sword, heavy, polearm, bow, catalyst, shield, armor, ring, spell, titanite, ember, soul, key, estus, consumable, humanity, soapstone) used by `src/components/ItemIcon.tsx`. Every item shows the illustration for its type (weapon types come from the id ranges in `MeleeWeapons.json`; goods are matched by name), and a CSS tint marks titanite grades. They were generated with Figma's image generation from generic written descriptions ("a single … on a plain dark charcoal background, painterly, no text"). They are not extracted game icons or wiki images, so they don't depict specific in-game items.
+
+The source PNGs were 1024 × 1024. `build/convert-item-art.mjs --rm` encodes them as 256 × 256 WebP at quality 82.

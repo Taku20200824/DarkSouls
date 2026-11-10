@@ -56,7 +56,7 @@ export default function Inventory() {
                 {items.map((i) => (
                   <li key={`${i.category}-${i.id}`} className="flex items-center justify-between gap-2 border-b border-gold-600/5 py-1.5">
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <ItemIcon name={i.name} category={i.category} size={26} />
+                      <ItemIcon name={i.name} category={i.category} size={40} />
                       <span className="truncate text-gold-300">{i.name}</span>
                     </span>
                     <span className="shrink-0 text-ash-500">×{i.quantity}</span>
@@ -72,7 +72,7 @@ export default function Inventory() {
                 {collection.map((n) => (
                   <li key={n} className="flex items-center justify-between gap-2 py-0.5">
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <ItemIcon name={n} category={tab === "spells" ? "spells" : "rings"} size={24} />
+                      <ItemIcon name={n} category={tab === "spells" ? "spells" : "rings"} size={36} />
                       <span className={`truncate ${ownedNames.has(n) ? "text-gold-300" : "text-ash-500"}`}>{n}</span>
                     </span>
                     <span className="shrink-0">{ownedNames.has(n) ? "✓" : "—"}</span>

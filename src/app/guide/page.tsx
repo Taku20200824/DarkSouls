@@ -3,12 +3,12 @@ import Link from "next/link";
 import { useTracker } from "@/components/TrackerProvider";
 import { Badge, PageTitle, Panel } from "@/components/ui";
 import { areaById } from "@/lib/data/areas";
-import { achievementHints, achievementUnlocked, computeObjectives, estimateArea, nextRoute, nextUpgradeAdvice } from "@/lib/guide/engine";
+import { achievementHints, achievementUnlocked, computeObjectives, estimateArea, nextObjective, nextRoute, nextUpgradeAdvice } from "@/lib/guide/engine";
 
 export default function Guide() {
   const { tracker, demo } = useTracker();
   const objectives = computeObjectives(tracker);
-  const next = objectives.find((o) => !o.done);
+  const next = nextObjective(objectives);
   const cur = estimateArea(tracker).areaId;
   const route = next ? nextRoute(cur, next.area) : [];
   const advice = nextUpgradeAdvice(tracker.character);
@@ -47,10 +47,16 @@ export default function Guide() {
         <ol className="space-y-2">
           {objectives.map((o, i) => (
             <li key={o.id} className={`flex items-start gap-3 rounded p-2 ${o === next ? "bg-ember-600/10 ring-1 ring-ember-500/40" : ""}`}>
-              <span className={`font-display mt-0.5 w-6 text-right ${o.done ? "text-emerald-300" : "text-ash-500"}`}>{o.done ? "✓" : i + 1}</span>
+              <span className={`font-display mt-0.5 w-6 text-right ${o.status === "skipped" ? "text-amber-300" : o.done ? "text-emerald-300" : "text-ash-500"}`}>{o.status === "skipped" ? "↷" : o.done ? "✓" : i + 1}</span>
               <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2"><span className={o.done ? "text-ash-400 line-through" : "text-gold-300"}>{o.title}</span>{o.done && <Badge kind={demo ? "demo" : o.doneCertainty} />}</div>
-                <div className="text-xs text-ash-500">{o.whyMn}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={o.done ? "text-ash-400 line-through" : "text-gold-300"}>{o.title}</span>
+                  {o.status === "skipped" && <span className="rounded-[1px] border border-amber-600/60 bg-black/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-300">Алгассан</span>}
+                  {o.status === "implied" && <Badge kind="inferred" />}
+                  {o.status === "detected" && <Badge kind={demo ? "demo" : o.doneCertainty} />}
+                  {o.optional && <span className="text-[10px] text-ash-500">(заавал биш)</span>}
+                </div>
+                <div className="text-xs text-ash-500">{o.statusNoteMn ?? o.whyMn}</div>
               </div>
             </li>
           ))}

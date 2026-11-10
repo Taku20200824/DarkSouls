@@ -3,11 +3,17 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import gsap from "gsap";
 import { AREAS, CONNECTIONS, areaById, areaHasBonfire, connectionBetween, routeBetween, type Area, type ConnectionKind } from "@/lib/data/areas";
-import { bossById } from "@/lib/data/bosses";
+import { bossById, type Boss } from "@/lib/data/bosses";
 import { useTracker } from "@/components/TrackerProvider";
 import { AreaDetail } from "@/components/AreaDetail";
+import { BossThumb } from "@/components/BossThumb";
 import { PageTitle, Panel } from "@/components/ui";
-import { bossStatus, computeObjectives } from "@/lib/guide/engine";
+import { bossStatus, computeObjectives, nextObjective } from "@/lib/guide/engine";
+
+type PopupContent = { kind: "area"; area: Area } | { kind: "boss"; boss: Boss; state: string };
+type Popup = PopupContent & { x: number; y: number };
+
+const STATE_MN: Record<string, string> = { defeated: "Ялсан", alive: "Амьд", unknown: "Тодорхойгүй" };
 
 const FULL = { x: 0, y: 0, w: 1160, h: 740 };
 const FIRELINK = "firelink-shrine";
@@ -46,8 +52,16 @@ function WorldMap() {
   const [includeAlternates, setIncludeAlternates] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [notice, setNotice] = useState("");
-  const next = computeObjectives(tracker).find((objective) => !objective.done);
+  const [popup, setPopup] = useState<Popup | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const next = nextObjective(computeObjectives(tracker));
   const area = areaById(selected)!;
+
+  function showPopup(e: React.MouseEvent, content: PopupContent) {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPopup({ ...content, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
 
   function applyView() {
     const { x, y, w, h } = view.current;
@@ -149,6 +163,7 @@ function WorldMap() {
         </label>
       </div>
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="relative" ref={wrapRef} onMouseLeave={() => setPopup(null)}>
         <div className="panel overflow-hidden p-0">
           <svg ref={svgRef} viewBox={`0 0 ${FULL.w} ${FULL.h}`} className="h-auto w-full select-none bg-[radial-gradient(ellipse_at_center,#241a10_0%,#0b0907_78%)]" role="group" aria-label="Lordran map">
             <defs>
@@ -194,8 +209,9 @@ function WorldMap() {
                   aria-label={entry.name} aria-pressed={active} className="group cursor-pointer outline-none"
                   onClick={() => selectArea(entry.id)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectArea(entry.id); } }}
+                  onMouseMove={(e) => showPopup(e, { kind: "area", area: entry })}
+                  onMouseLeave={() => setPopup(null)}
                 >
-                  <title>{entry.name}</title>
                   <circle r="22" fill="transparent" />
                   <circle r="14" fill="none" stroke="#ffb76e" opacity={active ? 1 : 0} className="group-focus-visible:opacity-100" />
                   <circle r="9" fill={entry.dlc ? "#2a2037" : "#19120b"} stroke={active ? "#ffae66" : "#e0c184"} strokeWidth="2" />
@@ -205,10 +221,11 @@ function WorldMap() {
                     const { state } = bossStatus(boss, tracker);
                     const color = state === "defeated" ? "#e0c184" : state === "alive" ? "#ee6d60" : "#928895";
                     return (
-                      <g key={id} transform={`translate(${15 + index * 11},-12)`}>
+                      <g key={id} transform={`translate(${15 + index * 11},-12)`} aria-label={`${boss.name} · ${STATE_MN[state]}`}
+                        onMouseMove={(e) => { e.stopPropagation(); showPopup(e, { kind: "boss", boss, state }); }}
+                      >
                         <circle r="6" fill="#17100b" stroke={color} strokeWidth="1.5" />
                         <path d="M-2 0 L0 -2 L2 0 L0 2 Z" fill={color} />
-                        <title>{`${boss.name} · ${state}`}</title>
                       </g>
                     );
                   })}
@@ -233,6 +250,38 @@ function WorldMap() {
             <span>🔥 Bonfire олсон (save)</span>
             <span><span className="text-gold-300">●</span> Ялсан · <span className="text-red-400">●</span> Амьд · <span className="text-ash-400">●</span> Тодорхойгүй</span>
           </div>
+        </div>
+        {popup && (
+          <div
+            className="pointer-events-none absolute z-20 w-64 -translate-y-full rounded-sm border border-gold-600/40 bg-[#0b0a0df2] p-3 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.9)]"
+            style={{ left: Math.max(4, Math.min(popup.x + 14, (wrapRef.current?.clientWidth ?? 9999) - 262)), top: Math.max(popup.y - 10, 120) }}
+          >
+            {popup.kind === "boss" ? (
+              <div className="flex items-center gap-3">
+                <BossThumb boss={popup.boss} defeated={popup.state === "defeated"} size={56} />
+                <div className="min-w-0">
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-ember-300">Boss</div>
+                  <div className="font-display text-sm font-semibold text-gold-100">{popup.boss.name}</div>
+                  <div className={`text-xs ${popup.state === "defeated" ? "text-emerald-300" : popup.state === "alive" ? "text-red-300" : "text-ash-400"}`}>{STATE_MN[popup.state]}</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gold-400">Бүс{popup.area.dlc ? " · DLC" : ""}</div>
+                <div className="font-display text-sm font-semibold text-gold-100">{popup.area.name}</div>
+                <div className="mt-0.5 text-xs leading-snug text-ash-400">{popup.area.mn}</div>
+                {popup.area.bosses.length > 0 && (
+                  <div className="mt-2 flex gap-1.5">
+                    {popup.area.bosses.map((id) => {
+                      const b = bossById(id)!;
+                      return <BossThumb key={id} boss={b} defeated={bossStatus(b, tracker).state === "defeated"} size={40} />;
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
         </div>
         <Panel className="xl:max-h-[75vh] xl:overflow-y-auto">
           <div aria-live="polite">{notice && <p className="mb-3 text-sm text-ash-300">{notice}</p>}</div>

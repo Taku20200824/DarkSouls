@@ -147,6 +147,19 @@ body::after {
     0 0 10px -3px color-mix(in srgb, var(--ic-color) 60%, transparent);
   transition: box-shadow 0.25s, transform 0.25s;
 }
+.item-icon img {
+  filter: saturate(1.05) contrast(1.05);
+}
+/* Grey titanite art takes the grade colour (green / blue / white / red / twinkling / demon). */
+.item-icon--tinted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ic-color);
+  mix-blend-mode: color;
+  opacity: 0.7;
+  pointer-events: none;
+}
 li:hover > .item-icon,
 .item-icon-hover:hover {
   box-shadow:

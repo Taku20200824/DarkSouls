@@ -6,7 +6,7 @@ import { BOSSES } from "@/lib/data/bosses";
 import { QUESTS } from "@/lib/data/npcs";
 import { UPGRADE_PATHS, planUpgrade, totalMaterials } from "@/lib/data/upgrades";
 import { BOSS_FLAG_DB, BOSS_SOUL_DB, KNOWN_FLAG_DB } from "@/lib/save/itemdb";
-import { bossStatus, computeObjectives, type TrackerContext } from "@/lib/guide/engine";
+import { bossStatus, computeObjectives, nextObjective, type TrackerContext } from "@/lib/guide/engine";
 import { diffCharacters, charKey, withoutSeenBosses } from "@/lib/server/progress";
 import { parseSave } from "@/lib/save/ds1";
 import { demoState } from "@/lib/client/demo";
@@ -107,6 +107,26 @@ describe("boss status + objectives", () => {
   it("with no data, nothing is claimed done", () => {
     const objs = computeObjectives({ character: null, achievements: null, manualBosses: {}, manualAchievements: {} });
     expect(objs.every((o) => !o.done)).toBe(true);
+  });
+  it("Quelaag beaten via the Master Key route => Capra/Depths skipped, not the next objective", () => {
+    const manual = { "asylum-demon": true, "taurus-demon": true, "bell-gargoyles": true, quelaag: true };
+    const objs = computeObjectives(ctx({ character: null, manualBosses: manual }));
+    const by = (id: string) => objs.find((o) => o.id === id)!;
+    expect(by("capra").status).toBe("skipped");
+    expect(by("depths").status).toBe("skipped");
+    expect(nextObjective(objs)?.id).toBe("sens");
+  });
+  it("later progress implies non-bypassable prerequisites", () => {
+    const objs = computeObjectives(ctx({ character: null, manualBosses: { "iron-golem": true } }));
+    const by = (id: string) => objs.find((o) => o.id === id)!;
+    expect(by("parish").status).toBe("implied");
+    expect(by("quelaag").status).toBe("implied");
+    expect(by("burg").status).toBe("implied");
+    expect(nextObjective(objs)?.id).toBe("anor");
+  });
+  it("Darkroot before Anor Londo: next is still the main path, not a done branch", () => {
+    const objs = computeObjectives(ctx({ character: null, manualBosses: { "asylum-demon": true, "taurus-demon": true, "bell-gargoyles": true, sif: true } }));
+    expect(nextObjective(objs)?.id).toBe("capra");
   });
 });
 

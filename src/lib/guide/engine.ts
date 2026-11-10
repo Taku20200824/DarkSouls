@@ -111,8 +111,18 @@ export interface Objective {
   prepareMn: string[];
   achievement?: string;
   bossIds: string[];
+  /** True for anything that no longer needs doing: detected, implied, or skipped. */
   done: boolean;
   doneCertainty: BossStatus["certainty"];
+  /**
+   * detected — boss evidence in the save/Steam data;
+   * implied — not detected, but a later milestone that requires it is done;
+   * skipped — bypassable and a later milestone was reached another way;
+   * todo — still to do.
+   */
+  status: "detected" | "implied" | "skipped" | "todo";
+  statusNoteMn?: string;
+  optional: boolean;
 }
 
 interface MilestoneDef {
@@ -149,8 +159,33 @@ export const MILESTONES: MilestoneDef[] = [
   { id: "dlc", title: "Artorias of the Abyss (DLC)", area: "oolacile", bossIds: ["sanctuary-guardian", "artorias", "kalameet", "manus"], whyMn: "DLC boss-ууд ба ховор зэвсгүүд.", whereMn: "Darkroot Basin (Dusk + Broken Pendant)", collectMn: ["Guardian Tail", "Obsidian Greatsword", "Soul of Artorias", "Soul of Manus"], enemiesMn: ["Sanctuary Guardian", "Knight Artorias", "Black Dragon Kalameet", "Manus"], avoidMissingMn: ["Sanctuary Guardian-ийн сүүл", "Kalameet-ийн сүүл", "Silver Pendant-ыг Manus-д авч явах"], prepareMn: ["Зэвсэг +10 / +5", "Silver Pendant"], optional: true },
 ];
 
+/**
+ * What each milestone needs first. The fixed MILESTONES order is only a suggested route — the
+ * four Lord Souls, for one, can be taken in any order — so "next objective" is resolved from
+ * this graph instead of "first unfinished entry in the list".
+ */
+const PREREQS: Record<string, { requires: string[]; bypassable?: boolean }> = {
+  asylum: { requires: [] },
+  burg: { requires: ["asylum"] },
+  parish: { requires: ["burg"] },
+  // Both skippable via Master Key → Darkroot Basin → Valley of Drakes → Blighttown.
+  capra: { requires: ["burg"], bypassable: true },
+  depths: { requires: ["capra"], bypassable: true },
+  quelaag: { requires: ["depths"] },
+  sens: { requires: ["parish", "quelaag"] },
+  anor: { requires: ["sens"] },
+  darkroot: { requires: ["parish"] },
+  kings: { requires: ["darkroot"] },
+  nito: { requires: ["asylum"] },
+  seath: { requires: ["anor"] },
+  izalith: { requires: ["quelaag", "anor"] },
+  gwyn: { requires: ["kings", "nito", "seath", "izalith"] },
+  dlc: { requires: ["darkroot"] },
+};
+
 export function computeObjectives(ctx: TrackerContext): Objective[] {
-  return MILESTONES.map((m) => {
+  const detected = new Map<string, { done: boolean; cert: BossStatus["certainty"] }>();
+  for (const m of MILESTONES) {
     const statuses = m.bossIds.map((id) => bossStatus(BOSSES.find((b) => b.id === id)!, ctx));
     const done = statuses.every((s) => s.state === "defeated");
     const cert = done
@@ -160,14 +195,60 @@ export function computeObjectives(ctx: TrackerContext): Objective[] {
           ? "verified"
           : "inferred"
       : "unknown";
-    return { ...m, done, doneCertainty: cert };
+    detected.set(m.id, { done, cert });
+  }
+
+  // Walk back from everything detected done: a required predecessor must have been done too
+  // (its evidence just isn't in the save); a bypassable one was skipped instead.
+  const status = new Map<string, Objective["status"]>();
+  const note = new Map<string, string>();
+  for (const m of MILESTONES) status.set(m.id, detected.get(m.id)!.done ? "detected" : "todo");
+  const visit = (id: string, by: string) => {
+    for (const p of PREREQS[id]?.requires ?? []) {
+      if (status.get(p) !== "todo") continue;
+      const byTitle = MILESTONES.find((x) => x.id === by)?.title ?? by;
+      if (PREREQS[p]?.bypassable) {
+        status.set(p, "skipped");
+        note.set(p, `Алгассан — '${byTitle}' өөр замаар хүрсэн. Шагналын төлөө буцаж болно.`);
+      } else {
+        status.set(p, "implied");
+        note.set(p, `Save-д шууд нотолгоо алга, гэхдээ '${byTitle}' биелсэн тул энэ нь хийгдсэн байх ёстой.`);
+      }
+      visit(p, by);
+    }
+  };
+  for (const m of MILESTONES) if (status.get(m.id) === "detected") visit(m.id, m.id);
+
+  return MILESTONES.map((m) => {
+    const s = status.get(m.id)!;
+    const det = detected.get(m.id)!;
+    return {
+      ...m,
+      status: s,
+      statusNoteMn: note.get(m.id),
+      done: s !== "todo",
+      doneCertainty: s === "detected" ? det.cert : s === "todo" ? "unknown" : "inferred",
+      optional: !!m.optional,
+    };
   });
 }
 
-/** Estimated current area: area of the first not-done main-route milestone. Clearly an estimate. */
+/**
+ * The objective to work on now: the first unfinished main-route milestone whose prerequisites
+ * are all done or skipped (so a bypassed Gaping Dragon never blocks the route), falling back to
+ * the first unfinished one, then optional content.
+ */
+export function nextObjective(objs: Objective[]): Objective | undefined {
+  const byId = new Map(objs.map((o) => [o.id, o]));
+  const ready = (o: Objective) => (PREREQS[o.id]?.requires ?? []).every((p) => byId.get(p)?.done !== false);
+  const todo = objs.filter((o) => !o.done);
+  return todo.find((o) => !o.optional && ready(o)) ?? todo.find((o) => !o.optional) ?? todo.find(ready) ?? todo[0];
+}
+
+/** Estimated current area: area of the next objective. Clearly an estimate. */
 export function estimateArea(ctx: TrackerContext): { areaId: string | null; label: "Inference" } {
   if (!ctx.character && !ctx.achievements) return { areaId: null, label: "Inference" };
-  const next = computeObjectives(ctx).find((o) => !o.done && !MILESTONES.find((m) => m.id === o.id)?.optional);
+  const next = nextObjective(computeObjectives(ctx).filter((o) => !o.optional));
   return { areaId: next?.area ?? "kiln-of-the-first-flame", label: "Inference" };
 }
 
