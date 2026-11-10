@@ -48,6 +48,8 @@ win:
   artifactName: "Lordran-Tracker-Setup-${version}.${ext}"
 
 nsis:
+  # Ends a still-running app/server process instead of asking the user to close it.
+  include: build/installer.nsh
   oneClick: true
   perMachine: false
   allowToChangeInstallationDirectory: false

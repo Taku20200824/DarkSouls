@@ -5,7 +5,7 @@
 // zero-config local-storage + session-secret behavior this relies on.
 const { app, BrowserWindow, dialog, shell } = require("electron");
 const { autoUpdater } = require("electron-updater");
-const { spawn } = require("node:child_process");
+const { spawn, execFileSync } = require("node:child_process");
 const net = require("node:net");
 const path = require("node:path");
 const http = require("node:http");
@@ -14,6 +14,8 @@ const fs = require("node:fs");
 let serverProcess = null;
 let mainWindow = null;
 let currentUrl = null;
+let titleLabel = null; // update-progress text kept in the window title over the page's own <title>
+let stoppingServer = false;
 
 function findFreePort(preferred) {
   return new Promise((resolve) => {
@@ -84,6 +86,7 @@ async function startServer() {
   serverProcess.stdout.pipe(logStream);
   serverProcess.stderr.pipe(logStream);
   serverProcess.on("exit", (code) => {
+    if (stoppingServer) return; // we killed it on purpose (quit / install update)
     if (code && code !== 0 && mainWindow) {
       mainWindow.webContents.loadURL(
         `data:text/html,${encodeURIComponent(`<body style="background:#050506;color:#e6d19c;font-family:sans-serif;padding:3rem">Server exited unexpectedly (code ${code}). Please restart LORDRAN TRACKER.<br><br><small>Log: ${logFile}</small></body>`)}`,
@@ -128,6 +131,12 @@ function createWindow(url) {
     return { action: "deny" };
   });
 
+  mainWindow.on("page-title-updated", (event) => {
+    if (!titleLabel) return;
+    event.preventDefault();
+    mainWindow.setTitle(`${BASE_TITLE} — ${titleLabel}`);
+  });
+
   mainWindow.loadURL(url);
 }
 
@@ -138,35 +147,89 @@ function createWindow(url) {
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
 
+const BASE_TITLE = "LORDRAN TRACKER";
+
+function setProgress(fraction, label) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setProgressBar(fraction); // taskbar bar; -1 removes it
+  titleLabel = label ?? null;
+  if (label) mainWindow.setTitle(`${BASE_TITLE} — ${label}`);
+  else mainWindow.setTitle(mainWindow.webContents.getTitle() || BASE_TITLE);
+}
+
+/**
+ * The local server is the same "Lordran Tracker.exe" binary (ELECTRON_RUN_AS_NODE), and
+ * the NSIS installer refuses to run while any process of that name is alive ("Lordran
+ * Tracker could not be closed"). A plain kill() returns before the process is gone, so
+ * kill the whole tree synchronously and only then hand over to the installer.
+ */
+function stopServerSync() {
+  const proc = serverProcess;
+  serverProcess = null;
+  stoppingServer = true;
+  if (!proc || proc.exitCode !== null || !proc.pid) return;
+  try {
+    if (process.platform === "win32") execFileSync("taskkill", ["/pid", String(proc.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
+    else proc.kill("SIGKILL");
+  } catch {
+    // Already gone.
+  }
+}
+
 function setUpAutoUpdate() {
+  let downloading = false;
+
   autoUpdater.on("update-available", async (info) => {
     const { response } = await dialog.showMessageBox(mainWindow, {
       type: "info",
-      title: "LORDRAN TRACKER",
+      title: BASE_TITLE,
       message: `Шинэ хувилбар бэлэн байна: v${info.version}`,
-      detail: "Татаж аваад шинэчлэх үү?",
+      detail: "Татаж аваад шинэчлэх үү? Татаж байх үед app-ийг ашиглаж болно — явцыг цонхны гарчиг болон taskbar дээр харуулна.",
       buttons: ["Шинэчлэх", "Дараа нь"],
       defaultId: 0,
       cancelId: 1,
     });
-    if (response === 0) autoUpdater.downloadUpdate();
+    if (response !== 0) return;
+    downloading = true;
+    setProgress(0.01, "Шинэчлэл татаж байна… 0%");
+    autoUpdater.downloadUpdate().catch(() => {}); // failures arrive via the "error" event
+  });
+
+  autoUpdater.on("download-progress", (p) => {
+    const pct = Math.max(0, Math.min(100, p.percent || 0));
+    setProgress(pct / 100, `Шинэчлэл татаж байна… ${Math.floor(pct)}%`);
   });
 
   autoUpdater.on("update-downloaded", async () => {
+    downloading = false;
+    setProgress(-1, "Шинэчлэл бэлэн");
     const { response } = await dialog.showMessageBox(mainWindow, {
       type: "info",
-      title: "LORDRAN TRACKER",
+      title: BASE_TITLE,
       message: "Шинэчлэл татагдлаа. Апп-ыг дахин эхлүүлж суулгах уу?",
       buttons: ["Одоо дахин эхлүүлэх", "Дараа нь"],
       defaultId: 0,
       cancelId: 1,
     });
-    if (response === 0) autoUpdater.quitAndInstall();
+    if (response !== 0) return;
+    stopServerSync();
+    // isSilent=false keeps the installer's own progress window; isForceRunAfter relaunches the app.
+    setImmediate(() => autoUpdater.quitAndInstall(false, true));
   });
 
   autoUpdater.on("error", (err) => {
     const logFile = path.join(app.getPath("userData"), "server.log");
     fs.appendFileSync(logFile, `\n--- auto-update error ${new Date().toISOString()} ---\n${err.stack ?? err}\n`);
+    // Only interrupt for a download the user asked for; a failed background check stays silent.
+    if (!downloading) return;
+    downloading = false;
+    setProgress(-1);
+    dialog.showMessageBox(mainWindow, {
+      type: "error",
+      title: BASE_TITLE,
+      message: "Шинэчлэл татаж чадсангүй.",
+      detail: `Интернэт холболтоо шалгаад app-ийг дахин нээнэ үү, эсвэл сайтаас шинэ хувилбарыг татаж суулгана уу.\n\n${err.message ?? err}`,
+    });
   });
 
   if (app.isPackaged) autoUpdater.checkForUpdates().catch(() => {});
@@ -203,6 +266,4 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
 
-app.on("before-quit", () => {
-  if (serverProcess) serverProcess.kill();
-});
+app.on("before-quit", stopServerSync);
