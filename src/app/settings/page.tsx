@@ -35,8 +35,8 @@ function Connected() {
       <Panel title="Автомат sync">
         <div className="text-sm">
           <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : <span className="text-ash-500">Эхэлж байна…</span>}</p>
-          {c?.saveFound === false && <p className="text-amber-300">Save файл олдсонгүй. Тоглоомыг нэг удаа ажиллуулж хадгална уу, эсвэл Manual upload ашиглана уу.</p>}
-          {c?.saveFound && c.message && <p className="text-amber-300">{c.message}</p>}
+          {c?.saveFound === false && <p className="text-warning">Save файл олдсонгүй. Тоглоомыг нэг удаа ажиллуулж хадгална уу, эсвэл Manual upload ашиглана уу.</p>}
+          {c?.saveFound && c.message && <p className="text-warning">{c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
           {c?.lastSyncAt && <p className="text-ash-400">Сүүлийн sync: {fmtAgo(c.lastSyncAt)}</p>}
           <p className="text-ash-400">Хувилбар: {process.env.NEXT_PUBLIC_APP_VERSION}</p>
@@ -49,7 +49,7 @@ function Connected() {
         <div className="text-sm">
           <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : c?.lastHeartbeat ? <span>OFFLINE — LAST SYNC {fmtAgo(c.lastSyncAt ?? c.lastHeartbeat)}</span> : <span className="text-ash-500">Not connected</span>}</p>
           {c?.deviceName && <p className="text-ash-400">Төхөөрөмж: {c.deviceName} {c.version ? `· v${c.version}` : ""}</p>}
-          {c?.saveFound === false && <p className="text-amber-300">Companion save файлыг олсонгүй: {c.message}</p>}
+          {c?.saveFound === false && <p className="text-warning">Companion save файлыг олсонгүй: {c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
         </div>
         <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-ash-300">
@@ -58,8 +58,8 @@ function Connected() {
           <li>Companion-д <code>pair КОД</code> гэж оруул. Дараа нь <code>run</code>.</li>
         </ol>
         <button className="btn btn-ember mt-4" onClick={makeCode}>Холбох код үүсгэх</button>
-        {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-[0.4em] text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
-        <button className="btn mt-4 text-xs" onClick={() => post("/api/companion/revoke", {})}>Бүх companion-ий эрхийг цуцлах</button>
+        {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-code text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
+        <button className="btn btn-danger btn-sm mt-4" onClick={() => post("/api/companion/revoke", {})}>Бүх companion-ий эрхийг цуцлах</button>
       </Panel>
       <Panel title={IS_DESKTOP_BUILD ? "App-ийн хувилбар" : "Desktop App (Windows)"}>
         {!IS_DESKTOP_BUILD && <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>}

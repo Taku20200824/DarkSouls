@@ -43,7 +43,7 @@ export default function Upgrades() {
             {owned.map((o) => <option key={`o-${o.id}`} value={o.baseName}>{`${o.name} (эзэмшдэг)`}</option>)}
             {ALL_WEAPON_NAMES.map((n) => <option key={n} value={n} />)}
           </datalist>
-          {ownedMatch && <p className="mt-1 text-xs text-emerald-300">Inventory: {ownedMatch.name} <Badge kind={demo ? "demo" : "verified"} /></p>}
+          {ownedMatch && <p className="mt-1 text-xs text-success">Inventory: {ownedMatch.name} <Badge kind={demo ? "demo" : "verified"} /></p>}
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div><label className="block text-xs text-ash-500">Одоогийн зам</label>
               <select className="input mt-1 w-full" value={curPath} onChange={(e) => setCurPath(e.target.value)}>{UPGRADE_PATHS.filter((p) => p.verified).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -74,7 +74,7 @@ export default function Upgrades() {
                         <tr key={t.material} className="border-t border-gold-600/10">
                           <td className="py-1.5 text-gold-300"><span className="flex items-center gap-2"><ItemIcon name={t.material} category="goods" size={32} />{t.material}</span></td><td>{t.qty}</td>
                           <td>{have ?? <span className="text-ash-500">Not connected</span>}</td>
-                          <td className={miss ? "text-red-300" : "text-emerald-300"}>{miss === null ? "—" : miss}</td>
+                          <td className={miss ? "text-danger" : "text-success"}>{miss === null ? "—" : miss}</td>
                         </tr>
                       );
                     })}

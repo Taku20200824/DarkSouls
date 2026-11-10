@@ -18,7 +18,43 @@
   --color-blood-500: #8f1414;
   --color-ash-300: #c2bdb1;
   --color-ash-400: #918c82;
-  --color-ash-500: #66625b;
+  /* Lightened from #66625b (≈3.3:1) to pass WCAG AA 4.5:1 for small text on the
+     stone-950 page and stone-850 panel backgrounds. */
+  --color-ash-500: #837e75;
+
+  /* Small-type scale (text-micro …). The UI's tiny uppercase labels used to be
+     text-[9px] / [10px] / [11px] / [13px] / [15px] one-offs; 9px is folded into micro. */
+  --text-micro: 0.625rem; /* 10px — badges, stat labels, eyebrows */
+  --text-label: 0.6875rem; /* 11px — nav sublabels, small captions */
+  --text-body-sm: 0.8125rem; /* 13px — dense body copy */
+  --text-title: 0.9375rem; /* 15px — panel titles */
+  --text-display: 2.6rem; /* page titles (md+) */
+
+  /* Letter-spacing for uppercase Cinzel text (tracking-caps …). */
+  --tracking-caps: 0.14em; /* buttons, badges, inline caps */
+  --tracking-label: 0.2em; /* section labels, panel titles */
+  --tracking-eyebrow: 0.28em; /* eyebrows, the sidebar brand */
+  --tracking-code: 0.4em; /* pairing code digits */
+  --tracking-logo: 0.6em; /* "TRACKER" under the logo */
+
+  /* Status colours — use these (text-success, border-warning-line/60 …) instead of raw
+     Tailwind palettes, so a state reads the same on every page. Values match the
+     emerald/red/amber/sky/indigo/fuchsia shades the pages used before. */
+  --color-success: oklch(84.5% 0.143 164.978); /* defeated, owned, verified */
+  --color-success-line: oklch(50.8% 0.118 165.612);
+  --color-danger: oklch(80.8% 0.114 19.571); /* alive, missing, error */
+  --color-danger-strong: oklch(70.4% 0.191 22.216);
+  --color-warning: oklch(87.9% 0.169 91.605); /* missable, inferred, skipped */
+  --color-warning-line: oklch(66.6% 0.179 58.318);
+  --color-info: oklch(82.8% 0.111 230.318); /* user-confirmed */
+  --color-info-line: oklch(50% 0.134 242.749);
+  --color-steam: oklch(78.5% 0.115 274.713); /* Steam API source */
+  --color-steam-line: oklch(51.1% 0.262 276.966);
+  --color-demo: oklch(83.3% 0.145 321.434); /* demo data — never real stats */
+  --color-demo-soft: oklch(90.3% 0.076 319.62);
+  --color-demo-line: oklch(59.1% 0.293 322.896);
+  --color-demo-dot: oklch(74% 0.238 322.16);
+  --color-demo-deep: oklch(40.1% 0.17 325.612);
   /* Latin glyphs use Cinzel/Cormorant Garamond; those ship no Cyrillic, so Mongolian
      text falls through to Yeseva One / Alegreya (both carry full Cyrillic + Cyrillic-ext,
      which covers Ө/Ү) before hitting the plain system serif. */
@@ -68,12 +104,16 @@ body::after {
   color: #fff;
 }
 
-.font-display {
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
-}
-.font-serif {
-  font-family: var(--font-serif);
+/* In a layer so tracking-* utilities can override the default spacing — unlayered CSS
+   beats every Tailwind utility, which silently disabled all tracking on display text. */
+@layer components {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+  }
+  .font-serif {
+    font-family: var(--font-serif);
+  }
 }
 .gold-text {
   background: linear-gradient(180deg, #fff6dc 0%, #e6d19c 35%, #b8955a 70%, #6e5530 100%);
@@ -203,7 +243,7 @@ li:hover > .item-icon,
   font-size: 0.82rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  transition: all 0.25s ease;
+  transition: border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, opacity 0.25s ease;
   overflow: hidden;
 }
 .btn::after {
@@ -222,9 +262,66 @@ li:hover > .item-icon,
   color: #fff3dc;
   box-shadow: 0 0 22px -4px rgba(255, 145, 66, 0.55), inset 0 0 12px rgba(255, 145, 66, 0.12);
 }
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled="true"] {
   opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
+}
+.btn:disabled::after {
+  display: none;
+}
+/* Sizes: default (md), .btn-sm for filters / toolbars, .btn-lg for hero calls to action. */
+.btn-sm {
+  padding: 0.3rem 0.8rem;
+  font-size: var(--text-micro);
+  gap: 0.35rem;
+}
+.btn-lg {
+  padding: 0.875rem 1.75rem;
+}
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+/* Loading: <button className="btn" aria-busy={busy} disabled={busy}> — spinner before the label. */
+.btn[aria-busy="true"] {
+  cursor: progress;
+}
+.btn[aria-busy="true"]::before {
+  content: "";
+  width: 0.9em;
+  height: 0.9em;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: btn-spin 0.7s linear infinite;
+}
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Ghost: secondary actions that shouldn't compete with the panel (no fill until hover). */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-ash-300);
+}
+.btn-ghost:hover {
+  background: rgba(255, 145, 66, 0.06);
+  border-color: rgba(207, 177, 115, 0.3);
+}
+/* Danger: destructive actions (revoke, delete). */
+.btn-danger {
+  border-color: color-mix(in oklch, var(--color-danger-strong) 55%, transparent);
+  color: var(--color-danger);
+}
+.btn-danger:hover {
+  border-color: var(--color-danger-strong);
+  color: #fff;
+  box-shadow: 0 0 22px -4px color-mix(in oklch, var(--color-danger-strong) 60%, transparent);
 }
 .btn-ember {
   background: linear-gradient(180deg, #d45a12 0%, #8a300a 100%);
@@ -248,6 +345,24 @@ li:hover > .item-icon,
 .input:focus {
   border-color: var(--color-ember-400);
   box-shadow: 0 0 0 3px rgba(242, 106, 27, 0.15);
+}
+.input::placeholder {
+  color: var(--color-ash-500);
+}
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Error: set aria-invalid on the field (and point aria-describedby at the message). */
+.input[aria-invalid="true"] {
+  border-color: var(--color-danger-strong);
+}
+.input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger-strong) 25%, transparent);
+}
+.input-sm {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
 }
 
 /* ---------- Atmosphere ---------- */

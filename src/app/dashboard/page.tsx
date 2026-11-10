@@ -37,7 +37,7 @@ function Inner() {
     <>
       <div className="dashboard-chapter">
         <div className="relative z-10"><p className="eyebrow">THE CHRONICLE / {demo ? "DEMO JOURNEY" : "YOUR JOURNEY"}</p><p className="font-serif mt-3 text-3xl text-gold-200 md:text-4xl">The fire still burns.</p><p className="mt-2 text-xs leading-6 text-ash-400">Every soul has a story. This one is yours.</p></div>
-        <Link href="/guide" className="btn relative z-10 !text-[10px]">Continue the path <ArrowUpRight size={14} /></Link>
+        <Link href="/guide" className="btn btn-sm relative z-10">Continue the path <ArrowUpRight size={14} /></Link>
         <BonfireMark className="chapter-bonfire" />
       </div>
       <PageTitle title={ch?.name.value ?? "Live Dashboard"} sub={ch ? `${ch.className.value ?? ""} · Slot ${ch.slot + 1} · ${sel?.source ?? ""} · ${fmtAgo(sel?.updatedAt)}` : "Дүрийн мэдээлэл хүлээгдэж байна"} />
@@ -83,11 +83,11 @@ function Inner() {
               <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                 <div><span className="text-ash-500">Хаана: </span>{next.whereMn}</div>
                 {next.achievement && <div><span className="text-ash-500">Achievement: </span>{next.achievement}</div>}
-                {next.avoidMissingMn.length > 0 && <div className="md:col-span-2 text-amber-300">⚠ {next.avoidMissingMn.join(" · ")}</div>}
+                {next.avoidMissingMn.length > 0 && <div className="md:col-span-2 text-warning">⚠ {next.avoidMissingMn.join(" · ")}</div>}
               </div>
               {skipped.length > 0 && (
                 <p className="mt-3 text-xs text-ash-400">
-                  <span className="text-amber-300">↷ Алгассан:</span> {skipped.map((o) => o.title).join(" · ")} — өөр замаар цааш явсан тул дараагийн зорилтод тооцохгүй.
+                  <span className="text-warning">↷ Алгассан:</span> {skipped.map((o) => o.title).join(" · ")} — өөр замаар цааш явсан тул дараагийн зорилтод тооцохгүй.
                 </p>
               )}
               <Link href="/guide" className="btn mt-3">Бүрэн хөтөч</Link>
@@ -134,7 +134,7 @@ function Inner() {
                 {advice.needs.map((n) => (
                   <li key={n.material} className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2"><ItemIcon name={n.material} category="goods" size={30} />{n.material} ×{n.qty}</span>
-                    <span className={n.missing ? "text-red-300" : "text-emerald-300"}>{n.missing ? `дутуу ${n.missing}` : "хангалттай"} (байгаа {n.have ?? "?"})</span>
+                    <span className={n.missing ? "text-danger" : "text-success"}>{n.missing ? `дутуу ${n.missing}` : "хангалттай"} (байгаа {n.have ?? "?"})</span>
                   </li>
                 ))}
               </ul>
@@ -153,7 +153,7 @@ function Inner() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Object.entries(ch.stats).map(([k, v]) => (
                 <div key={k} className="min-w-0 rounded bg-stone-900/60 px-3 py-2">
-                  <div className="truncate text-[10px] uppercase tracking-[0.12em] text-ash-400" title={k}>{k}</div>
+                  <div className="truncate text-micro uppercase tracking-caps text-ash-400" title={k}>{k}</div>
                   <div className="font-display text-2xl leading-tight tabular-nums text-gold-300">{v.value ?? "?"}</div>
                 </div>
               ))}

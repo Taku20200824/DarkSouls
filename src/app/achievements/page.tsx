@@ -34,7 +34,7 @@ export default function Achievements() {
             <div className="h-2 rounded bg-stone-800"><div className="h-2 rounded bg-gradient-to-r from-ember-600 to-gold-400" style={{ width: `${comp.known ? (comp.unlocked / comp.total) * 100 : 0}%` }} /></div>
             <p className="mt-1 text-xs text-ash-500">{ach?.status === "ok" ? `Steam синк: ${fmtDate(ach.fetchedAt)}` : ach?.status ? STATUS_MN[ach.status] ?? ach.status : "Steam-ээс синк хийгээгүй."}</p>
           </div>
-          {status === "ready" && <button className="btn btn-ember" onClick={sync} disabled={busy}>{busy ? "Синк…" : "Steam-ээс синк"}</button>}
+          {status === "ready" && <button className="btn btn-ember" onClick={sync} disabled={busy} aria-busy={busy}>{busy ? "Синк…" : "Steam-ээс синк"}</button>}
         </div>
       </Panel>
       {(Object.keys(CAT) as AchCategory[]).map((cat) => (
@@ -50,18 +50,18 @@ export default function Achievements() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={u.unlocked ? "font-display text-lg text-gold-300" : "font-display text-lg text-ash-400"}>{a.name}</span>
-                      <span className={u.unlocked ? "text-xs text-emerald-300" : u.unlocked === false ? "text-xs text-ash-500" : "text-xs text-ash-500"}>{u.unlocked ? "Unlocked" : u.unlocked === false ? "Locked" : "Unknown"}</span>
+                      <span className={u.unlocked ? "text-xs text-success" : u.unlocked === false ? "text-xs text-ash-500" : "text-xs text-ash-500"}>{u.unlocked ? "Unlocked" : u.unlocked === false ? "Locked" : "Unknown"}</span>
                       {u.source && <Badge kind={demo ? "demo" : u.source === "Steam API" ? "steam" : "manual"} />}
-                      <span className="rounded bg-stone-800 px-1.5 text-[10px] text-ash-400">{a.cycle}</span>
+                      <span className="rounded bg-stone-800 px-1.5 text-micro text-ash-400">{a.cycle}</span>
                     </div>
                     <p className="text-xs text-ash-500">{a.descEn}</p>
                     <p className="text-sm text-ash-300">{a.howMn}</p>
-                    {a.missableMn && <p className="text-xs text-amber-300">⚠ {a.missableMn}</p>}
-                    {hints.get(a.name) && !u.unlocked && <p className="text-xs text-emerald-300">Save дээр нөхцөл биелсэн харагдаж байна (Inferred).</p>}
-                    {s?.unlockTime && <p className="text-[11px] text-ash-500">Нээсэн: {fmtDate(s.unlockTime * 1000)}</p>}
+                    {a.missableMn && <p className="text-xs text-warning">⚠ {a.missableMn}</p>}
+                    {hints.get(a.name) && !u.unlocked && <p className="text-xs text-success">Save дээр нөхцөл биелсэн харагдаж байна (Inferred).</p>}
+                    {s?.unlockTime && <p className="text-label text-ash-500">Нээсэн: {fmtDate(s.unlockTime * 1000)}</p>}
                   </div>
                   {status === "ready" && !tracker.achievements && (
-                    <button className="btn !py-1 text-xs" onClick={() => post("/api/manual", { kind: "achievements", id: a.name, value: manual ? null : true })}>{manual ? "Гарын тэмдэг арилгах" : "Гараар тэмдэглэх"}</button>
+                    <button className="btn btn-sm" onClick={() => post("/api/manual", { kind: "achievements", id: a.name, value: manual ? null : true })}>{manual ? "Гарын тэмдэг арилгах" : "Гараар тэмдэглэх"}</button>
                   )}
                 </li>
               );

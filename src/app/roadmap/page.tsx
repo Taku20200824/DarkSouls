@@ -39,7 +39,7 @@ export default function Roadmap() {
           {checklist.map((c) => (
             <li key={c.mn} className="flex items-center justify-between gap-2">
               <span>{c.mn}</span>
-              <span className="flex items-center gap-1">{c.done === true ? <span className="text-emerald-300">✓</span> : c.done === false ? <span className="text-red-300">✗</span> : <span className="text-ash-500">Unknown</span>}{c.done !== null && <Badge kind={demo ? "demo" : "inferred"} />}</span>
+              <span className="flex items-center gap-1">{c.done === true ? <span className="text-success">✓</span> : c.done === false ? <span className="text-danger">✗</span> : <span className="text-ash-500">Unknown</span>}{c.done !== null && <Badge kind={demo ? "demo" : "inferred"} />}</span>
             </li>
           ))}
         </ul>

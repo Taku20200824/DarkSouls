@@ -17,7 +17,7 @@ export default function Quests() {
           const done = new Set(manual[q.id] ?? []);
           const dead = q.deathFlag ? flagSet("NPC", q.deathFlag) : null;
           return (
-            <Panel key={q.id} title={q.npc} right={dead ? <span className="text-xs text-red-300">☠ Нас барсан <Badge kind={demo ? "demo" : "verified"} /></span> : undefined}>
+            <Panel key={q.id} title={q.npc} right={dead ? <span className="text-xs text-danger">☠ Нас барсан <Badge kind={demo ? "demo" : "verified"} /></span> : undefined}>
               <p className="text-sm text-ash-400">{q.mn}</p>
               <ol className="relative mt-4 space-y-3 border-l border-gold-600/30 pl-5">
                 {q.stages.map((s) => {
@@ -28,13 +28,13 @@ export default function Quests() {
                       <span className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full border ${isDone ? "border-ember-300 bg-ember-500" : "border-gold-600 bg-stone-900"}`} />
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         <span className={isDone ? "text-gold-300" : "text-ash-300"}>{s.mn}</span>
-                        {s.area && <span className="text-[11px] text-ash-500">({areaById(s.area)?.name})</span>}
+                        {s.area && <span className="text-label text-ash-500">({areaById(s.area)?.name})</span>}
                         {flagged === true && <Badge kind={demo ? "demo" : "verified"} />}
                         {flagged !== true && done.has(s.id) && <Badge kind="manual" />}
                       </div>
-                      {s.decisionMn && <p className="text-xs text-amber-300">⚖ {s.decisionMn}</p>}
+                      {s.decisionMn && <p className="text-xs text-warning">⚖ {s.decisionMn}</p>}
                       {status === "ready" && flagged !== true && (
-                        <button className="mt-1 text-[11px] text-ember-300 underline" onClick={() => {
+                        <button className="mt-1 text-label text-ember-300 underline" onClick={() => {
                           const next = new Set(done);
                           if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
                           post("/api/manual", { kind: "quests", id: q.id, value: [...next] });
@@ -44,9 +44,9 @@ export default function Quests() {
                   );
                 })}
               </ol>
-              {q.failureMn.length > 0 && <div className="mt-3 text-xs text-red-300">✗ {q.failureMn.join(" · ")}</div>}
+              {q.failureMn.length > 0 && <div className="mt-3 text-xs text-danger">✗ {q.failureMn.join(" · ")}</div>}
               <div className="mt-2 text-xs text-ash-400">Шагнал: {q.rewardsMn.join(" · ")}</div>
-              {q.missableMn && <div className="mt-1 text-xs text-amber-300">⚠ Missable: {q.missableMn}</div>}
+              {q.missableMn && <div className="mt-1 text-xs text-warning">⚠ Missable: {q.missableMn}</div>}
             </Panel>
           );
         })}

@@ -43,7 +43,7 @@ export default function Inventory() {
     <>
       <PageTitle title="Inventory & Collection" sub="Save файлаас уншсан эд зүйлс. Тоглоомын нэр томьёо англиар." />
       <div className="mb-4 flex flex-wrap gap-2">
-        {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`btn !py-1 text-xs ${tab === t.id ? "btn-ember" : ""}`}>{t.mn}</button>)}
+        {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`btn btn-sm ${tab === t.id ? "btn-ember" : ""}`}>{t.mn}</button>)}
         <input className="input ml-auto w-full sm:w-64" placeholder="Хайх…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {!ch ? (

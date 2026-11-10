@@ -51,7 +51,7 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
               return (
                 <li key={id} className="flex items-center justify-between gap-2">
                   <Link href={`/bosses/${id}`} className="flex min-w-0 items-center gap-2 hover:text-ember-300"><BossThumb boss={b} defeated={s.state === "defeated"} size={36} /><span className="truncate">{b.name}</span></Link>
-                  <span className="flex items-center gap-1"><span className={s.state === "defeated" ? "text-emerald-300" : s.state === "alive" ? "text-red-300" : "text-ash-500"}>{s.state === "defeated" ? "Defeated" : s.state === "alive" ? "Alive" : "Unknown"}</span><Badge kind={demo ? "demo" : s.certainty} /></span>
+                  <span className="flex items-center gap-1"><span className={s.state === "defeated" ? "text-success" : s.state === "alive" ? "text-danger" : "text-ash-500"}>{s.state === "defeated" ? "Defeated" : s.state === "alive" ? "Alive" : "Unknown"}</span><Badge kind={demo ? "demo" : s.certainty} /></span>
                 </li>
               );
             })}
@@ -67,7 +67,7 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
           {area.items.map((it) => {
             const base = it.replace(/\s*\(.*\)$/, "");
             const owned = ch ? hasItem(ch, base) : null;
-            return <li key={it} className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2"><ItemIcon name={base} size={26} /><span className="truncate">{it}</span></span>{owned !== null && <span className={owned ? "text-emerald-300" : "text-ash-500"}>{owned ? "✓ эзэмшдэг" : "—"}</span>}</li>;
+            return <li key={it} className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2"><ItemIcon name={base} size={26} /><span className="truncate">{it}</span></span>{owned !== null && <span className={owned ? "text-success" : "text-ash-500"}>{owned ? "✓ эзэмшдэг" : "—"}</span>}</li>;
           })}
         </ul>
       </div>
@@ -80,7 +80,7 @@ export function AreaDetail({ area, compact }: { area: Area; compact?: boolean })
           </div>
           <div className="font-display text-lg text-gold-300">{objective.title}</div>
           <p className="text-ash-300">{objective.statusNoteMn ?? objective.whyMn}</p>
-          {objective.avoidMissingMn.length > 0 && <p className="mt-1 text-amber-300">⚠ {objective.avoidMissingMn.join(" · ")}</p>}
+          {objective.avoidMissingMn.length > 0 && <p className="mt-1 text-warning">⚠ {objective.avoidMissingMn.join(" · ")}</p>}
         </div>
       )}
       <div>

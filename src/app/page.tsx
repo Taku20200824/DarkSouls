@@ -49,7 +49,7 @@ export default function Landing() {
     <main id="main-content" className={`landing landing-immersive relative z-10 overflow-hidden ${effects ? "" : "effects-paused"}`}>
       <motion.div className="reading-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
       <header className="landing-nav">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Lordran Tracker home"><BonfireMark className="h-10 w-7" /><span className="font-display text-[13px] tracking-[.2em] text-gold-200">LORDRAN <span className="text-ash-400">/ TRACKER</span></span></Link>
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Lordran Tracker home"><BonfireMark className="h-10 w-7" /><span className="font-display text-body-sm tracking-label text-gold-200">LORDRAN <span className="text-ash-400">/ TRACKER</span></span></Link>
         <nav aria-label="Main navigation" className="flex items-center gap-6 md:gap-9">
           <a href="#discover" className="landing-nav-link hidden sm:block">THE COMPANION</a><a href="#journey" className="landing-nav-link hidden md:block">YOUR JOURNEY</a>
           <button onClick={() => enter("/dashboard")} className="landing-nav-link flex items-center gap-2">{status === "ready" ? "DASHBOARD" : "EXPLORE DEMO"}<ArrowUpRight size={14} /></button>
@@ -68,7 +68,7 @@ export default function Landing() {
             <button className="btn hero-cta" onClick={() => { setDemo(true); router.push("/dashboard"); }}>Explore demo <ChevronRight size={16} /></button>
             {!IS_DESKTOP_BUILD && <a className="btn hero-cta" href={DESKTOP_DOWNLOAD_PATH}><Download size={16} /> Windows-д татах{desktop ? ` v${desktop.version}` : ""}</a>}
           </motion.div>
-          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-[10px] tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
+          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-micro tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in.</motion.div>
         </motion.div>
         <div className="hero-location"><span className="status-spark" /><span>REST AT THE BONFIRE</span><span className="text-ash-500">/ FIRELINK SHRINE</span></div>
         <a href="#discover" className="hero-scroll"><span>DESCEND INTO LORDRAN</span><ArrowDown size={15} /></a>
@@ -83,17 +83,17 @@ export default function Landing() {
         <div className="feature-grid">{FEATURES.map((f, i) => (
           <RelicCard key={f.n} index={i} onClick={() => enter(f.href)} label={`Open ${f.name}${status === "ready" ? "" : " in demo mode"}`}>
             <div className="flex items-center justify-between"><f.icon size={25} strokeWidth={1.3} className="feature-icon" /><span className="font-display text-xs tracking-widest text-ash-500">{f.n} /</span></div>
-            <p className="eyebrow mt-8 !text-[9px] !tracking-[.18em]">{f.en}</p><h3 className="mt-3 text-lg font-medium text-gold-200">{f.t}</h3><p className="mt-3 text-[13px] leading-6 text-ash-400">{f.d}</p><div className="feature-link"><span>{f.name}</span><ArrowUpRight size={17} /></div>
+            <p className="eyebrow mt-8 !text-micro !tracking-label">{f.en}</p><h3 className="mt-3 text-lg font-medium text-gold-200">{f.t}</h3><p className="mt-3 text-body-sm leading-6 text-ash-400">{f.d}</p><div className="feature-link"><span>{f.name}</span><ArrowUpRight size={17} /></div>
           </RelicCard>
         ))}</div>
       </section>
       <motion.div className="encounter-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: .15 }} transition={{ duration: 1 }}><BossSpotlight onExplore={() => enter("/bosses/artorias")} /></motion.div>
       <section id="journey" className="journey-section">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: .25 }} variants={reveal} transition={{ duration: .8 }} className="relative z-10">
-          <p className="eyebrow">02 / YOUR NEXT CHAPTER</p><BonfireMark className="mx-auto my-8 h-24 w-16" /><h2 className="section-title">Don’t you dare<br /><span>go hollow.</span></h2><p className="mx-auto mt-5 max-w-md text-sm leading-7 text-ash-400">Хэдэн ч удаа үхсэн бай — гал хэзээ ч унтрахгүй.<br />Аяллаа үргэлжлүүл. Бид замыг тань санана.</p><button className="btn btn-ember mt-8 !px-7 !py-3.5" onClick={() => enter("/dashboard")}>Begin your journey <ArrowUpRight size={16} /></button>
+          <p className="eyebrow">02 / YOUR NEXT CHAPTER</p><BonfireMark className="mx-auto my-8 h-24 w-16" /><h2 className="section-title">Don’t you dare<br /><span>go hollow.</span></h2><p className="mx-auto mt-5 max-w-md text-sm leading-7 text-ash-400">Хэдэн ч удаа үхсэн бай — гал хэзээ ч унтрахгүй.<br />Аяллаа үргэлжлүүл. Бид замыг тань санана.</p><button className="btn btn-ember btn-lg mt-8" onClick={() => enter("/dashboard")}>Begin your journey <ArrowUpRight size={16} /></button>
         </motion.div><span className="journey-ring" aria-hidden="true" />
       </section>
-      <footer className="landing-footer"><Link href="/" className="font-display text-xs tracking-[.22em] text-gold-400">LORDRAN TRACKER</Link><p>Fan-made & unofficial. DARK SOULS © Bandai Namco / FromSoftware.</p><a href="#main-content" className="flex items-center gap-2">BACK TO THE FLAME <ArrowUpRight size={13} /></a></footer>
+      <footer className="landing-footer"><Link href="/" className="font-display text-xs tracking-label text-gold-400">LORDRAN TRACKER</Link><p>Fan-made & unofficial. DARK SOULS © Bandai Namco / FromSoftware.</p><a href="#main-content" className="flex items-center gap-2">BACK TO THE FLAME <ArrowUpRight size={13} /></a></footer>
     </main>
   );
 }

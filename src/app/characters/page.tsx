@@ -36,9 +36,9 @@ function Inner() {
                   <Badge kind={demo ? "demo" : c.source === "Companion" ? "companion" : "save"} />
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
-                  <div><div className="text-[10px] uppercase text-ash-500">SL</div><div className="font-display text-xl text-gold-300">{ch.level.value ?? "—"}</div></div>
-                  <div><div className="text-[10px] uppercase text-ash-500">NG</div><div className="font-display text-xl text-gold-300">{ch.ngCycle.value === null ? "?" : ch.ngCycle.value === 0 ? "NG" : `NG+${ch.ngCycle.value}`}</div></div>
-                  <div><div className="text-[10px] uppercase text-ash-500">Үхэл</div><div className="font-display text-xl text-gold-300">{ch.deaths.value ?? "?"}</div></div>
+                  <div><div className="text-micro uppercase text-ash-500">SL</div><div className="font-display text-xl text-gold-300">{ch.level.value ?? "—"}</div></div>
+                  <div><div className="text-micro uppercase text-ash-500">NG</div><div className="font-display text-xl text-gold-300">{ch.ngCycle.value === null ? "?" : ch.ngCycle.value === 0 ? "NG" : `NG+${ch.ngCycle.value}`}</div></div>
+                  <div><div className="text-micro uppercase text-ash-500">Үхэл</div><div className="font-display text-xl text-gold-300">{ch.deaths.value ?? "?"}</div></div>
                 </div>
                 <div className="mt-3 text-xs text-ash-500">Тоглосон: {fmtDuration(ch.playTimeSeconds.value) ?? "Unknown"} · Шинэчилсэн {fmtAgo(c.updatedAt)}</div>
                 {active && <div className="mt-3 text-xs text-ember-300">✦ Сонгогдсон</div>}

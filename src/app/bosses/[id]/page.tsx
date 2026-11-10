@@ -25,12 +25,12 @@ export default function BossPage({ params }: { params: Promise<{ id: string }> }
         <Panel>
           <BossPortrait boss={b} defeated={s.state === "defeated"} sizes="(max-width: 1024px) 100vw, 260px" />
           <div className="mt-4 text-center">
-            <div className={`font-display text-2xl ${s.state === "defeated" ? "text-emerald-300" : s.state === "alive" ? "text-red-300" : "text-ash-400"}`}>{s.state === "defeated" ? "DEFEATED" : s.state === "alive" ? "ALIVE" : "UNKNOWN"}</div>
+            <div className={`font-display text-2xl ${s.state === "defeated" ? "text-success" : s.state === "alive" ? "text-danger" : "text-ash-400"}`}>{s.state === "defeated" ? "DEFEATED" : s.state === "alive" ? "ALIVE" : "UNKNOWN"}</div>
             <Badge kind={demo ? "demo" : s.certainty} />
           </div>
           <ul className="mt-3 space-y-1 text-xs text-ash-400">{s.sources.map((x) => <li key={x}>• {x}</li>)}</ul>
           {status === "ready" && s.certainty !== "verified" && s.certainty !== "inferred" && (
-            <button className="btn mt-4 w-full justify-center text-xs" onClick={() => post("/api/manual", { kind: "bosses", id: b.id, value: manual ? null : true })}>
+            <button className="btn btn-sm btn-block mt-4" onClick={() => post("/api/manual", { kind: "bosses", id: b.id, value: manual ? null : true })}>
               {manual ? "Гарын баталгааг цуцлах" : "Ялсан гэж гараар баталгаажуулах"}
             </button>
           )}
@@ -56,7 +56,7 @@ export default function BossPage({ params }: { params: Promise<{ id: string }> }
                   <ul className="mt-1 space-y-1">{b.soulWeapons.map((w) => <li key={w} className="flex items-center gap-2"><ItemIcon name={w} size={26} />{w}</li>)}</ul>
                 </div>
               )}
-              {b.tailCut && <p className="mt-2 flex items-center gap-2 text-sm text-amber-300"><ItemIcon name={b.tailCut} size={26} />✂ Сүүл тасдахад: {b.tailCut} — boss-ыг алахаас өмнө!</p>}
+              {b.tailCut && <p className="mt-2 flex items-center gap-2 text-sm text-warning"><ItemIcon name={b.tailCut} size={26} />✂ Сүүл тасдахад: {b.tailCut} — boss-ыг алахаас өмнө!</p>}
             </Panel>
             <Panel title="Achievement / NG+">
               {related.length ? <ul className="text-sm">{related.map((a) => <li key={a.name}><Link href="/achievements" className="text-gold-300 hover:text-ember-300">{a.name}</Link></li>)}</ul> : <p className="text-sm text-ash-500">Шууд холбоотой achievement алга.</p>}

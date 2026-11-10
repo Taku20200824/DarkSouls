@@ -47,9 +47,9 @@ export function LiveStatus() {
 
 function Pill({ main, sub, color, pulse }: { main: string; sub?: string; color: "ember" | "ash" | "fuchsia"; pulse?: boolean }) {
   return (
-    <div className={clsx("border px-3 py-2.5 text-xs", color === "ember" ? "border-ember-500/50 bg-[linear-gradient(90deg,rgba(242,106,27,0.15),transparent)] shadow-[0_0_24px_-10px_#f26a1b]" : color === "fuchsia" ? "border-fuchsia-600/60 bg-fuchsia-900/20" : "border-ash-500/30 bg-black/40")}>
-      <div className="font-display flex items-center gap-2 text-[10px] font-semibold tracking-[0.2em] text-gold-300">
-        <span className={clsx("h-2 w-2 rounded-full", color === "ember" ? "bg-ember-400" : color === "fuchsia" ? "bg-fuchsia-400" : "bg-ash-500", pulse && "animate-pulse")} />
+    <div className={clsx("border px-3 py-2.5 text-xs", color === "ember" ? "border-ember-500/50 bg-[linear-gradient(90deg,rgba(242,106,27,0.15),transparent)] shadow-[0_0_24px_-10px_var(--color-ember-500)]" : color === "fuchsia" ? "border-demo-line/60 bg-demo-deep/20" : "border-ash-500/30 bg-black/40")}>
+      <div className="font-display flex items-center gap-2 text-micro font-semibold tracking-label text-gold-300">
+        <span className={clsx("h-2 w-2 rounded-full", color === "ember" ? "bg-ember-400" : color === "fuchsia" ? "bg-demo-dot" : "bg-ash-500", pulse && "animate-pulse")} />
         {main}
       </div>
       {sub && <div className="mt-0.5 text-ash-400">{sub}</div>}
@@ -125,8 +125,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="group flex items-center gap-3 px-2">
           <BonfireMark className="h-12 w-9" />
           <div>
-            <div className="font-display gold-text text-xl font-bold tracking-[0.28em]">LORDRAN</div>
-            <div className="font-display text-[10px] tracking-[0.6em] text-ash-500 group-hover:text-ember-300">TRACKER</div>
+            <div className="font-display gold-text text-xl font-bold tracking-eyebrow">LORDRAN</div>
+            <div className="font-display text-micro tracking-logo text-ash-500 group-hover:text-ember-300">TRACKER</div>
           </div>
         </Link>
         <div className="ornament my-5" />
@@ -137,10 +137,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             return (
               <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "text-gold-200" : "text-ash-400 hover:text-gold-300")}>
                 {active && <motion.span layoutId="nav-active" className="absolute inset-0 border-l-2 border-ember-400 bg-[linear-gradient(90deg,rgba(242,106,27,0.18),transparent)]" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
-                <Icon className={clsx("relative h-4 w-4 shrink-0 transition", active ? "text-ember-300 drop-shadow-[0_0_6px_#ff9142]" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
+                <Icon className={clsx("relative h-4 w-4 shrink-0 transition", active ? "text-ember-300 drop-shadow-[0_0_6px_var(--color-ember-400)]" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
                 <span className="relative min-w-0">
-                  <span className="block truncate text-[13px]">{n.label}</span>
-                  <span className="font-display block text-[9px] uppercase tracking-[0.25em] text-ash-500">{n.en}</span>
+                  <span className="block truncate text-body-sm">{n.label}</span>
+                  <span className="font-display block text-micro uppercase tracking-eyebrow text-ash-500">{n.en}</span>
                 </span>
               </Link>
             );
@@ -153,27 +153,27 @@ export function Shell({ children }: { children: React.ReactNode }) {
               {state.user.avatar && <img src={state.user.avatar} alt="" className="h-9 w-9 border border-gold-500/50" />}
               <div className="min-w-0">
                 <div className="truncate text-gold-300">{state.user.personaName ?? state.user.steamId}</div>
-                <div className="font-display text-[9px] tracking-widest text-ash-500">STEAM · {state.user.steamId}</div>
+                <div className="font-display text-micro tracking-widest text-ash-500">STEAM · {state.user.steamId}</div>
               </div>
             </div>
           )}
           {state?.storeKind === "dev-file" && (
-            <div className={clsx("mt-3 border p-2 text-[10px]", state.desktop ? "border-ash-500/30 text-ash-500" : "border-amber-600/50 text-amber-300")}>
+            <div className={clsx("mt-3 border p-2 text-micro", state.desktop ? "border-ash-500/30 text-ash-500" : "border-warning-line/50 text-warning")}>
               {state.desktop ? "LOCAL STORAGE — энэ компьютер дээр хадгалагдана" : "DEV STORE — Firebase тохируулаагүй"}
             </div>
           )}
-          <div className="font-display mt-3 text-center text-[9px] tracking-widest text-ash-500">
+          <div className="font-display mt-3 text-center text-micro tracking-widest text-ash-500">
             v{process.env.NEXT_PUBLIC_APP_VERSION}{state?.desktop ? " · Desktop" : ""}
           </div>
         </div>
       </aside>
       <div className="min-w-0 flex-1">
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gold-600/15 bg-stone-950/85 px-4 py-2.5 backdrop-blur md:hidden">
-          <button className="btn !px-2.5 !py-1.5" onClick={() => setOpen(!open)} aria-label="Цэс" aria-expanded={open} aria-controls="tracker-navigation">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
-          <span className="font-display gold-text text-sm font-bold tracking-[0.3em]">LORDRAN TRACKER</span>
+          <button className="btn btn-sm" onClick={() => setOpen(!open)} aria-label="Цэс" aria-expanded={open} aria-controls="tracker-navigation">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
+          <span className="font-display gold-text text-sm font-bold tracking-eyebrow">LORDRAN TRACKER</span>
           <BonfireMark className="h-7 w-5" />
         </div>
-        {demo && <div className="bg-fuchsia-900/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-fuchsia-200">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
+        {demo && <div className="bg-demo-deep/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-demo-soft">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
         <motion.main id="main-content" key={path} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
       <VictoryOverlay />

@@ -248,7 +248,7 @@ function WorldMap() {
             <span>→ Нэг чиглэл</span>
             <span className="text-ember-300">◆ Сонгосон маршрут</span>
             <span>🔥 Bonfire олсон (save)</span>
-            <span><span className="text-gold-300">●</span> Ялсан · <span className="text-red-400">●</span> Амьд · <span className="text-ash-400">●</span> Тодорхойгүй</span>
+            <span><span className="text-gold-300">●</span> Ялсан · <span className="text-danger-strong">●</span> Амьд · <span className="text-ash-400">●</span> Тодорхойгүй</span>
           </div>
         </div>
         {popup && (
@@ -260,14 +260,14 @@ function WorldMap() {
               <div className="flex items-center gap-3">
                 <BossThumb boss={popup.boss} defeated={popup.state === "defeated"} size={56} />
                 <div className="min-w-0">
-                  <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-ember-300">Boss</div>
+                  <div className="text-micro font-semibold uppercase tracking-label text-ember-300">Boss</div>
                   <div className="font-display text-sm font-semibold text-gold-100">{popup.boss.name}</div>
-                  <div className={`text-xs ${popup.state === "defeated" ? "text-emerald-300" : popup.state === "alive" ? "text-red-300" : "text-ash-400"}`}>{STATE_MN[popup.state]}</div>
+                  <div className={`text-xs ${popup.state === "defeated" ? "text-success" : popup.state === "alive" ? "text-danger" : "text-ash-400"}`}>{STATE_MN[popup.state]}</div>
                 </div>
               </div>
             ) : (
               <>
-                <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gold-400">Бүс{popup.area.dlc ? " · DLC" : ""}</div>
+                <div className="text-micro font-semibold uppercase tracking-label text-gold-400">Бүс{popup.area.dlc ? " · DLC" : ""}</div>
                 <div className="font-display text-sm font-semibold text-gold-100">{popup.area.name}</div>
                 <div className="mt-0.5 text-xs leading-snug text-ash-400">{popup.area.mn}</div>
                 {popup.area.bosses.length > 0 && (

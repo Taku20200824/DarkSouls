@@ -47,14 +47,14 @@ export default function Guide() {
         <ol className="space-y-2">
           {objectives.map((o, i) => (
             <li key={o.id} className={`flex items-start gap-3 rounded p-2 ${o === next ? "bg-ember-600/10 ring-1 ring-ember-500/40" : ""}`}>
-              <span className={`font-display mt-0.5 w-6 text-right ${o.status === "skipped" ? "text-amber-300" : o.done ? "text-emerald-300" : "text-ash-500"}`}>{o.status === "skipped" ? "↷" : o.done ? "✓" : i + 1}</span>
+              <span className={`font-display mt-0.5 w-6 text-right ${o.status === "skipped" ? "text-warning" : o.done ? "text-success" : "text-ash-500"}`}>{o.status === "skipped" ? "↷" : o.done ? "✓" : i + 1}</span>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={o.done ? "text-ash-400 line-through" : "text-gold-300"}>{o.title}</span>
-                  {o.status === "skipped" && <span className="rounded-[1px] border border-amber-600/60 bg-black/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-300">Алгассан</span>}
+                  {o.status === "skipped" && <span className="rounded-[1px] border border-warning-line/60 bg-black/40 px-1.5 py-0.5 text-micro font-semibold uppercase tracking-caps text-warning">Алгассан</span>}
                   {o.status === "implied" && <Badge kind="inferred" />}
                   {o.status === "detected" && <Badge kind={demo ? "demo" : o.doneCertainty} />}
-                  {o.optional && <span className="text-[10px] text-ash-500">(заавал биш)</span>}
+                  {o.optional && <span className="text-micro text-ash-500">(заавал биш)</span>}
                 </div>
                 <div className="text-xs text-ash-500">{o.statusNoteMn ?? o.whyMn}</div>
               </div>
@@ -69,8 +69,8 @@ export default function Guide() {
 function Info({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-widest text-ash-500">{k}</div>
-      <div className={warn ? "text-amber-300" : "text-ash-300"}>{v}</div>
+      <div className="text-label uppercase tracking-widest text-ash-500">{k}</div>
+      <div className={warn ? "text-warning" : "text-ash-300"}>{v}</div>
     </div>
   );
 }
