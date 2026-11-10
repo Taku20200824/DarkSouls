@@ -104,7 +104,7 @@ python lordran_companion.py once --print          REM parse locally and print JS
 
 Steam achievements refresh on their own while the site is open, at most every 10 minutes. Save data cannot come from Steam, so the hosted site still needs the companion on the PC: pair once, run `autostart on`, and there is nothing more to do.
 
-The desktop app needs none of this. It runs on the same PC as the game, so it checks the signed-in account's save every 10 seconds while it is open, with the same read-only and checksum rules. Progress made while it is closed is picked up the next time it opens.
+The Windows desktop app reads saves locally every 10 seconds while open. To see its progress on the website, sign in to both with the same Steam account. Generate a pairing code in the website's Settings, then enter it under «Вэбтэй синк хийх» in the desktop app's Settings. Once linked, the app sends validated save data for that account and retries network failures. The website reads the resulting records from `users/{steamId}/characters` in Firestore.
 
 Run `build_windows.bat` to build a standalone `dist\lordran-companion.exe` with PyInstaller.
 

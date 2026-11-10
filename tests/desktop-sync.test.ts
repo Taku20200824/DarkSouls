@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { documentsRoots, findSave, steamAccountId, syncDesktopSave, STABLE_MS } from "@/lib/server/desktop-sync";
 import { ingest } from "@/lib/server/progress";
+import { cloudLinkPath } from "@/lib/server/desktop-cloud";
 import type { Store } from "@/lib/server/store";
 
 vi.mock("@/lib/server/progress", () => ({ ingest: vi.fn(async () => []) }));
@@ -46,7 +47,10 @@ describe("desktop save sync", () => {
     docs = fs.mkdtempSync(path.join(os.tmpdir(), "lordran-docs-"));
     vi.mocked(ingest).mockClear();
   });
-  afterEach(() => fs.rmSync(docs, { recursive: true, force: true }));
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    fs.rmSync(docs, { recursive: true, force: true });
+  });
 
   it("maps a SteamID64 to the save folder name", () => {
     expect(steamAccountId(STEAM_ID)).toBe(ACCOUNT);
@@ -114,5 +118,42 @@ describe("desktop save sync", () => {
     const store = memoryStore();
     expect(await syncDesktopSave(STEAM_ID, store, Date.now(), [docs])).toEqual({ changed: true });
     expect(await store.get(`users/${STEAM_ID}/meta/companion`)).toMatchObject({ saveFound: false });
+  });
+
+  it("uploads an already imported save after linking, retries failure, and stops after success", async () => {
+    const file = place(ACCOUNT);
+    const modified = age(file, 60);
+    const store = memoryStore();
+    const request = vi.fn()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    vi.stubGlobal("fetch", request);
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(request).not.toHaveBeenCalled();
+
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ error: "upload_failed" });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ syncedSaveAt: modified, error: null });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+
+    expect(ingest).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledTimes(2);
+    const [url, options] = request.mock.calls[1];
+    expect(url).toBe("https://darksouls-five.vercel.app/api/companion/sync");
+    expect(JSON.parse(options.body)).toMatchObject({ saveModifiedAt: modified, checksumsValid: true, client: "companion" });
+  });
+
+  it("can display a fallback save locally without uploading it for the wrong Steam account", async () => {
+    age(place("999"), 60);
+    const store = memoryStore();
+    const request = vi.fn();
+    vi.stubGlobal("fetch", request);
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(ingest).toHaveBeenCalledOnce();
+    expect(request).not.toHaveBeenCalled();
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ error: "account_save_not_found" });
   });
 });
