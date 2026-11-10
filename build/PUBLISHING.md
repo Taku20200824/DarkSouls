@@ -1,6 +1,6 @@
 # Publishing a new desktop build
 
-1. Bump the version in **both** `package.json` and `electron/package.json` (keep them equal), and in `src/lib/downloads.ts`'s `DESKTOP_APP_VERSION`.
+1. Bump the version in **both** `package.json` and `electron/package.json` (keep them equal). The website needs no change: `/download` and the version labels read the Blob store's `latest.yml`, so the site offers the new installer within a minute of step 4.
 2. `npm run dist:win` — produces in `dist/`:
    - `Lordran Tracker-Setup-<version>.exe`
    - `Lordran Tracker-Setup-<version>.exe.blockmap`

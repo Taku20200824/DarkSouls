@@ -4,7 +4,8 @@ import { Gate } from "@/components/Shell";
 import { useTracker } from "@/components/TrackerProvider";
 import { SaveUpload } from "@/components/SaveUpload";
 import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
-import { DESKTOP_DOWNLOAD_URL, DESKTOP_APP_VERSION } from "@/lib/downloads";
+import { DESKTOP_DOWNLOAD_PATH } from "@/lib/downloads";
+import { useLatestDesktop } from "@/components/useLatestDesktop";
 
 export default function Settings() {
   const { demo, setDemo, status } = useTracker();
@@ -62,7 +63,7 @@ function Connected() {
       </Panel>
       <Panel title="Desktop App (Windows)">
         <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>
-        <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_URL} download>v{DESKTOP_APP_VERSION} татах (.exe)</a>
+        <DesktopDownload />
         <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>
       </Panel>
       </>
@@ -82,5 +83,23 @@ function Connected() {
         </ul>
       </Panel>
     </div>
+  );
+}
+
+function DesktopDownload() {
+  const latest = useLatestDesktop();
+  const { state } = useTracker();
+  const isDesktop = Boolean(state?.desktop);
+  const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+  return (
+    <>
+      <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_PATH}>{latest ? `v${latest.version} татах (.exe)` : "Хамгийн сүүлийн хувилбарыг татах (.exe)"}</a>
+      {latest?.releaseDate && <p className="mt-2 text-xs text-ash-500">Гаргасан: {new Date(latest.releaseDate).toLocaleDateString("mn-MN")}</p>}
+      {isDesktop && latest && (
+        <p className="mt-2 text-xs text-ash-400">
+          Энэ app: v{APP_VERSION}{latest.version !== APP_VERSION ? " — шинэ хувилбар байна. App-ийг дахин нээхэд шинэчлэх эсэхийг асууна." : " — хамгийн сүүлийн хувилбар."}
+        </p>
+      )}
+    </>
   );
 }
