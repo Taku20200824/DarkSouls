@@ -56,17 +56,17 @@ function Connected() {
           {c?.saveFound === false && <p className="text-warning">Companion save файлыг олсонгүй: {c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
         </div>
-        <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-ash-300">
-          <li>Windows App болон энэ сайтад ижил Steam бүртгэлээр нэвтэрнэ үү.</li>
-          <li>8 тэмдэгт холбох код үүсгэнэ үү (10 минут хүчинтэй, нэг удаагийн).</li>
-          <li>App-ийн тохиргооны «Вэбтэй синк хийх» хэсэгт кодыг оруулна уу. Тусдаа Companion ашиглавал <code>pair КОД</code>, дараа нь <code>run</code>.</li>
-        </ol>
-        <button className="btn btn-ember mt-4" onClick={makeCode}>Холбох код үүсгэх</button>
-        {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-code text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
+        <p className="mt-4 text-sm text-ash-300">Windows App болон энэ сайтад ижил Steam бүртгэлээр нэвтэрнэ үү. App save ахицыг Firebase-д автоматаар хадгална. Энэ сайт тэндээс ахицыг, Steam-ээс профайл болон achievement-ийг авна.</p>
+        <details className="mt-4 text-sm text-ash-400">
+          <summary className="cursor-pointer">Тусдаа Python Companion ашиглах</summary>
+          <p className="mt-2"><code>pair КОД</code>, дараа нь <code>run</code>.</p>
+          <button className="btn btn-sm mt-2" onClick={makeCode}>Companion код үүсгэх</button>
+          {code && <div className="mt-3 rounded border border-ember-500/50 p-3 text-center"><div className="font-display text-3xl tracking-code text-gold-300">{code.code}</div><div className="text-xs text-ash-500">Дуусах: {fmtDate(code.expiresAt)}</div></div>}
+        </details>
         <button className="btn btn-danger btn-sm mt-4" onClick={() => post("/api/companion/revoke", {})}>Бүх companion-ий эрхийг цуцлах</button>
       </Panel>
       <Panel title={IS_DESKTOP_BUILD ? "App-ийн хувилбар" : "Desktop App (Windows)"}>
-        {!IS_DESKTOP_BUILD && <p className="text-sm text-ash-400">Энэ сайтыг бүхэлд нь тусдаа PC app болгож суулгаж болно (нэвтрэх шаардлагагүй, Firebase тохируулахгүйгээр локал хадгална). <code>Windows Companion</code>-аас ялгаатай — энэ бол tracker-ийн бүх дэлгэц өөрөө.</p>}
+        {!IS_DESKTOP_BUILD && <p className="text-sm text-ash-400">Windows App-ийг суулгаад Steam-ээр нэвтэрнэ үү. Хуучин хувилбараас шинэчилсэн бол App дээр нэг удаа дахин нэвтэрч автомат синкийг асаана уу.</p>}
         <DesktopDownload />
         {!IS_DESKTOP_BUILD && <p className="mt-2 text-xs text-ash-500">Гарын үсэггүй build тул анх удаа ажиллуулахад «Windows protected your PC» гарна → «More info» → «Run anyway».</p>}
       </Panel>
@@ -76,6 +76,7 @@ function Connected() {
       <Panel title="Steam">
         <p className="text-sm text-ash-400">SteamID64: {state?.user.steamId}</p>
         <p className="text-sm text-ash-400">Dark Souls: Remastered эзэмшил: {state?.user.ownsGame === true ? "Тийм" : state?.user.ownsGame === false ? "Олдсонгүй" : "Unknown (тоглоомын жагсаалт private эсвэл API key алга)"}</p>
+        {state?.user.playtimeMinutes != null && <p className="text-sm text-ash-400">Steam дээр тоглосон хугацаа: {Math.floor(state.user.playtimeMinutes / 60)} цаг {state.user.playtimeMinutes % 60} мин</p>}
         <button className="btn mt-3" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/"; }}>Гарах</button>
       </Panel>
       <Panel title="Нууцлал">

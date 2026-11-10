@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { withUser, ok, readJson } from "@/lib/server/api";
-import { cloudLinkPath, cloudRequest, withDesktopLock, type CloudLink } from "@/lib/server/desktop-cloud";
+import { cloudLinkPath, cloudRequest, revokeCloudLink, withDesktopLock, type CloudLink } from "@/lib/server/desktop-cloud";
 import { isDesktopApp } from "@/lib/server/env";
 import { jsonError } from "@/lib/server/security";
 
@@ -26,15 +26,10 @@ export const POST = withUser(async ({ req, steamId, store }) => {
     const paired = PairResponse.safeParse(await response.json().catch(() => null));
     if (!paired.success || paired.data.steamId !== steamId) return jsonError(502, "pairing_failed");
     await store.set(path, { token: paired.data.token });
-    if (previous) await revoke(previous.token);
+    if (previous) await revokeCloudLink(previous.token);
     return ok();
   });
 }, { mutation: true, limit: 10 });
-
-async function revoke(token: string) {
-  const response = await cloudRequest("pair", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
-  return response?.ok || response?.status === 401;
-}
 
 export const DELETE = withUser(async ({ steamId, store }) => {
   if (!isDesktopApp() || store.kind !== "dev-file") return jsonError(404, "not_found");
@@ -42,6 +37,6 @@ export const DELETE = withUser(async ({ steamId, store }) => {
     const path = cloudLinkPath(steamId);
     const link = await store.get<CloudLink>(path);
     await store.delete(path);
-    return ok({ remoteRevoked: !link || await revoke(link.token) });
+    return ok({ remoteRevoked: !link || await revokeCloudLink(link.token) });
   });
 }, { mutation: true, limit: 10 });

@@ -29,6 +29,11 @@ export function cloudRequest(endpoint: "pair" | "sync", options: RequestInit): P
   });
 }
 
+export async function revokeCloudLink(token: string) {
+  const response = await cloudRequest("pair", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+  return response?.ok || response?.status === 401;
+}
+
 export async function uploadDesktopSave(store: Store, steamId: string, link: CloudLink, payload: SyncPayload) {
   const response = await cloudRequest("sync", {
     method: "POST",
