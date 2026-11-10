@@ -43,7 +43,9 @@ publish:
 win:
   target: nsis
   icon: build/icon.ico
-  artifactName: "${productName}-Setup-${version}.${ext}"
+  # No space in the file name: latest.yml, the site's /download redirect and the Blob URL
+  # all use this one name, so each release uploads a single installer.
+  artifactName: "Lordran-Tracker-Setup-${version}.${ext}"
 
 nsis:
   oneClick: true
