@@ -77,7 +77,14 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const d = readFlag("lt_demo") === "1";
+    const url = new URL(window.location.href);
+    const signedIn = url.searchParams.get("signed_in") === "1";
+    if (signedIn) {
+      writeFlag("lt_demo", null);
+      url.searchParams.delete("signed_in");
+      window.history.replaceState(window.history.state, "", url);
+    }
+    const d = !signedIn && readFlag("lt_demo") === "1";
     demoRef.current = d;
     setDemoState(d);
     setSelected(readFlag("lt_char"));

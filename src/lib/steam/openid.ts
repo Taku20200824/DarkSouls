@@ -31,6 +31,12 @@ export async function verifyAssertion(
   fetchImpl: FetchLike = fetch as unknown as FetchLike,
   now: number = Date.now(),
 ): Promise<VerifyResult> {
+  const fields = new Set<string>();
+  for (const name of params.keys()) {
+    if (!name.startsWith("openid.")) continue;
+    if (fields.has(name)) return { ok: false, reason: "duplicate_fields" };
+    fields.add(name);
+  }
   const g = (k: string) => params.get(`openid.${k}`);
   if (g("mode") !== "id_res") return { ok: false, reason: g("mode") === "cancel" ? "cancelled" : "bad_mode" };
   if (g("ns") !== NS) return { ok: false, reason: "bad_ns" };
@@ -44,7 +50,7 @@ export async function verifyAssertion(
   try {
     const a = new URL(returnTo);
     const b = new URL(expectedReturnTo);
-    if (a.origin !== b.origin || a.pathname !== b.pathname) return { ok: false, reason: "bad_return_to" };
+    if (a.origin !== b.origin || a.pathname !== b.pathname || (b.search && a.search !== b.search)) return { ok: false, reason: "bad_return_to" };
   } catch {
     return { ok: false, reason: "bad_return_to" };
   }
