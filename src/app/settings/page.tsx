@@ -91,13 +91,15 @@ function DesktopDownload() {
   const current = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
   if (IS_DESKTOP_BUILD) {
     // Inside the installed app: no installer download — it updates itself on launch.
-    const newer = latest && current && compareVersions(latest.version, current) > 0;
+    const newer = Boolean(latest?.version && current && compareVersions(latest.version, current) > 0);
     return (
       <div className="mt-3 text-sm">
         <p>Энэ app: <span className="font-display text-gold-300">v{current}</span></p>
         <p className={newer ? "mt-1 text-ember-300" : "mt-1 text-ash-400"}>
           {!latest
             ? "Шинэ хувилбар шалгаж байна…"
+            : !latest.version
+              ? "Шинэ хувилбарын мэдээлэл авч чадсангүй (интернэт холболтоо шалгана уу)."
             : newer
               ? `Шинэ хувилбар v${latest.version} гарсан. App-ийг хаагаад дахин нээхэд шинэчлэх эсэхийг асууна.`
               : "Хамгийн сүүлийн хувилбар. Шинэ хувилбар гарвал app нээх үед автоматаар асууна."}
@@ -107,7 +109,7 @@ function DesktopDownload() {
   }
   return (
     <>
-      <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_PATH}>{latest ? `v${latest.version} татах (.exe)` : "Хамгийн сүүлийн хувилбарыг татах (.exe)"}</a>
+      <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_PATH}>{latest?.version ? `v${latest.version} татах (.exe)` : "Хамгийн сүүлийн хувилбарыг татах (.exe)"}</a>
       {latest?.releaseDate && <p className="mt-2 text-xs text-ash-500">Гаргасан: {new Date(latest.releaseDate).toLocaleDateString("mn-MN")}</p>}
     </>
   );

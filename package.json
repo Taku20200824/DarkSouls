@@ -1,6 +1,6 @@
 {
   "name": "lordran-tracker",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "LORDRAN TRACKER — Dark Souls Remastered companion",
   "scripts": {
@@ -14,7 +14,7 @@
     "electron:dev": "npm run build:desktop && electron electron/main.js",
     "icon": "node build/make-icon.mjs",
     "bundle:electron": "node build/bundle-electron.mjs",
-    "dist:win": "npm run icon && npm run build:desktop && npm run bundle:electron && electron-builder --win"
+    "dist:win": "npm run icon && npm run build:desktop && npm run bundle:electron && electron-builder --win --publish never"
   },
   "engines": {
     "node": ">=20"

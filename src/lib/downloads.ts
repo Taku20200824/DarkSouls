@@ -1,13 +1,17 @@
 /**
- * Desktop app installer, built by `npm run dist:win` and uploaded to the project's
- * public Vercel Blob store together with electron-updater's `latest.yml`.
+ * Desktop app installer, built by `npm run dist:win` and attached — with
+ * electron-updater's `latest.yml` and the .blockmap — to a GitHub Release of the
+ * public repo (tag `v<version>`).
  *
  * The site never hard-codes the current version: `/download` and
- * `/api/desktop/latest` read `latest.yml` (the same manifest installed apps poll
- * for auto-update), so uploading a new release is all it takes for the site to
- * offer it. FALLBACK_* is only used if the manifest can't be fetched.
+ * `/api/desktop/latest` read the newest release's `latest.yml` (the same manifest
+ * installed apps poll for auto-update), so publishing a release is all it takes for
+ * the site to offer it. The github.com/…/releases/latest/download/<file> URL is a
+ * plain redirect, not the rate-limited REST API. If it can't be read, the button
+ * falls back to the Releases page.
  */
-export const DESKTOP_BLOB_BASE = "https://bpcne2nkaruzhq1b.public.blob.vercel-storage.com/";
+export const DESKTOP_REPO = "Taku20200824/DarkSouls";
+const RELEASES = `https://github.com/${DESKTOP_REPO}/releases`;
 export const DESKTOP_DOWNLOAD_PATH = "/download";
 
 /** True in the Electron desktop build (set at build time in next.config.ts). */
@@ -24,9 +28,7 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-const FALLBACK_VERSION = "0.1.4";
-const FALLBACK_FILE = `Lordran-Tracker-Setup-${FALLBACK_VERSION}.exe`;
-
+/** `version` is "" when the manifest couldn't be read (then `url` is the Releases page). */
 export type DesktopRelease = { version: string; url: string; releaseDate: string | null; fromManifest: boolean };
 
 /** Parses the top-level `version`, `path` and `releaseDate` of an electron-builder latest.yml. */
@@ -41,13 +43,16 @@ export function parseLatestYml(text: string): { version: string; path: string; r
 /** Server-only: the newest published installer, re-checked at most once a minute. */
 export async function latestDesktopRelease(): Promise<DesktopRelease> {
   try {
-    const res = await fetch(`${DESKTOP_BLOB_BASE}latest.yml`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${RELEASES}/latest/download/latest.yml`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       const parsed = parseLatestYml(await res.text());
-      if (parsed) return { version: parsed.version, url: DESKTOP_BLOB_BASE + encodeURIComponent(parsed.path), releaseDate: parsed.releaseDate, fromManifest: true };
+      if (parsed) {
+        const url = `${RELEASES}/download/v${encodeURIComponent(parsed.version)}/${encodeURIComponent(parsed.path)}`;
+        return { version: parsed.version, url, releaseDate: parsed.releaseDate, fromManifest: true };
+      }
     }
   } catch {
-    // Offline (e.g. the desktop app without network) or Blob unavailable: use the fallback.
+    // Offline (e.g. the desktop app without network) or GitHub unavailable.
   }
-  return { version: FALLBACK_VERSION, url: DESKTOP_BLOB_BASE + FALLBACK_FILE, releaseDate: null, fromManifest: false };
+  return { version: "", url: `${RELEASES}/latest`, releaseDate: null, fromManifest: false };
 }

@@ -32,13 +32,17 @@ afterPack: build/after-pack.cjs
 
 icon: build/icon.png
 
-# Where electron-updater looks for new versions: the same public Vercel Blob store the
-# installer itself is uploaded to (see src/lib/downloads.ts). electron-builder writes
-# latest.yml here on every build; it — and the installer + .blockmap — get uploaded to
-# this store by hand (no CI publish step) — see build/PUBLISHING.md.
+# Where electron-updater looks for new versions: the public GitHub repo's Releases. It
+# reads latest.yml from the newest (non-draft, non-prerelease) release and downloads the
+# installer attached to it. Releases are created by hand on github.com with the three
+# dist/ files attached (no token in the build) — see build/PUBLISHING.md.
+# Up to 0.1.7 this pointed at a Vercel Blob store, which the Hobby plan suspended for
+# exceeding 1 GB; GitHub Releases has no storage or bandwidth cap for public repos.
 publish:
-  provider: generic
-  url: https://bpcne2nkaruzhq1b.public.blob.vercel-storage.com/
+  provider: github
+  owner: Taku20200824
+  repo: DarkSouls
+  releaseType: release
 
 win:
   target: nsis

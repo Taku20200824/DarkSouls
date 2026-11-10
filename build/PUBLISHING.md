@@ -1,21 +1,25 @@
 # Publishing a new desktop build
 
-1. Bump the version in **both** `package.json` and `electron/package.json` (keep them equal). The website needs no change: `/download` and the version labels read the Blob store's `latest.yml`, so the site offers the new installer within a minute of step 3.
+Installers are distributed through **GitHub Releases** of the public repo
+(`Taku20200824/DarkSouls`). Installed apps (0.1.8+) and the website both read the newest
+release's `latest.yml`, so publishing a release is all it takes — no site deploy.
+
+1. Bump the version in **both** `package.json` and `electron/package.json` (keep them equal), plus the two `package-lock.json` files.
 2. `npm run dist:win` — produces in `dist/`:
    - `Lordran-Tracker-Setup-<version>.exe`
    - `Lordran-Tracker-Setup-<version>.exe.blockmap`
-   - `latest.yml` (electron-updater's feed manifest, from the `publish` block in `electron-builder.yml`; it references the installer by the same hyphenated name)
-3. Upload the three files to the Vercel Blob store `store_BPcNe2nKARuZhq1B` (public). **Upload `latest.yml` last**: once it's up, installed apps start fetching the installer it names.
-   ```
-   npx --yes vercel blob put "C:\tusul\DarkSouls\dist\Lordran-Tracker-Setup-<version>.exe" --access=public --rw-token=<token>
-   npx --yes vercel blob put "C:\tusul\DarkSouls\dist\Lordran-Tracker-Setup-<version>.exe.blockmap" --access=public --rw-token=<token>
-   npx --yes vercel blob put "C:\tusul\DarkSouls\dist\latest.yml" --access=public --force --cache-control-max-age 60 --rw-token=<token>
-   ```
-   `latest.yml` **must** be uploaded as exactly `latest.yml` (no version in the name) — that's the fixed path `electron-updater` polls on every launch. It already exists from the previous release, hence `--force`, and the short cache max-age stops the CDN from serving the old manifest for 30 days.
-   Alternatively, use the store's **Manage Blobs** page in the Vercel dashboard: delete the old `latest.yml`, then **Upload** the three files.
-4. Check it landed: `https://bpcne2nkaruzhq1b.public.blob.vercel-storage.com/latest.yml` shows the new version, and `https://darksouls-five.vercel.app/api/desktop/latest` reports it within a minute.
-5. Commit and push the version bump.
+   - `latest.yml`
+3. Commit and push the version bump.
+4. On GitHub: **Releases → Draft a new release**
+   - **Tag**: `v<version>` (e.g. `v0.1.9`) — the `v` prefix is required, electron-updater looks the release up by it.
+   - **Title**: `Lordran Tracker <version>`
+   - **Attach** the three files from step 2 (drag them onto the page).
+   - Leave "Set as a pre-release" **unchecked** and click **Publish release** (a draft or pre-release is ignored).
+5. Check it landed: `https://github.com/Taku20200824/DarkSouls/releases/latest/download/latest.yml` shows the new version, and `https://darksouls-five.vercel.app/api/desktop/latest` reports it within a minute.
 
-Already-installed apps pick up the new version automatically (checks on launch, asks before downloading, asks again before restarting to install) — no further action needed for existing users.
+Already-installed apps (0.1.8+) pick up the new version on their next launch (they ask before downloading, show progress at the bottom of the window, and ask again before restarting to install).
 
-Releases up to 0.1.4 were built with a spaced file name (`Lordran Tracker-Setup-…`). 0.1.4's `latest.yml` was edited by hand to point at the hyphenated copy of the same installer.
+## History
+
+- 0.1.0–0.1.7 used a Vercel Blob store (`store_BPcNe2nKARuZhq1B`) as the update feed. The Hobby plan allows 1 GB of storage; ~144 MB per installer filled it, and Vercel suspended the store (403 "Your store is blocked") for 30 days. Apps from those versions can't see new releases: reinstall them once from the website.
+- Releases up to 0.1.4 were built with a spaced file name (`Lordran Tracker-Setup-…`).
