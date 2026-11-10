@@ -1,0 +1,177 @@
+.section {
+  max-width: 1470px;
+  margin: auto;
+  padding: clamp(3rem, 8vw, 7rem) clamp(1rem, 6vw, 6rem) 0;
+  scroll-margin-top: 1rem;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-bottom: 1.75rem;
+}
+
+.intro {
+  max-width: 26ch;
+  color: var(--color-ash-400);
+  font-size: .875rem;
+  line-height: 1.65;
+}
+
+.frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  border: 1px solid #ab8b535e;
+  background: #0d1013;
+  box-shadow: 0 20px 60px #0008;
+}
+
+.scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5rem;
+  min-height: 26rem;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.art,
+.scene::after {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.art img { object-fit: cover; }
+
+.scene::after {
+  content: "";
+  z-index: -1;
+  background: linear-gradient(0deg, #07090bf5 3%, #07090bdb 22%, transparent 76%), linear-gradient(180deg, #07090b99, transparent 25%);
+}
+
+.sceneLabel,
+.consoleLabel {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: #d3b68a;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .17em;
+}
+
+.sceneLabel { color: #ffd39d; }
+
+.sceneCopy h3 {
+  color: #fff1d5;
+  font: 600 clamp(2rem, 4.4vw, 4.5rem)/1.02 var(--font-display);
+  text-wrap: balance;
+}
+
+.sceneCopy p {
+  max-width: 45ch;
+  margin: .85rem 0 1.25rem;
+  color: #e2d6c4;
+  font-size: .875rem;
+  line-height: 1.65;
+}
+
+.console {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.85rem);
+  border-inline-start: 1px solid #ab8b5340;
+  background: linear-gradient(135deg, #20202473, transparent 58%);
+}
+
+.map {
+  position: relative;
+  margin: 1rem 0;
+  border: 1px solid #ab8b5333;
+  background: radial-gradient(ellipse at 44% 51%, #272014, #0a0c10 75%);
+}
+
+.map svg {
+  display: block;
+  width: 100%;
+  height: clamp(9rem, 16vw, 13rem);
+  background-image: linear-gradient(#ab8b5310 1px, transparent 1px), linear-gradient(90deg, #ab8b5310 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.mapStamp {
+  position: absolute;
+  bottom: .35rem;
+  right: .45rem;
+  color: #b2a18b;
+  font-size: .5rem;
+  letter-spacing: .13em;
+}
+
+.edge { stroke: #a88d5c60; stroke-width: 3; }
+.orbit { fill: none; stroke: #a88d5c48; stroke-width: 2; stroke-dasharray: 6 9; }
+.node { fill: #8b795d; }
+.route { fill: none; stroke: #ffbd72; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+.waypoint { fill: #ffd1a1; }
+.destination { fill: #fff0cd; }
+.beacon { fill: #ff974b43; stroke: #ffad68; stroke-width: 3; }
+
+.destinations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.destinations button {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-height: 2.75rem;
+  padding: .5rem .6rem;
+  text-align: left;
+  color: #ddd2be;
+  background: #141518;
+  border: 1px solid #ab8b5340;
+  font-size: .75rem;
+  line-height: 1.3;
+  transition: border-color .2s, background .2s;
+}
+
+.destinations button span { color: #c7a46e; font-family: var(--font-display); }
+.destinations button:hover { border-color: #d1a16a; }
+.destinations button[aria-pressed="true"] {
+  border-color: #e9a867;
+  color: #fff1d5;
+  background: linear-gradient(100deg, #59351e, #221810);
+  box-shadow: inset 2px 0 #ffbd72;
+}
+
+.routeSummary { margin-top: 1rem; }
+.routeSummary ol { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .65rem; }
+.routeSummary li, .routeSummary p { color: #ddd2be; font-size: .75rem; line-height: 1.6; }
+.routeSummary li + li::before { content: "→"; color: #e2a266; margin-right: .4rem; }
+.routeSummary p { margin-top: .4rem; }
+.routeSummary .routeNote { color: #a69a8b; font-size: .69rem; }
+
+.section[data-animated="true"] .art { animation: reveal .65s ease both; }
+.section[data-animated="true"] .route { animation: trace .8s ease-out both; }
+@keyframes reveal { from { opacity: .45; transform: scale(1.035); } to { opacity: 1; transform: scale(1); } }
+@keyframes trace { from { stroke-dasharray: 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+
+@media (max-width: 850px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .scene { min-height: 22rem; }
+  .console { border-inline-start: 0; border-top: 1px solid #ab8b5340; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section[data-animated="true"] .art,
+  .section[data-animated="true"] .route { animation: none; }
+  .destinations button { transition: none; }
+}
