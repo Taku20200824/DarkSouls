@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { Gate } from "@/components/Shell";
 import { useTracker } from "@/components/TrackerProvider";
@@ -13,6 +14,7 @@ export default function Settings() {
   return (
     <>
       <PageTitle title="Settings & Companion" sub="Companion холболт, manual upload, Demo Mode, нууцлал." />
+      <p className="-mt-6 mb-6 text-center text-xs text-ash-400"><Link href="/privacy" className="text-ember-300 underline">Нууцлал ба аюулгүй байдал</Link> — ямар өгөгдөл хадгалдаг, юуг огт авдаггүй.</p>
       <Panel title="Demo Mode" className="mb-4">
         <p className="text-sm text-ash-400">Demo Mode нь зөвхөн интерфэйсийг үзүүлэх зориулалттай жишээ өгөгдөл харуулна. Бодит статистиктай хэзээ ч холилдохгүй.</p>
         <button className="btn mt-3" onClick={() => setDemo(!demo)}>{demo ? "Demo Mode унтраах" : "Demo Mode асаах"}</button>
