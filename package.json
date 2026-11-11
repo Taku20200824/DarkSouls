@@ -15,7 +15,9 @@
     "electron:dev": "npm run build:desktop && electron electron/main.js",
     "icon": "node build/make-icon.mjs",
     "bundle:electron": "node build/bundle-electron.mjs",
-    "dist:win": "npm run icon && npm run build:desktop && npm run bundle:electron && electron-builder --win --publish never"
+    "dist:win": "npm run icon && npm run build:desktop && npm run bundle:electron && electron-builder --win --publish never",
+    "appx-assets": "node build/make-appx-assets.mjs",
+    "dist:store": "npm run icon && npm run appx-assets && npm run build:desktop && npm run bundle:electron && electron-builder --win appx --publish never"
   },
   "engines": {
     "node": ">=20"

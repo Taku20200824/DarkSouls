@@ -60,3 +60,19 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   deleteAppDataOnUninstall: false
+
+# Microsoft Store package (`npm run dist:store`). The Store re-signs it, so it installs
+# without the SmartScreen "unknown publisher" warning and the Store delivers updates (the
+# in-app updater is off in Store builds: electron/main.js checks process.windowsStore).
+# identityName / publisher / publisherDisplayName MUST be the values Partner Center shows
+# under Product management → Product identity — the placeholders below only make a local
+# test package and will be rejected by the Store.
+appx:
+  identityName: LordranTracker.PLACEHOLDER
+  publisher: CN=00000000-0000-0000-0000-000000000000
+  publisherDisplayName: Lordran Tracker contributors
+  applicationId: LordranTracker
+  displayName: Lordran Tracker
+  backgroundColor: "#050506"
+  languages: [en-US]
+  artifactName: "Lordran-Tracker-${version}.${ext}"

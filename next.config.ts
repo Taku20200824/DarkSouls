@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
   // "dist:win" script). Only enabled for that build — Vercel has its own output
   // handling and some Next versions have had packaging issues with this set globally.
   ...(process.env.ELECTRON_BUILD === "1" ? { output: "standalone" as const } : {}),
+  // Desktop build: keep the ISR / fetch cache in memory. A Microsoft Store (MSIX) install
+  // lives in the read-only WindowsApps folder, so writing it to .next/ there would fail;
+  // NSIS installs never need it on disk either (one local user, server restarts with the app).
+  ...(process.env.ELECTRON_BUILD === "1" ? { experimental: { isrFlushToDisk: false } } : {}),
   serverExternalPackages: ["firebase-admin"],
   images: {
     // Desktop build: serve images as-is. The optimizer caches into .next/cache/images

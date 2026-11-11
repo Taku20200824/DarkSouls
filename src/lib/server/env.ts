@@ -22,6 +22,8 @@ export const isProduction = () => process.env.NODE_ENV === "production";
  * Never set in the hosted/Vercel deployment.
  */
 export const isDesktopApp = () => env("LORDRAN_DESKTOP") === "1";
+/** Desktop app installed from the Microsoft Store (updates come from the Store). */
+export const isStoreApp = () => isDesktopApp() && env("LORDRAN_STORE") === "1";
 
 /** Writable per-user directory for local state (dev-file store, generated secret). */
 export function dataDir(): string {

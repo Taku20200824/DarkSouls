@@ -98,7 +98,16 @@ function Connected() {
 
 function DesktopDownload() {
   const latest = useLatestDesktop();
+  const { state } = useTracker();
   const current = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+  if (IS_DESKTOP_BUILD && state?.desktopStore) {
+    return (
+      <div className="mt-3 text-sm">
+        <p>Энэ app: <span className="font-display text-gold-300">v{current}</span> · Microsoft Store</p>
+        <p className="mt-1 text-ash-400">Шинэчлэлтийг Microsoft Store автоматаар суулгана.</p>
+      </div>
+    );
+  }
   if (IS_DESKTOP_BUILD) {
     // Inside the installed app: no installer download — it updates itself on launch.
     const newer = Boolean(latest?.version && current && compareVersions(latest.version, current) > 0);

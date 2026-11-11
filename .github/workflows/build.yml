@@ -73,3 +73,52 @@ jobs:
             dist/latest.yml
           if-no-files-found: error
           retention-days: 30
+
+  # Microsoft Store package (.appx). Built here rather than locally: some antivirus products
+  # quarantine electron-builder's bundled makeappx.exe. Upload the artifact to Partner Center;
+  # the Store re-signs it. Needs the real identity values in electron-builder.yml (appx:).
+  store:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            electron/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: electron
+      - run: npm run dist:store
+      - name: Package summary
+        shell: pwsh
+        run: |
+          $appx = Get-ChildItem dist/*.appx | Select-Object -First 1
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead($appx.FullName)
+          $manifest = $zip.Entries | Where-Object FullName -eq "AppxManifest.xml"
+          $xml = [xml](New-Object IO.StreamReader($manifest.Open())).ReadToEnd()
+          $zip.Dispose()
+          $id = $xml.Package.Identity
+          $summary = @(
+            "### Microsoft Store package",
+            "| | |", "|---|---|",
+            "| File | $($appx.Name) ($([math]::Round($appx.Length / 1MB, 1)) MB) |",
+            "| SHA-256 | ``$((Get-FileHash $appx -Algorithm SHA256).Hash.ToLower())`` |",
+            "| Identity Name | ``$($id.Name)`` |",
+            "| Publisher | ``$($id.Publisher)`` |",
+            "| Version | ``$($id.Version)`` |",
+            "| Publisher display name | $($xml.Package.Properties.PublisherDisplayName) |",
+            "| Capabilities | $(($xml.Package.Capabilities.ChildNodes | ForEach-Object { $_.Name }) -join ', ') |"
+          ) -join "`n"
+          $summary | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          $summary
+      - uses: actions/upload-artifact@v4
+        with:
+          name: microsoft-store-package
+          path: dist/*.appx
+          if-no-files-found: error
+          retention-days: 30

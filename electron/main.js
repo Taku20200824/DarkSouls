@@ -76,6 +76,8 @@ async function startServer() {
       HOSTNAME: "127.0.0.1",
       APP_URL: appUrl,
       LORDRAN_DESKTOP: "1",
+      // Microsoft Store (MSIX) install: the Store delivers updates, so the UI says so.
+      LORDRAN_STORE: process.windowsStore ? "1" : "",
       LORDRAN_DATA_DIR: app.getPath("userData"),
       // The real Documents folder, including a OneDrive or other redirect, for save discovery.
       LORDRAN_DOCUMENTS_DIR: app.getPath("documents"),
@@ -263,7 +265,9 @@ function setUpAutoUpdate() {
     });
   });
 
-  if (app.isPackaged) autoUpdater.checkForUpdates().catch(() => {});
+  // Store installs update through the Microsoft Store; a GitHub installer would replace the
+  // package with a separate NSIS install, so never self-update there.
+  if (app.isPackaged && !process.windowsStore) autoUpdater.checkForUpdates().catch(() => {});
 }
 
 // Two instances would run two servers over one local data file, each overwriting the other.

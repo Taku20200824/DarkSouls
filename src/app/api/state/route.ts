@@ -1,5 +1,5 @@
 import { withUser, ok } from "@/lib/server/api";
-import { isDesktopApp } from "@/lib/server/env";
+import { isDesktopApp, isStoreApp } from "@/lib/server/env";
 import { cloudLinkPath, type CloudLink } from "@/lib/server/desktop-cloud";
 import type { StoredCharacter, TrackerEvent } from "@/lib/server/progress";
 
@@ -24,6 +24,7 @@ export const GET = withUser(async ({ steamId, store }) => {
     now,
     storeKind: store.kind,
     desktop,
+    desktopStore: isStoreApp(),
     desktopCloud: link ? { lastSyncedAt: link.lastSyncedAt, error: link.error } : null,
     user: user ?? { steamId },
     characters: chars,
