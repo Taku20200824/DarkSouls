@@ -52,10 +52,11 @@ export default function Privacy() {
                 <tr><th className="py-2 pr-4">Юу</th><th className="py-2 pr-4">Хаанаас</th><th className="py-2">Юунд</th></tr>
               </thead>
               <tbody className="divide-y divide-gold-600/10 text-ash-300">
-                <tr><td className="py-2 pr-4">SteamID, нэр, профайл зураг, профайлын холбоос</td><td className="py-2 pr-4">Steam Web API (нийтэд харагдах мэдээлэл)</td><td className="py-2">Таныг таньж, нүүрэн дээр харуулах</td></tr>
+                <tr><td className="py-2 pr-4">SteamID, нэр, профайл зураг, профайлын холбоос, профайл нийтэд нээлттэй эсэх, сүүлд нэвтэрсэн цаг</td><td className="py-2 pr-4">Steam Web API (нийтэд харагдах мэдээлэл)</td><td className="py-2">Таныг таньж, нүүрэн дээр харуулах</td></tr>
                 <tr><td className="py-2 pr-4">Dark Souls-ийн тоглосон хугацаа, тоглоом эзэмшдэг эсэх</td><td className="py-2 pr-4">Steam Web API</td><td className="py-2">Хянах самбарт харуулах</td></tr>
                 <tr><td className="py-2 pr-4">Steam achievement-ийн жагсаалт</td><td className="py-2 pr-4">Steam Web API</td><td className="py-2">100% хөтөч, achievement хуудас</td></tr>
                 <tr><td className="py-2 pr-4">Тоглоомын ахиц: дүрийн нэр, анги, түвшин, stat, souls, үхлийн тоо, тоглосон хугацаа, bonfire, ялсан boss, эд зүйлс</td><td className="py-2 pr-4">Windows App эсвэл хөтөч дээр задалсан save</td><td className="py-2">Ахиц, boss, үхлийн статистик</td></tr>
+                <tr><td className="py-2 pr-4">Ахицын түүх: үхэл, ялсан boss, түвшин ахисан зэрэг үйл явдал ба үе үеийн snapshot</td><td className="py-2 pr-4">Дээрх ахицын өөрчлөлтөөс тооцсон</td><td className="py-2">Үхлийн график, «сүүлийн үйл явдал»</td></tr>
                 <tr><td className="py-2 pr-4">Гараар тэмдэглэсэн boss / achievement / quest</td><td className="py-2 pr-4">Таны өөрийн оруулсан</td><td className="py-2">Save-д байхгүй мэдээллийг нөхөх</td></tr>
                 <tr><td className="py-2 pr-4">Companion төхөөрөмжийн нэр, хувилбар, сүүлийн синкийн цаг</td><td className="py-2 pr-4">Windows App / Companion</td><td className="py-2">Синкийн төлөвийг харуулах</td></tr>
               </tbody>
@@ -100,7 +101,8 @@ export default function Privacy() {
           <ul className="list-disc space-y-1.5 pl-5 text-sm text-ash-300">
             <li>Бүх холболт HTTPS (HSTS идэвхтэй).</li>
             <li>Өөр сайт энэ сайтыг frame-д оруулж чадахгүй (<code>X-Frame-Options: DENY</code>).</li>
-            <li>Хэрэглэгч бүр зөвхөн өөрийн SteamID-ийн өгөгдлийг харна; API бүр нэвтрэлт шалгана.</li>
+            <li>Хэрэглэгчийн өгөгдөлд хандах API бүр нэвтрэлтийг шалгаж, зөвхөн тухайн SteamID-ийн өгөгдлийг буцаана. Өөрчлөлт хийх хүсэлт бүрт өөр сайтаас ирсэн эсэхийг (CSRF) шалгана.</li>
+            <li>Нэвтрэлтийн cookie гарын үсэгтэй (HS256) тул гараар өөрчилж өөр хүн болж чадахгүй.</li>
             <li>Vercel дээр байрладаг; Vercel Web Analytics идэвхгүй.</li>
           </ul>
         </Panel>
@@ -111,7 +113,7 @@ export default function Privacy() {
             <li><b className="text-gold-300">Синкийг зогсоох</b>: Windows App → Settings → «Холболт салгах», эсвэл вэбийн Settings → «Бүх companion-ий эрхийг цуцлах».</li>
             <li>
               <b className="text-gold-300">Хадгалсан өгөгдлөө бүрэн устгуулах</b>: одоогоор өөрөө устгах товч байхгүй.{" "}
-              <a className="text-ember-300 underline" href={`${REPO}/issues/new`} target="_blank" rel="noreferrer">GitHub Issue</a>-ээр хүсэлт илгээнэ үү (SteamID-гаа бичнэ; нууц үг бүү бич).
+              <a className="text-ember-300 underline" href={`${REPO}/issues/new`} target="_blank" rel="noreferrer">GitHub Issue</a>-ээр хүсэлт илгээнэ үү (SteamID-гаа бичнэ; нууц үг бүү бич). Issue нь нийтэд харагдана — SteamID нь Steam дээр ч нийтэд харагддаг мэдээлэл.
             </li>
           </ul>
         </Panel>

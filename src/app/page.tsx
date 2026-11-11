@@ -77,7 +77,8 @@ export default function Landing() {
       </section>
       <div className="legend-strip"><div><span>26</span><p>LEGENDARY BOSSES</p></div><span className="legend-divider" /><div><span>41</span><p>ACHIEVEMENTS TO CLAIM</p></div><span className="legend-divider" /><div><span>∞</span><p>REASONS TO RISE AGAIN</p></div><p className="legend-quote">“The flame fades.<br /><em>The journey remains.”</em></p></div>
       <div className="chronicle-strip" aria-label="Companion features"><span><Flame size={15} /> SAVE-BY-SAVE TRACKING</span><span><Swords size={15} /> BOSS STRATEGIES</span><span><Compass size={15} /> A PATH TO 100%</span><span><ShieldCheck size={15} /> YOUR SAVE, UNTOUCHED</span></div>
-      <BonfireAtlas animated={effects && !reduced} />
+      {/* Reduced motion is handled in BonfireAtlas.module.css (prefers-reduced-motion); useReducedMotion() is null on the server, so passing it here made the first render differ from SSR. */}
+      <BonfireAtlas animated={effects} />
       <section id="discover" className="discovery-section">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: .3 }} variants={reveal} transition={{ duration: .7 }} className="discovery-heading">
           <div><p className="eyebrow">II / KNOW THE WORLD. DEFY YOUR FATE.</p><h2 className="section-title">Master the darkness.<br /><span>Write your own legend.</span></h2></div><p className="max-w-sm text-sm leading-7 text-ash-400">Хаашаа явах, юу цуглуулах, хэнийг ялах вэ?<br />Таны дараагийн алхам бүрт хэрэгтэй мэдээлэл.</p>
