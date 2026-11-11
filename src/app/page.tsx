@@ -69,7 +69,7 @@ export default function Landing() {
             <button className="btn hero-cta" onClick={() => { setDemo(true); router.push("/dashboard"); }}>Explore demo <ChevronRight size={16} /></button>
             {!IS_DESKTOP_BUILD && <a className="btn hero-cta" href={DESKTOP_DOWNLOAD_PATH}><Download size={16} /> Windows-д татах{desktop?.version ? ` v${desktop.version}` : ""}</a>}
           </motion.div>
-          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-micro tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in. <Link href="/privacy" className="underline decoration-gold-600/50 underline-offset-2 hover:text-ember-300">Нууцлал</Link></motion.div>
+          <motion.div variants={reveal} transition={{ duration: .7 }} className="mt-6 flex items-center gap-2 text-micro tracking-wide text-ash-400"><ShieldCheck size={14} className="text-gold-500" /> Read-only saves. Secure Steam sign-in. <Link href="/privacy" className="underline decoration-gold-600/50 underline-offset-2 hover:text-ember-300">Нууцлал</Link>{!IS_DESKTOP_BUILD && <> · <Link href="/code-signing" className="underline decoration-gold-600/50 underline-offset-2 hover:text-ember-300">Code signing policy</Link></>}</motion.div>
         </motion.div>
         <div className="hero-location"><span className="status-spark" /><span>REST AT THE BONFIRE</span><span className="text-ash-500">/ FIRELINK SHRINE</span></div>
         <a href="#bonfire-atlas" className="hero-scroll"><span>DESCEND INTO LORDRAN</span><ArrowDown size={15} /></a>
@@ -96,7 +96,7 @@ export default function Landing() {
           <p className="eyebrow">02 / YOUR NEXT CHAPTER</p><BonfireMark className="mx-auto my-8 h-24 w-16" /><h2 className="section-title">Don’t you dare<br /><span>go hollow.</span></h2><p className="mx-auto mt-5 max-w-md text-sm leading-7 text-ash-400">Хэдэн ч удаа үхсэн бай — гал хэзээ ч унтрахгүй.<br />Аяллаа үргэлжлүүл. Бид замыг тань санана.</p><button className="btn btn-ember btn-lg mt-8" onClick={() => enter("/dashboard")}>Begin your journey <ArrowUpRight size={16} /></button>
         </motion.div><span className="journey-ring" aria-hidden="true" />
       </section>
-      <footer className="landing-footer"><Link href="/" className="font-display text-xs tracking-label text-gold-400">LORDRAN TRACKER</Link><p>Fan-made & unofficial. DARK SOULS © Bandai Namco / FromSoftware. · <Link href="/privacy" className="underline hover:text-ember-300">Нууцлал ба аюулгүй байдал</Link></p><a href="#main-content" className="flex items-center gap-2">BACK TO THE FLAME <ArrowUpRight size={13} /></a></footer>
+      <footer className="landing-footer"><Link href="/" className="font-display text-xs tracking-label text-gold-400">LORDRAN TRACKER</Link><p>Fan-made & unofficial. DARK SOULS © Bandai Namco / FromSoftware. · <Link href="/privacy" className="underline hover:text-ember-300">Нууцлал ба аюулгүй байдал</Link> · <Link href="/code-signing" className="underline hover:text-ember-300">Download &amp; Code signing policy</Link></p><a href="#main-content" className="flex items-center gap-2">BACK TO THE FLAME <ArrowUpRight size={13} /></a></footer>
     </main>
   );
 }

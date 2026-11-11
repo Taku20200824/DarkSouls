@@ -121,6 +121,7 @@ function DesktopDownload() {
     <>
       <a className="btn btn-ember mt-3" href={DESKTOP_DOWNLOAD_PATH}>{latest?.version ? `v${latest.version} татах (.exe)` : "Хамгийн сүүлийн хувилбарыг татах (.exe)"}</a>
       {latest?.releaseDate && <p className="mt-2 text-xs text-ash-500">Гаргасан: {new Date(latest.releaseDate).toLocaleDateString("mn-MN")}</p>}
+      <p className="mt-2 text-xs text-ash-400"><Link href="/code-signing" className="text-ember-300 underline">Code signing policy</Link> — татсан файлаа шалгах арга, гарын үсгийн бодлого.</p>
     </>
   );
 }

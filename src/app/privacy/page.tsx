@@ -94,6 +94,7 @@ export default function Privacy() {
             <li>Installer-ийг зөвхөн <a className="text-ember-300 underline" href={`${REPO}/releases`} target="_blank" rel="noreferrer">GitHub Releases</a>-ээс түгээдэг.</li>
             <li>Release бүрийн <code>latest.yml</code> дотор SHA-512 hash байдаг; App шинэчлэлт татахдаа үүнийг шалгаж, таарахгүй бол суулгахгүй.</li>
             <li>Хүсвэл файлыг <a className="text-ember-300 underline" href="https://www.virustotal.com/" target="_blank" rel="noreferrer">VirusTotal</a>-д өөрөө шалгуулж болно.</li>
+            <li><Link className="text-ember-300 underline" href="/code-signing">Code signing policy</Link> — татах, шалгах, устгах заавар.</li>
           </ul>
         </Panel>
 
