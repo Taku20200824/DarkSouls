@@ -25,6 +25,7 @@ function memoryStore(): Store {
     add: async () => "id",
     list: async () => [],
     delete: async () => {},
+    deleteTree: async () => {},
   };
 }
 

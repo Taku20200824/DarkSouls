@@ -8,6 +8,7 @@ import { PageTitle, Panel, fmtAgo, fmtDate } from "@/components/ui";
 import { DESKTOP_DOWNLOAD_PATH, IS_DESKTOP_BUILD, compareVersions } from "@/lib/downloads";
 import { useLatestDesktop } from "@/components/useLatestDesktop";
 import { DesktopCloudPanel } from "@/components/DesktopCloudPanel";
+import { DeleteAccountPanel } from "@/components/DeleteAccountPanel";
 
 export default function Settings() {
   const { demo, setDemo, status } = useTracker();
@@ -88,7 +89,9 @@ function Connected() {
           <li>Steam API key зөвхөн сервер дээр. Companion token-ийн зөвхөн SHA-256 hash хадгална.</li>
           <li>Save файлд хэзээ ч бичихгүй, өөрчлөхгүй.</li>
         </ul>
+        <Link href="/privacy" className="mt-2 inline-block text-xs text-ember-300 underline">Дэлгэрэнгүй: Нууцлал ба аюулгүй байдал</Link>
       </Panel>
+      <DeleteAccountPanel />
     </div>
   );
 }

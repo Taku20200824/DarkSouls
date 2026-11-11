@@ -2,6 +2,12 @@
   "name": "lordran-tracker-shell",
   "version": "0.1.11",
   "private": true,
+  "description": "LORDRAN TRACKER — unofficial Dark Souls: Remastered progress tracker (desktop app)",
+  "author": {
+    "name": "Lordran Tracker contributors",
+    "url": "https://github.com/Taku20200824/DarkSouls"
+  },
+  "homepage": "https://darksouls-five.vercel.app",
   "main": "dist/main.js",
   "dependencies": {
     "electron-updater": "^6.8.11"

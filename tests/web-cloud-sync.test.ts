@@ -28,6 +28,7 @@ function memoryStore(): Store {
     list: async <T,>(path: string) => [...docs.entries()].filter(([key]) => key.startsWith(`${path}/`))
       .map(([key, value]) => ({ ...value as T, id: key.split("/").at(-1)! })),
     async delete(path) { docs.delete(path); },
+    async deleteTree(path) { for (const key of [...docs.keys()]) if (key === path || key.startsWith(`${path}/`)) docs.delete(key); },
     async atomic(operation) { return operation(store); },
   };
   return store;

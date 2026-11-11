@@ -23,6 +23,8 @@ export interface Store {
   add(collectionPath: string, data: object): Promise<string>;
   list<T>(collectionPath: string, opts?: ListOpts): Promise<(T & { id: string })[]>;
   delete(docPath: string): Promise<void>;
+  /** Deletes a document and every subcollection below it (account deletion). */
+  deleteTree(docPath: string): Promise<void>;
   atomic?<T>(operation: (store: TransactionStore) => Promise<T>): Promise<T>;
 }
 
@@ -85,6 +87,10 @@ class FirestoreStore implements Store {
   }
   async delete(p: string) {
     await (await this.dbPromise).doc(p).delete();
+  }
+  async deleteTree(p: string) {
+    const db = await this.dbPromise as import("firebase-admin/firestore").Firestore;
+    await db.recursiveDelete(db.doc(p));
   }
   async atomic<T>(operation: (store: TransactionStore) => Promise<T>): Promise<T> {
     const db = await this.dbPromise as import("firebase-admin/firestore").Firestore;
@@ -160,6 +166,11 @@ class DevFileStore implements Store {
   async delete(p: string) {
     const d = this.read();
     delete d[p];
+    this.write(d);
+  }
+  async deleteTree(p: string) {
+    const d = this.read();
+    for (const k of Object.keys(d)) if (k === p || k.startsWith(`${p}/`)) delete d[k];
     this.write(d);
   }
 }

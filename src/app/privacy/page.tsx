@@ -112,8 +112,15 @@ export default function Privacy() {
             <li><b className="text-gold-300">Гарах</b>: нэвтрэлтийн cookie устна.</li>
             <li><b className="text-gold-300">Синкийг зогсоох</b>: Windows App → Settings → «Холболт салгах», эсвэл вэбийн Settings → «Бүх companion-ий эрхийг цуцлах».</li>
             <li>
-              <b className="text-gold-300">Хадгалсан өгөгдлөө бүрэн устгуулах</b>: одоогоор өөрөө устгах товч байхгүй.{" "}
-              <a className="text-ember-300 underline" href={`${REPO}/issues/new`} target="_blank" rel="noreferrer">GitHub Issue</a>-ээр хүсэлт илгээнэ үү (SteamID-гаа бичнэ; нууц үг бүү бич). Issue нь нийтэд харагдана — SteamID нь Steam дээр ч нийтэд харагддаг мэдээлэл.
+              <b className="text-gold-300">Хадгалсан өгөгдлөө бүрмөсөн устгах</b>: вэбийн <Link className="text-ember-300 underline" href="/settings">Settings</Link> → «Өгөгдлөө устгах» хэсэгт{" "}
+              <b>УСТГАХ</b> гэж бичээд товчийг дарна. Таны SteamID-ийн доорх бүх өгөгдөл (ахиц, үйл явдал, snapshot, achievement, гараар тэмдэглэсэн зүйл)
+              болон Windows App / companion-ий холболтын эрх даруй устаж, та гарна. Буцаах боломжгүй.
+            </li>
+            <li>
+              Windows App дээрх ижил товч нь App-ийн локал өгөгдлийг устгаж, вэб рүү синк хийх эрхийг цуцална; вэб дээрх хуулбарыг вэбийн Settings-ээс устгана.
+            </li>
+            <li className="text-ash-400">
+              Нэвтрэлтийн нэг удаагийн nonce-ийн hash (зөвхөн цаг агуулна) болон 10 минутын дотор дуусах холбох код устгалд ороогүй — эдгээр нь хувийн мэдээлэл агуулдаггүй.
             </li>
           </ul>
         </Panel>
