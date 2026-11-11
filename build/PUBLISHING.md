@@ -23,3 +23,20 @@ Already-installed apps (0.1.8+) pick up the new version on their next launch (th
 
 - 0.1.0–0.1.7 used a Vercel Blob store (`store_BPcNe2nKARuZhq1B`) as the update feed. The Hobby plan allows 1 GB of storage; ~144 MB per installer filled it, and Vercel suspended the store (403 "Your store is blocked") for 30 days. Apps from those versions can't see new releases: reinstall them once from the website.
 - Releases up to 0.1.4 were built with a spaced file name (`Lordran Tracker-Setup-…`).
+
+## CI build (GitHub Actions)
+
+`.github/workflows/build.yml` runs on every push to `main`, every tag and every pull request:
+
+- **check** (Ubuntu): typecheck, unit tests (including the TS ↔ Python parser parity test), the Python companion tests and `npm audit --omit=dev --audit-level=high`.
+- **windows** (Windows): `npm run dist:win` from a clean checkout, then uploads the installer, its `.blockmap` and `latest.yml` as the `windows-installer` workflow artifact, and prints their SHA-256 in the log.
+
+You can attach that artifact to a release instead of a local build: Actions tab → the run → **windows-installer**. It is the reproducible build that code signing will use.
+
+## Code signing (planned)
+
+The installer is not signed yet. The repository now meets the basic requirements of the free [SignPath Foundation](https://signpath.org/) program for open-source projects: an OSI-approved license (MIT, see `LICENSE`) and automated builds on GitHub Actions. To continue:
+
+1. Turn on two-factor authentication (MFA) on GitHub.
+2. Apply at signpath.org/apply.
+3. After approval, add a SignPath signing step to the `windows` job after the artifact upload (`signpath/github-action-submit-signing-request`, using `needs.windows.outputs.artifact-id`), then publish the signed artifact.

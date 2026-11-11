@@ -1,6 +1,7 @@
 {
   "name": "lordran-tracker",
   "version": "0.1.12",
+  "license": "MIT",
   "private": true,
   "description": "LORDRAN TRACKER — Dark Souls Remastered companion",
   "scripts": {

@@ -1,0 +1,75 @@
+# CI for LORDRAN TRACKER.
+#  - check:   typecheck, unit tests (incl. the TS <-> Python save-parser parity test),
+#             Python companion tests and a production-dependency audit — on every push/PR.
+#  - windows: builds the Windows installer from a clean checkout with `npm run dist:win`
+#             and uploads Lordran-Tracker-Setup-<version>.exe, its .blockmap and latest.yml
+#             as a workflow artifact. This is the reproducible build that code signing
+#             (SignPath) will sign; the signing step goes after the upload once the project
+#             is approved (see build/PUBLISHING.md).
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r companion/requirements.txt
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:py
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  windows:
+    needs: check
+    runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            electron/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: electron
+      - run: npm run dist:win
+      - name: SHA-256 of the build
+        shell: pwsh
+        run: Get-ChildItem dist/Lordran-Tracker-Setup-*.exe, dist/latest.yml | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), $_.Name }
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            dist/Lordran-Tracker-Setup-*.exe
+            dist/Lordran-Tracker-Setup-*.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+          retention-days: 30
