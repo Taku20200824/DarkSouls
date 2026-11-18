@@ -1,11 +1,14 @@
 "use client";
 import clsx from "clsx";
 import { motion } from "motion/react";
+import { usePathname } from "next/navigation";
+import { chapterFor } from "./nav";
 import type { Certainty } from "@/lib/save/types";
 
 export function Panel({ children, className, title, right, hover }: { children: React.ReactNode; className?: string; title?: React.ReactNode; right?: React.ReactNode; hover?: boolean }) {
   return (
-    <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .5 }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
+    <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .55, ease: [0.22, 1, 0.36, 1] }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
+      <span className="panel-rivets" aria-hidden />
       {title && (
         <header className="panel-head mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3">
           <h2 className="font-display flex items-center gap-2 text-title font-semibold uppercase tracking-label text-gold-300 md:text-base">
@@ -22,10 +25,10 @@ export function Panel({ children, className, title, right, hover }: { children: 
 
 function Flourish({ flip }: { flip?: boolean }) {
   return (
-    <svg viewBox="0 0 160 14" className={clsx("h-3.5 w-24 md:w-40", flip && "-scale-x-100")} aria-hidden>
-      <path d="M0 7 H120" stroke="url(#fl-g)" strokeWidth="1" />
-      <path d="M120 7 C132 1 140 1 146 7 C140 13 132 13 120 7Z" fill="none" stroke="#cfb173" strokeWidth="1" />
-      <rect x="150" y="4" width="6" height="6" transform="rotate(45 153 7)" fill="#ff9142" />
+    <svg viewBox="0 0 160 14" className={clsx("flourish h-3.5 w-16 sm:w-24 md:w-40", flip && "-scale-x-100")} aria-hidden>
+      <path className="flourish-line" d="M0 7 H120" stroke="url(#fl-g)" strokeWidth="1" pathLength={1} />
+      <path className="flourish-line" d="M120 7 C132 1 140 1 146 7 C140 13 132 13 120 7Z" fill="none" stroke="#cfb173" strokeWidth="1" pathLength={1} />
+      <rect className="flourish-gem" x="150" y="4" width="6" height="6" transform="rotate(45 153 7)" fill="#ff9142" />
       <defs>
         <linearGradient id="fl-g" x1="0" x2="1">
           <stop offset="0" stopColor="#cfb173" stopOpacity="0" />
@@ -37,14 +40,23 @@ function Flourish({ flip }: { flip?: boolean }) {
 }
 
 export function PageTitle({ title, sub }: { title: string; sub?: string }) {
+  const chapter = chapterFor(usePathname());
   return (
-    <div className="mb-8 text-center md:mb-10">
-      <div className="flex items-center justify-center gap-3 md:gap-5">
+    <div className="page-title relative mb-8 text-center md:mb-12">
+      {chapter && (
+        <>
+          <span className="page-title__numeral font-display" aria-hidden>{chapter.numeral}</span>
+          <p className="font-display relative mb-3 text-micro uppercase tracking-eyebrow text-ember-300/90">
+            Chapter {chapter.numeral} <span className="mx-2 text-gold-600">◆</span> {chapter.en}
+          </p>
+        </>
+      )}
+      <div className="relative flex items-center justify-center gap-3 md:gap-5">
         <Flourish />
         <h1 className="font-display shimmer-title text-2xl font-bold uppercase tracking-caps md:text-display md:leading-tight">{title}</h1>
         <Flourish flip />
       </div>
-      {sub && <p className="font-serif mx-auto mt-3 max-w-3xl text-base italic text-ash-400 md:text-lg">{sub}</p>}
+      {sub && <p className="font-serif relative mx-auto mt-3 max-w-3xl text-base italic text-ash-400 md:text-lg">{sub}</p>}
     </div>
   );
 }
@@ -72,12 +84,13 @@ export function Badge({ kind, children }: { kind: keyof typeof BADGE | Certainty
 
 export function Stat({ label, value, certainty, demo, hint }: { label: string; value: React.ReactNode; certainty?: Certainty; demo?: boolean; hint?: string }) {
   return (
-    <div className="panel panel-hover group flex flex-col p-4">
+    <div className="panel panel-hover stat group flex flex-col p-4">
+      <span className="panel-rivets" aria-hidden />
       <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
         <span className="font-display text-micro font-semibold uppercase tracking-caps text-ash-500">{label}</span>
         {demo ? <Badge kind="demo" /> : certainty && <Badge kind={certainty} />}
       </div>
-      <div className="font-display mt-auto pt-2 text-2xl font-semibold leading-tight text-gold-200 transition [overflow-wrap:anywhere] xl:text-3xl group-hover:text-white group-hover:[text-shadow:0_0_18px_rgba(255,145,66,0.6)]">
+      <div className="stat__value font-display mt-auto pt-3 text-2xl font-semibold leading-tight [overflow-wrap:anywhere] xl:text-3xl">
         {value ?? <span className="text-ash-500">—</span>}
       </div>
       {hint && <div className="mt-1 text-xs text-ash-500">{hint}</div>}

@@ -7,24 +7,12 @@ import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
 import { fmtAgo } from "./ui";
 import { BOSSES } from "@/lib/data/bosses";
-import { Backpack, Compass, Hammer, LayoutDashboard, Map as MapIcon, Milestone, ScrollText, Settings, Skull, Swords, Trophy, Users, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { NAV, roman } from "./nav";
 import { BonfireMark } from "./BonfireMark";
 import { BossThumb } from "./BossThumb";
 
-const NAV = [
-  { href: "/dashboard", label: "Хяналтын самбар", en: "Dashboard", icon: LayoutDashboard },
-  { href: "/characters", label: "Дүр сонгох", en: "Characters", icon: Users },
-  { href: "/map", label: "Lordran газрын зураг", en: "World Map", icon: MapIcon },
-  { href: "/bosses", label: "Boss-ууд", en: "Bosses", icon: Swords },
-  { href: "/guide", label: "100% хөтөч", en: "Guide", icon: Compass },
-  { href: "/upgrades", label: "Зэвсэг сайжруулах", en: "Upgrades", icon: Hammer },
-  { href: "/inventory", label: "Эд зүйлс", en: "Inventory", icon: Backpack },
-  { href: "/achievements", label: "Achievement", en: "Achievements", icon: Trophy },
-  { href: "/deaths", label: "Үхлийн статистик", en: "Deaths", icon: Skull },
-  { href: "/quests", label: "NPC quest", en: "Quests", icon: ScrollText },
-  { href: "/roadmap", label: "NG → NG++", en: "Roadmap", icon: Milestone },
-  { href: "/settings", label: "Тохиргоо / Companion", en: "Settings", icon: Settings },
-];
+
 
 export function LiveStatus() {
   const { state, demo, status } = useTracker();
@@ -131,17 +119,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="ornament my-5" />
         <nav id="tracker-navigation" aria-label="Tracker navigation" className="space-y-0.5">
-          {NAV.map((n) => {
+          {NAV.map((n, i) => {
             const active = path.startsWith(n.href);
             const Icon = n.icon;
             return (
-              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "text-gold-200" : "text-ash-400 hover:text-gold-300")}>
-                {active && <motion.span layoutId="nav-active" className="absolute inset-0 border-l-2 border-ember-400 bg-[linear-gradient(90deg,rgba(242,106,27,0.18),transparent)]" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
-                <Icon className={clsx("relative h-4 w-4 shrink-0 transition", active ? "text-ember-300 drop-shadow-[0_0_6px_var(--color-ember-400)]" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
-                <span className="relative min-w-0">
+              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("nav-item group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "nav-item--on text-gold-200" : "text-ash-400 hover:text-gold-300")}>
+                {active && <motion.span layoutId="nav-active" className="nav-item__active absolute inset-0" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
+                <span className={clsx("nav-item__icon relative mx-0.5 grid h-7 w-7 shrink-0 place-items-center", active && "nav-item__icon--on")}>
+                  <Icon className={clsx("h-4 w-4 transition", active ? "text-ember-300" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
+                </span>
+                <span className="relative min-w-0 flex-1">
                   <span className="block truncate text-body-sm">{n.label}</span>
                   <span className="font-display block text-micro uppercase tracking-eyebrow text-ash-500">{n.en}</span>
                 </span>
+                <span className={clsx("font-display relative w-7 text-right text-label tracking-caps transition", active ? "text-ember-300" : "text-ash-500/60 group-hover:text-gold-500")}>{roman(i)}</span>
               </Link>
             );
           })}
@@ -174,7 +165,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <BonfireMark className="h-7 w-5" />
         </div>
         {demo && <div className="bg-demo-deep/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-demo-soft">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
-        <motion.main id="main-content" key={path} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
+        <motion.main id="main-content" key={path} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
       <VictoryOverlay />
     </div>
