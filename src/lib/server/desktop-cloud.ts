@@ -45,9 +45,11 @@ export async function uploadDesktopSave(store: Store, steamId: string, link: Clo
   if (receipt?.ok === true) {
     await store.set(docPath, {
       syncedSaveAt: payload.saveModifiedAt, syncedParser: payload.parserVersion, lastSyncedAt: Date.now(), error: null,
+      lastResult: receipt.unchanged === true ? "unchanged" : "stored",
     }, true);
     return true;
   }
+  if (response && !response.ok) console.error("cloud upload rejected", response.status);
   const error = response?.status === 401 ? "invalid_token" : "upload_failed";
   if (link.error === error) return false;
   await store.set(docPath, { error }, true);

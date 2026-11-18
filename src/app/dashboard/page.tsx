@@ -46,7 +46,7 @@ function Inner() {
         <Link href="/guide" className="btn btn-sm relative z-10">Continue the path <ArrowUpRight size={14} /></Link>
         <BonfireMark className="chapter-bonfire" />
       </div>
-      <PageTitle title={ch?.name.value ?? "Live Dashboard"} sub={ch ? `${ch.className.value ?? ""} · Slot ${ch.slot + 1} · ${sel?.source ?? ""} · ${fmtAgo(sel?.updatedAt)}` : "Дүрийн мэдээлэл хүлээгдэж байна"} />
+      <PageTitle title={ch?.name.value ?? "Live Dashboard"} sub={ch ? `${ch.className.value ?? ""} · Slot ${ch.slot + 1} · ${sel?.source ?? ""} · ${fmtAgo(Math.max(sel?.updatedAt ?? 0, state?.sync?.lastSyncAt ?? 0) || null)}` : "Дүрийн мэдээлэл хүлээгдэж байна"} />
       {!ch && (
         <Empty>
           Save өгөгдөл алга (<b>Waiting for save data</b>). <Link className="text-ember-300 underline" href="/characters">Save upload</Link> эсвэл <Link className="text-ember-300 underline" href="/settings">companion</Link> холбоно уу.
@@ -135,7 +135,7 @@ function Inner() {
             </>
           ) : (
             <>
-              <p className="text-sm text-ash-400">Steam achievement өгөгдөл: <b>{achStatus === "private" ? "Профайл private" : achStatus === "no_key" ? "Steam API key тохируулаагүй" : "Not connected"}</b></p>
+              <p className="text-sm text-ash-400">Steam achievement өгөгдөл: <b>{achStatus === "private" ? "Профайл private" : achStatus === "no_key" ? "Steam API key тохируулаагүй" : achStatus === "not_linked" ? "App вэбтэй холбогдоогүй" : achStatus === "error" ? "Steam API алдаа" : "Not connected"}</b></p>
               <button className="btn mt-3" onClick={() => post("/api/achievements/sync", {})}>Steam-ээс синк</button>
             </>
           )}

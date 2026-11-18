@@ -40,7 +40,7 @@ function Inner() {
                   <div><div className="text-micro uppercase text-ash-500">NG</div><div className="font-display text-xl text-gold-300">{ch.ngCycle.value === null ? "?" : ch.ngCycle.value === 0 ? "NG" : `NG+${ch.ngCycle.value}`}</div></div>
                   <div><div className="text-micro uppercase text-ash-500">Үхэл</div><div className="font-display text-xl text-gold-300">{ch.deaths.value ?? "?"}</div></div>
                 </div>
-                <div className="mt-3 text-xs text-ash-500">Тоглосон: {fmtDuration(ch.playTimeSeconds.value) ?? "Unknown"} · Шинэчилсэн {fmtAgo(c.updatedAt)}</div>
+                <div className="mt-3 text-xs text-ash-500">Тоглосон: {fmtDuration(ch.playTimeSeconds.value) ?? "Unknown"} · Синк {fmtAgo(Math.max(c.updatedAt, state?.sync?.lastSyncAt ?? 0))}</div>
                 {active && <div className="mt-3 text-xs text-ember-300">✦ Сонгогдсон</div>}
               </button>
             );

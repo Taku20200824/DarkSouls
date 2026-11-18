@@ -14,6 +14,7 @@ const STATUS_MN: Record<string, string> = {
   no_key: "Сервер дээр STEAM_API_KEY тохируулаагүй.",
   not_owned: "Энэ бүртгэлд Dark Souls: Remastered-ийн статистик олдсонгүй.",
   error: "Steam API алдаа гаргалаа. Дараа дахин оролдоно уу.",
+  not_linked: "App вэбтэй холбогдоогүй байна. Тохиргоо → «Steam-ээр дахин нэвтэрч синк асаах»-аар холбоно уу.",
 };
 
 type Filter = "all" | "unlocked" | "locked" | "missable";

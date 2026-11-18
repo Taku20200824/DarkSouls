@@ -115,6 +115,8 @@ async function ingestProgress(store: TransactionStore, steamId: string, payload:
     });
     results.push({ key, events: events.length, baseline: !prev });
   }
-  if (results.length) await store.set(`users/${steamId}/meta/sync`, { lastSyncAt: now, lastSource: source, saveModifiedAt: payload.saveModifiedAt ?? null }, true);
+  // Recorded even when every character was already up to date: the save was received and
+  // confirmed, so the site should say "synced just now" rather than show the last change.
+  await store.set(`users/${steamId}/meta/sync`, { lastSyncAt: now, lastSource: source, saveModifiedAt: payload.saveModifiedAt ?? null }, true);
   return results;
 }

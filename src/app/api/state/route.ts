@@ -25,7 +25,7 @@ export const GET = withUser(async ({ steamId, store }) => {
     storeKind: store.kind,
     desktop,
     desktopStore: isStoreApp(),
-    desktopCloud: link ? { lastSyncedAt: link.lastSyncedAt, error: link.error } : null,
+    desktopCloud: link ? { lastSyncedAt: link.lastSyncedAt, error: link.error, lastResult: link.lastResult } : null,
     user: user ?? { steamId },
     characters: chars,
     events,

@@ -146,6 +146,28 @@ describe("desktop save sync", () => {
     expect(JSON.parse(options.body)).toMatchObject({ saveModifiedAt: modified, checksumsValid: true, client: "companion" });
   });
 
+  it("re-sends after the link is reset (new sign-in / send now) and records the website's answer", async () => {
+    const file = place(ACCOUNT);
+    age(file, 60);
+    const store = memoryStore();
+    const request = vi.fn()
+      .mockResolvedValueOnce(Response.json({ ok: true, unchanged: false }))
+      .mockResolvedValueOnce(Response.json({ ok: true, unchanged: true }));
+    vi.stubGlobal("fetch", request);
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ lastResult: "stored", error: null });
+
+    // Same save, nothing new: without a reset the app does not upload again …
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(request).toHaveBeenCalledTimes(1);
+    // … but a reset (what sign-in and "send now" do) pushes it and the site confirms it.
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token", error: null });
+    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ lastResult: "unchanged", error: null });
+  });
+
   it("can display a fallback save locally without uploading it for the wrong Steam account", async () => {
     age(place("999"), 60);
     const store = memoryStore();

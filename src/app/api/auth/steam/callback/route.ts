@@ -50,7 +50,9 @@ async function signInDesktop(req: NextRequest, returnTo: URL) {
     const path = cloudLinkPath(profile.steamId);
     const previous = await store.get<CloudLink>(path);
     await store.set(`users/${profile.steamId}`, profile, true);
-    await store.set(path, { ...previous, token, error: null });
+    // A fresh sign-in starts a fresh link: forget what the old token had sent, so the
+    // current save is uploaded (and confirmed by the website) right away.
+    await store.set(path, { token, error: null });
     if (previous) await revokeCloudLink(previous.token);
   });
   return signIn(profile.steamId);

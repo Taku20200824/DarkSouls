@@ -127,7 +127,11 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     if (status !== "ready" || demo || !state || state.demo) return;
     const now = Date.now();
     if (now - achievementsTriedAt.current < ACHIEVEMENTS_TTL) return;
-    if (state.now - (state.achievements?.checkedAt ?? 0) < ACHIEVEMENTS_TTL) return;
+    // A result from before the app was linked to the website (no Steam key in the app)
+    // is stale as soon as a link exists, so don't wait out the TTL in that case.
+    const linkedSinceFailure = state.desktop && !!state.desktopCloud && !state.desktopCloud.error &&
+      (state.achievements?.status === "no_key" || state.achievements?.status === "not_linked");
+    if (!linkedSinceFailure && state.now - (state.achievements?.checkedAt ?? 0) < ACHIEVEMENTS_TTL) return;
     achievementsTriedAt.current = now;
     post("/api/achievements/sync", {}).catch(() => {});
   }, [status, demo, state, post]);

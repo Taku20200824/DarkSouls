@@ -3,6 +3,7 @@ import { withUser, ok, readJson } from "@/lib/server/api";
 import { cloudLinkPath, cloudRequest, revokeCloudLink, withDesktopLock, type CloudLink } from "@/lib/server/desktop-cloud";
 import { isDesktopApp } from "@/lib/server/env";
 import { jsonError } from "@/lib/server/security";
+import { syncDesktopSave } from "@/lib/server/desktop-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,21 @@ export const POST = withUser(async ({ req, steamId, store }) => {
     return ok();
   });
 }, { mutation: true, limit: 10 });
+
+/** "Send now": forget the last upload marker and push the current save to the website. */
+export const PUT = withUser(async ({ steamId, store }) => {
+  if (!isDesktopApp() || store.kind !== "dev-file") return jsonError(404, "not_found");
+  return withDesktopLock(steamId, async () => {
+    const path = cloudLinkPath(steamId);
+    const link = await store.get<CloudLink>(path);
+    if (!link?.token) return jsonError(409, "not_linked");
+    // Replace (not merge) the record without the "already sent" fields.
+    await store.set(path, { token: link.token, lastSyncedAt: link.lastSyncedAt, error: link.error === "invalid_token" ? link.error : null });
+    await syncDesktopSave(steamId, store);
+    const after = await store.get<CloudLink>(path);
+    return ok({ lastSyncedAt: after?.lastSyncedAt ?? null, lastResult: after?.lastResult ?? null, error: after?.error ?? null });
+  });
+}, { mutation: true, limit: 6 });
 
 export const DELETE = withUser(async ({ steamId, store }) => {
   if (!isDesktopApp() || store.kind !== "dev-file") return jsonError(404, "not_found");
