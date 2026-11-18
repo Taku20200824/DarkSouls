@@ -7,7 +7,7 @@ export function Panel({ children, className, title, right, hover }: { children: 
   return (
     <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .5 }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
       {title && (
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-gold-600/15 pb-3">
+        <header className="panel-head mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3">
           <h2 className="font-display flex items-center gap-2 text-title font-semibold uppercase tracking-label text-gold-300 md:text-base">
             <span className="inline-block h-1.5 w-1.5 rotate-45 bg-ember-400 shadow-[0_0_8px_var(--color-ember-400)]" />
             {title}

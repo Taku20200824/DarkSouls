@@ -521,3 +521,203 @@ button { cursor: pointer; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Achievements ---------- */
+.ach-icon {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 3px;
+  background: linear-gradient(160deg, #1d1b21, #0a0a0c);
+  transition: transform 0.25s, box-shadow 0.25s, filter 0.25s;
+}
+.ach-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ach-icon--on {
+  border: 1px solid rgba(255, 192, 122, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(5, 5, 6, 0.9),
+    0 0 0 2px rgba(207, 177, 115, 0.35),
+    0 0 22px -4px rgba(242, 106, 27, 0.75);
+}
+.ach-icon--on::after {
+  /* a slow sheen across unlocked art */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 236, 200, 0.28) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: ach-sheen 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.ach-icon--off {
+  border: 1px solid rgba(145, 140, 130, 0.25);
+}
+.ach-icon--off img {
+  filter: grayscale(1) brightness(0.55) contrast(1.1);
+}
+.ach-icon__seal {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border-radius: 2px;
+  background: rgba(5, 5, 6, 0.85);
+  color: var(--color-ash-400);
+  border: 1px solid rgba(145, 140, 130, 0.3);
+}
+@keyframes ach-sheen {
+  0%, 60% { background-position: 150% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ach-card {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(168, 137, 79, 0.16);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 45%),
+    linear-gradient(160deg, rgba(24, 23, 28, 0.94), rgba(9, 9, 11, 0.97));
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 14px 34px -22px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+.ach-card::before {
+  /* ember spine on the left edge */
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 14%;
+  bottom: 14%;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(145, 140, 130, 0.35), transparent);
+}
+.ach-card--on {
+  border-color: rgba(207, 177, 115, 0.32);
+  background:
+    radial-gradient(ellipse 60% 90% at 0% 50%, rgba(242, 106, 27, 0.1), transparent 70%),
+    linear-gradient(160deg, rgba(28, 25, 26, 0.96), rgba(10, 9, 10, 0.97));
+}
+.ach-card--on::before {
+  background: linear-gradient(180deg, transparent, #ff9142, transparent);
+  box-shadow: 0 0 10px rgba(255, 145, 66, 0.8);
+}
+.ach-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 145, 66, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 145, 66, 0.12), 0 0 36px -12px rgba(242, 106, 27, 0.45), 0 18px 40px -22px rgba(0, 0, 0, 0.95);
+}
+.ach-card:hover .ach-icon {
+  transform: scale(1.04);
+}
+.ach-card--off:hover .ach-icon--off img {
+  filter: grayscale(0.6) brightness(0.8);
+}
+
+.ach-hero-glow {
+  position: absolute;
+  inset: -40% auto auto -10%;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(242, 106, 27, 0.16), transparent 65%);
+  pointer-events: none;
+}
+.ring-arc {
+  filter: drop-shadow(0 0 4px rgba(255, 145, 66, 0.7));
+  transition: stroke-dasharray 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ach-cat {
+  padding: 0.35rem 0.5rem;
+  margin: -0.35rem -0.5rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ach-cat:hover,
+.ach-cat--active {
+  border-color: rgba(255, 145, 66, 0.35);
+  background: rgba(242, 106, 27, 0.06);
+}
+
+/* segmented control + chips (filters) */
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid rgba(168, 137, 79, 0.25);
+  border-radius: 2px;
+  background: rgba(5, 5, 6, 0.6);
+}
+.seg__btn {
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ash-400);
+  border-radius: 1px;
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.seg__btn:hover {
+  color: var(--color-gold-300);
+}
+.seg__btn--on {
+  color: #1a0b03;
+  background: linear-gradient(180deg, #ffc07a, #f26a1b);
+  box-shadow: 0 0 16px -4px rgba(242, 106, 27, 0.9);
+}
+.chip {
+  padding: 0.3rem 0.7rem;
+  font-size: 12px;
+  color: var(--color-ash-400);
+  border: 1px solid rgba(168, 137, 79, 0.2);
+  border-radius: 999px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.chip:hover {
+  color: var(--color-gold-300);
+  border-color: rgba(207, 177, 115, 0.5);
+}
+.chip--on {
+  color: var(--color-gold-200);
+  border-color: rgba(255, 145, 66, 0.7);
+  background: rgba(242, 106, 27, 0.12);
+}
+.seg__btn:focus-visible,
+.chip:focus-visible,
+.ach-cat:focus-visible {
+  outline: 2px solid var(--color-ember-400);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ach-icon--on::after { animation: none; }
+  .ach-card, .ach-card:hover { transform: none; }
+}
+
+/* Panel heading divider: ember at the rune, fading through gold into the dark. */
+.panel-head {
+  position: relative;
+}
+.panel-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 145, 66, 0.7), rgba(207, 177, 115, 0.28) 30%, rgba(168, 137, 79, 0.08) 75%, transparent);
+}
+@media (max-width: 639px) {
+  .seg { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; }
+  .seg__btn { padding: 0.5rem 0.4rem; }
+}

@@ -9,6 +9,7 @@ import { BOSSES } from "@/lib/data/bosses";
 import { areaById } from "@/lib/data/areas";
 import { BonfireMark } from "@/components/BonfireMark";
 import { ArrowUpRight } from "lucide-react";
+import { AchievementIcon } from "@/components/AchievementIcon";
 import { bossStatus, completionPercent, computeObjectives, estimateArea, nextObjective, nextUpgradeAdvice } from "@/lib/guide/engine";
 
 export default function Dashboard() {
@@ -32,6 +33,11 @@ function Inner() {
   const defeated = bosses.filter((x) => x.s.state === "defeated").length;
   const advice = nextUpgradeAdvice(ch);
   const achStatus = state?.achievements?.status;
+  const recentAch = Object.entries(tracker.achievements ?? {})
+    .filter(([, s]) => s.unlocked && s.unlockTime)
+    .sort(([, x], [, y]) => (y.unlockTime ?? 0) - (x.unlockTime ?? 0))
+    .slice(0, 6)
+    .map(([name, s]) => ({ name, s }));
 
   return (
     <>
@@ -117,6 +123,15 @@ function Inner() {
               <div className="font-display text-3xl text-gold-300">{comp.unlocked} <span className="text-lg text-ash-500">/ {comp.total}</span></div>
               <div className="mt-2 h-2 rounded bg-stone-800"><div className="h-2 rounded bg-gradient-to-r from-ember-600 to-gold-400" style={{ width: `${(comp.unlocked / comp.total) * 100}%` }} /></div>
               <p className="mt-2 text-xs text-ash-500">100% хүртэл: {Math.round((comp.unlocked / comp.total) * 100)}% · <Badge kind={demo ? "demo" : "steam"} /></p>
+              {recentAch.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {recentAch.map((a) => (
+                    <Link key={a.name} href="/achievements" title={a.name}>
+                      <AchievementIcon name={a.name} unlocked synced={a.s} size={40} />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <>
