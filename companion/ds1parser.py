@@ -448,5 +448,7 @@ def parse_save(data: bytes) -> dict:
 
 
 if __name__ == "__main__":
+    # Windows consoles default to a legacy code page (e.g. cp932); character names are UTF-8.
+    sys.stdout.reconfigure(encoding="utf-8")
     with open(sys.argv[1], "rb") as f:
         print(json.dumps(parse_save(f.read()), ensure_ascii=False))

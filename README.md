@@ -152,6 +152,6 @@ The upgrade recipes come from the Dark Souls Wiki path pages. Boss, Unique and D
 - Official game screenshots and item icons are not bundled. The cinematic landing, Artorias spotlight and boss portraits use original AI-generated fan illustrations (see `public/artwork/README.md`). Achievement icons load from Steam's CDN when Steam data is available.
 - The world map is illustrative. Its connections follow the real game, but positions are not real coordinates.
 - Rate limiting is per instance. For strict global limits, add a shared store such as Upstash.
-- Account deletion is not built in the UI yet. To remove a user, delete `users/{steamId}` in the Firebase console.
+- Account deletion is self-service under **Settings → Delete account** (`DELETE /api/account`, typed confirmation). Sessions are stateless JWTs, so a session cookie copied elsewhere stays valid until it expires (30 days) even after sign-out or deletion; rotate `SESSION_SECRET` to invalidate every session at once.
 
 Fan-made and unofficial. DARK SOULS is a trademark of Bandai Namco Entertainment / FromSoftware.

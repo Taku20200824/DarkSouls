@@ -312,6 +312,11 @@ def cmd_autostart(args) -> int:
 
 
 def main(argv=None) -> int:
+    # Mongolian messages (ү, ө) can't be encoded in Windows legacy code pages such as cp932,
+    # which would make print() raise. Force UTF-8 and never crash on output.
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(prog="lordran-companion", description="LORDRAN TRACKER Windows companion")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("pair"); p.add_argument("code"); p.add_argument("--server", required=True); p.add_argument("--name")

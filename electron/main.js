@@ -121,15 +121,31 @@ function createWindow(url) {
   // localhost callback; everything else external opens in the OS browser
   // instead of inside the app window.
   const allowedHosts = new Set(["127.0.0.1", "localhost", "steamcommunity.com"]);
+  // Only web links are handed to the OS: file:, ms-*:, custom protocol handlers etc. are dropped.
+  const openInBrowser = (target) => {
+    try {
+      const { protocol } = new URL(target);
+      if (protocol === "https:" || protocol === "http:") shell.openExternal(target);
+    } catch {
+      /* malformed URL: ignore */
+    }
+  };
   mainWindow.webContents.on("will-navigate", (event, target) => {
-    const host = new URL(target).hostname;
-    if (!allowedHosts.has(host)) {
+    let parsed;
+    try {
+      parsed = new URL(target);
+    } catch {
       event.preventDefault();
-      shell.openExternal(target);
+      return;
+    }
+    const web = parsed.protocol === "http:" || parsed.protocol === "https:";
+    if (!web || !allowedHosts.has(parsed.hostname)) {
+      event.preventDefault();
+      openInBrowser(target);
     }
   });
   mainWindow.webContents.setWindowOpenHandler(({ url: target }) => {
-    shell.openExternal(target);
+    openInBrowser(target);
     return { action: "deny" };
   });
 

@@ -7,8 +7,10 @@ import { parseSave } from "@/lib/save/ds1";
 import { buildDsr } from "./helpers/dsr";
 
 /** The Python companion parser must produce exactly what the TypeScript parser produces. */
-const hasPy = spawnSync("python3", ["-c", "import cryptography"]).status === 0;
-const py = (file: string) => JSON.parse(execFileSync("python3", ["companion/ds1parser.py", file], { encoding: "utf8", maxBuffer: 64 << 20 }));
+// Windows installs usually only have `python` on PATH; Linux/macOS CI has `python3`.
+const PY = ["python3", "python"].find((cmd) => spawnSync(cmd, ["-c", "import cryptography"]).status === 0);
+const hasPy = PY !== undefined;
+const py = (file: string) => JSON.parse(execFileSync(PY!, ["companion/ds1parser.py", file], { encoding: "utf8", maxBuffer: 64 << 20 }));
 const ts = (buf: Uint8Array) => JSON.parse(JSON.stringify(parseSave(buf)));
 
 describe.skipIf(!hasPy)("TS <-> Python parser parity", () => {
