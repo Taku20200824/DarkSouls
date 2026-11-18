@@ -31,7 +31,10 @@ export interface PlayerAchievement {
   unlocktime: number;
 }
 
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; reason: "private" | "no_key" | "not_owned" | "error"; status?: number; message?: string };
+export type ApiResult<T> = { ok: true; data: T } | { ok: false; reason: "private" | "no_key" | "bad_key" | "not_owned" | "error"; status?: number; message?: string };
+
+/** Steam answers a wrong or revoked key with a 403 HTML page ("Please verify your key= parameter"). */
+const isBadKey = (status: number, json: unknown) => (status === 401 || status === 403) && (json === null || typeof json !== "object");
 
 function key(): string | null {
   const k = process.env.STEAM_API_KEY;
@@ -43,7 +46,7 @@ export async function getPlayerSummary(steamId: string, f: FetchLike = fetch as 
   if (!k) return { ok: false, reason: "no_key" };
   try {
     const r = await f(`${BASE}/ISteamUser/GetPlayerSummaries/v0002/?key=${encodeURIComponent(k)}&steamids=${steamId}`);
-    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    if (!r.ok) return { ok: false, reason: isBadKey(r.status, null) ? "bad_key" : "error", status: r.status };
     const j = (await r.json()) as { response?: { players?: PlayerSummary[] } };
     const p = j.response?.players?.[0];
     return p ? { ok: true, data: p } : { ok: false, reason: "error", message: "player not found" };
@@ -59,7 +62,7 @@ export async function getOwnsGame(steamId: string, f: FetchLike = fetch as unkno
   try {
     const url = `${BASE}/IPlayerService/GetOwnedGames/v1/?key=${encodeURIComponent(k)}&steamid=${steamId}&include_played_free_games=1&appids_filter%5B0%5D=${DSR_APPID}`;
     const r = await f(url);
-    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    if (!r.ok) return { ok: false, reason: isBadKey(r.status, null) ? "bad_key" : "error", status: r.status };
     const j = (await r.json()) as { response?: { game_count?: number; games?: { appid: number; playtime_forever: number }[] } };
     if (!j.response || j.response.game_count === undefined) return { ok: true, data: { owned: null, playtimeMinutes: null } }; // private
     const g = j.response.games?.find((x) => x.appid === DSR_APPID);
@@ -74,7 +77,7 @@ export async function getSchema(f: FetchLike = fetch as unknown as FetchLike): P
   if (!k) return { ok: false, reason: "no_key" };
   try {
     const r = await f(`${BASE}/ISteamUserStats/GetSchemaForGame/v2/?key=${encodeURIComponent(k)}&appid=${DSR_APPID}&l=english`);
-    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    if (!r.ok) return { ok: false, reason: isBadKey(r.status, null) ? "bad_key" : "error", status: r.status };
     const j = (await r.json()) as { game?: { availableGameStats?: { achievements?: SchemaAchievement[] } } };
     const a = j.game?.availableGameStats?.achievements;
     return a ? { ok: true, data: a } : { ok: false, reason: "error", message: "no schema" };
@@ -88,11 +91,14 @@ export async function getPlayerAchievements(steamId: string, f: FetchLike = fetc
   if (!k) return { ok: false, reason: "no_key" };
   try {
     const r = await f(`${BASE}/ISteamUserStats/GetPlayerAchievements/v1/?key=${encodeURIComponent(k)}&steamid=${steamId}&appid=${DSR_APPID}`);
-    const j = (await r.json().catch(() => ({}))) as { playerstats?: { success?: boolean; error?: string; achievements?: PlayerAchievement[] } };
+    const raw = await r.json().catch(() => null);
+    if (isBadKey(r.status, raw)) return { ok: false, reason: "bad_key", status: r.status, message: "Steam rejected the API key" };
+    const j = (raw ?? {}) as { playerstats?: { success?: boolean; error?: string; achievements?: PlayerAchievement[] } };
     const ps = j.playerstats;
     if (ps?.success && ps.achievements) return { ok: true, data: ps.achievements };
     const msg = ps?.error ?? "";
-    if (/not public/i.test(msg) || r.status === 403) return { ok: false, reason: "private", status: r.status, message: msg };
+    // Only Steam's own "not public" answer means private; a bare 403 is a key problem.
+    if (/not public/i.test(msg)) return { ok: false, reason: "private", status: r.status, message: msg };
     if (/no stats|requested app has no stats/i.test(msg)) return { ok: false, reason: "not_owned", status: r.status, message: msg };
     return { ok: false, reason: "error", status: r.status, message: msg };
   } catch (e) {
@@ -116,4 +122,58 @@ export function mergeAchievements(schema: SchemaAchievement[], player: PlayerAch
     };
   }
   return out;
+}
+
+type TextFetch = (url: string, init?: RequestInit) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
+const xmlField = (block: string, tag: string) => {
+  const m = new RegExp(`<${tag}>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([^<]*))</${tag}>`).exec(block);
+  return m ? (m[1] ?? m[2] ?? "").trim() : null;
+};
+
+/**
+ * Key-free fallback: the player's public Steam Community stats page (?xml=1). Works whenever
+ * the profile's game details are public, even if the Web API key is missing or rejected.
+ * Returns the same shape mergeAchievements() produces (keyed by English display name).
+ */
+export async function getPublicAchievements(steamId: string, f: TextFetch = fetch as unknown as TextFetch): Promise<ApiResult<ReturnType<typeof mergeAchievements>>> {
+  try {
+    const r = await f(`https://steamcommunity.com/profiles/${steamId}/stats/${DSR_APPID}/achievements/?xml=1&l=english`, { redirect: "follow", cache: "no-store" });
+    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    const xml = await r.text();
+    const privacy = xmlField(xml, "privacyState");
+    const blocks = xml.match(/<achievement closed="[01]">[\s\S]*?<\/achievement>/g) ?? [];
+    if (!blocks.length) return privacy && privacy !== "public" ? { ok: false, reason: "private", message: `profile ${privacy}` } : { ok: false, reason: "error", message: "no achievements in community stats" };
+    const out: ReturnType<typeof mergeAchievements> = {};
+    for (const b of blocks) {
+      const name = xmlField(b, "name");
+      const apiName = xmlField(b, "apiname");
+      if (!name || !apiName) continue;
+      const unlocked = b.startsWith('<achievement closed="1"');
+      const ts = Number(xmlField(b, "unlockTimestamp") ?? 0);
+      out[name] = {
+        unlocked,
+        unlockTime: unlocked && ts > 0 ? ts : null,
+        apiName,
+        icon: xmlField(b, "iconClosed") ?? undefined, // Steam calls the coloured, unlocked art "closed"
+        iconGray: xmlField(b, "iconOpen") ?? undefined,
+        description: xmlField(b, "description") ?? undefined,
+      };
+    }
+    return { ok: true, data: out };
+  } catch (e) {
+    return { ok: false, reason: "error", message: String(e) };
+  }
+}
+
+/** Key-free profile basics from the public community profile (?xml=1). */
+export async function getPublicProfile(steamId: string, f: TextFetch = fetch as unknown as TextFetch): Promise<ApiResult<{ personaname: string | null; avatarfull: string | null; isPublic: boolean }>> {
+  try {
+    const r = await f(`https://steamcommunity.com/profiles/${steamId}/?xml=1`, { redirect: "follow", cache: "no-store" });
+    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    const xml = await r.text();
+    if (!xml.includes("<profile>")) return { ok: false, reason: "error", message: "no profile" };
+    return { ok: true, data: { personaname: xmlField(xml, "steamID"), avatarfull: xmlField(xml, "avatarFull"), isPublic: xmlField(xml, "privacyState") === "public" } };
+  } catch (e) {
+    return { ok: false, reason: "error", message: String(e) };
+  }
 }

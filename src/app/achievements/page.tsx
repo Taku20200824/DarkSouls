@@ -12,6 +12,7 @@ const CAT: Record<AchCategory, string> = { story: "Түүх", boss: "Boss", cove
 const STATUS_MN: Record<string, string> = {
   private: "Steam профайл эсвэл 'Game details' private байна — Steam Privacy Settings-ээс Public болгоно уу.",
   no_key: "Сервер дээр STEAM_API_KEY тохируулаагүй.",
+  bad_key: "Steam API key буруу эсвэл хүчингүй байна (403). Vercel дээрх STEAM_API_KEY-г шинэчилнэ үү.",
   not_owned: "Энэ бүртгэлд Dark Souls: Remastered-ийн статистик олдсонгүй.",
   error: "Steam API алдаа гаргалаа. Дараа дахин оролдоно уу.",
   not_linked: "App вэбтэй холбогдоогүй байна. Тохиргоо → «Steam-ээр дахин нэвтэрч синк асаах»-аар холбоно уу.",
@@ -112,7 +113,7 @@ export default function Achievements() {
               </button>
             )}
             <p className="max-w-64 text-center text-xs text-ash-500 lg:text-right">
-              {ach?.status === "ok" ? `Steam синк: ${fmtDate(ach.fetchedAt)}` : ach?.status ? STATUS_MN[ach.status] ?? ach.status : "Steam-ээс синк хийгээгүй."}
+              {ach?.status === "ok" ? `Steam синк: ${fmtDate(ach.fetchedAt)}${(ach as { via?: string }).via === "community" ? " · Steam Community-оос" : ""}` : ach?.status ? STATUS_MN[ach.status] ?? ach.status : "Steam-ээс синк хийгээгүй."}
             </p>
           </div>
         </div>

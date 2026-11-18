@@ -135,7 +135,7 @@ function Inner() {
             </>
           ) : (
             <>
-              <p className="text-sm text-ash-400">Steam achievement өгөгдөл: <b>{achStatus === "private" ? "Профайл private" : achStatus === "no_key" ? "Steam API key тохируулаагүй" : achStatus === "not_linked" ? "App вэбтэй холбогдоогүй" : achStatus === "error" ? "Steam API алдаа" : "Not connected"}</b></p>
+              <p className="text-sm text-ash-400">Steam achievement өгөгдөл: <b>{achStatus === "private" ? "Профайл private" : achStatus === "no_key" ? "Steam API key тохируулаагүй" : achStatus === "bad_key" ? "Steam API key буруу" : achStatus === "not_linked" ? "App вэбтэй холбогдоогүй" : achStatus === "error" ? "Steam API алдаа" : "Not connected"}</b></p>
               <button className="btn mt-3" onClick={() => post("/api/achievements/sync", {})}>Steam-ээс синк</button>
             </>
           )}
