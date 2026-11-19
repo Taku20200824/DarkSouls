@@ -937,3 +937,24 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .nav-item__active::before { animation: none; }
 }
+
+/* ── Redesign pass: shell polish ─────────────────────────────────────────── */
+:root { --mobile-bar-h: 52px; }
+
+/* Sidebar: scrollable when the window is short, but the bar only shows on hover. */
+.scrollbar-quiet { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.scrollbar-quiet:hover, .scrollbar-quiet:focus-within { scrollbar-color: rgba(168, 137, 79, 0.35) transparent; }
+.scrollbar-quiet::-webkit-scrollbar-thumb { background: transparent; }
+.scrollbar-quiet:hover::-webkit-scrollbar-thumb { background: rgba(168, 137, 79, 0.35); }
+
+/* Game picker: swipeable row without a scrollbar; edges fade when there is more to scroll. */
+.game-bar__list { scrollbar-width: none; scroll-snap-type: x proximity; mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%); }
+.game-bar__list::-webkit-scrollbar { display: none; }
+.game-chip { scroll-snap-align: start; position: relative; }
+.game-chip[aria-current="page"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: linear-gradient(90deg, transparent, #ff9142, transparent); }
+@media (min-width: 768px) { .game-bar__list { mask-image: none; } }
+
+/* Loading: a breathing ember instead of bare text. */
+.loading-ember { width: 14px; height: 14px; transform: rotate(45deg); background: radial-gradient(circle, #ffc07a, #f26a1b 60%, #8f1414); box-shadow: 0 0 18px 4px rgba(242, 106, 27, 0.45); animation: ember-breathe 1.6s ease-in-out infinite; }
+@keyframes ember-breathe { 0%, 100% { opacity: .45; transform: rotate(45deg) scale(.85); } 50% { opacity: 1; transform: rotate(45deg) scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .loading-ember { animation: none; } }

@@ -83,7 +83,7 @@
 .encounter-tags > span { border: 1px solid #a7b6c42e; padding: 5px 9px; color: #a7b6c4; font-size: 8px; letter-spacing: .14em; }
 .encounter-cta { margin-top: 25px; padding: 14px 20px; font-size: 10px; letter-spacing: .1em; border-color: #a7b6c466; background: #0c131b99; color: #d7e0e7; }
 .encounter-cta:hover { border-color: #bbd5ea; box-shadow: 0 0 28px #8eb1d02b; color: #fff; }
-.encounter-credit { position: absolute; bottom: 20px; left: 30px; color: #91a4b15c; font-size: 7px; letter-spacing: .12em; }
+.encounter-credit { position: absolute; bottom: 20px; left: 30px; color: #9fb0bc; font-size: 9px; letter-spacing: .12em; }
 .boss-spotlight-compact { min-height: 400px; margin-bottom: 30px; }
 .boss-spotlight-compact .encounter-copy { margin-block: 70px 55px; }
 .boss-spotlight-compact .encounter-copy h2 { font-size: 46px; }
@@ -141,7 +141,7 @@
   .encounter-copy h2 { font-size: 49px; margin-top: 15px; }
   .encounter-description { font-size: 21px; margin-top: 15px; }
   .encounter-tags { margin-top: 18px; }
-  .encounter-credit { left: 25px; font-size: 6px; }
+  .encounter-credit { left: 25px; font-size: 8px; }
   .boss-spotlight-compact { min-height: 680px; }
   .boss-spotlight-compact .encounter-copy { margin: 325px 20px 55px; }
   .boss-spotlight-compact .encounter-copy h2 { font-size: 42px; }

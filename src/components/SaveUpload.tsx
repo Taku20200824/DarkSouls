@@ -50,7 +50,7 @@ export function SaveUpload() {
       <p className="text-sm text-ash-400">
         <code className="text-gold-400">Documents\NBGI\DARK SOULS REMASTERED\&lt;ID&gt;\DRAKS0005.sl2</code> файлыг сонгоно уу. Файл таны браузерт задлагдана — эх файл сервер рүү илгээгдэхгүй, өөрчлөгдөхгүй.
       </p>
-      <input type="file" accept=".sl2" onChange={(e) => onFile(e.target.files?.[0])} className="block text-sm text-ash-400 file:mr-3 file:rounded file:border file:border-gold-600/50 file:bg-stone-800 file:px-3 file:py-1.5 file:text-gold-300" />
+      <input type="file" accept=".sl2" aria-label="DRAKS0005.sl2 save файл сонгох" onChange={(e) => onFile(e.target.files?.[0])} className="block text-sm text-ash-400 file:mr-3 file:rounded file:border file:border-gold-600/50 file:bg-stone-800 file:px-3 file:py-1.5 file:text-gold-300" />
       {err && <p className="text-sm text-danger">{err}</p>}
       {parsed && (
         <div className="rounded border border-gold-600/20 p-3">

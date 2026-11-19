@@ -37,22 +37,22 @@ export default function Upgrades() {
       <PageTitle title="Weapon Upgrade Planner" sub="Баталгаажсан жороор материал, ember, дархныг тооцоолно." />
       <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
         <Panel title="Сонголт">
-          <label className="block text-xs text-ash-500">Зэвсэг</label>
-          <input list="weapons" className="input mt-1 w-full" value={weapon} onChange={(e) => pickWeapon(e.target.value)} />
+          <label htmlFor="up-weapon" className="block text-xs text-ash-500">Зэвсэг</label>
+          <input id="up-weapon" list="weapons" className="input mt-1 w-full" value={weapon} onChange={(e) => pickWeapon(e.target.value)} />
           <datalist id="weapons">
             {owned.map((o) => <option key={`o-${o.id}`} value={o.baseName}>{`${o.name} (эзэмшдэг)`}</option>)}
             {ALL_WEAPON_NAMES.map((n) => <option key={n} value={n} />)}
           </datalist>
           {ownedMatch && <p className="mt-1 text-xs text-success">Inventory: {ownedMatch.name} <Badge kind={demo ? "demo" : "verified"} /></p>}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div><label className="block text-xs text-ash-500">Одоогийн зам</label>
-              <select className="input mt-1 w-full" value={curPath} onChange={(e) => setCurPath(e.target.value)}>{UPGRADE_PATHS.filter((p) => p.verified).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-            <div><label className="block text-xs text-ash-500">Одоогийн +</label>
-              <input type="number" min={0} max={15} className="input mt-1 w-full" value={curLevel} onChange={(e) => setCurLevel(Math.max(0, Math.min(15, Number(e.target.value))))} /></div>
-            <div><label className="block text-xs text-ash-500">Зорилтот зам</label>
-              <select className="input mt-1 w-full" value={target} onChange={(e) => { setTarget(e.target.value); setTargetLevel(UPGRADE_PATHS.find((p) => p.id === e.target.value)!.maxLevel); }}>{UPGRADE_PATHS.map((p) => <option key={p.id} value={p.id}>{p.name}{p.verified ? "" : " (баталгаажаагүй)"}</option>)}</select></div>
-            <div><label className="block text-xs text-ash-500">Зорилтот +</label>
-              <input type="number" min={0} max={tPath.maxLevel} className="input mt-1 w-full" value={targetLevel} onChange={(e) => setTargetLevel(Number(e.target.value))} /></div>
+            <div><label htmlFor="up-cur-path" className="block text-xs text-ash-500">Одоогийн зам</label>
+              <select id="up-cur-path" className="input mt-1 w-full" value={curPath} onChange={(e) => setCurPath(e.target.value)}>{UPGRADE_PATHS.filter((p) => p.verified).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+            <div><label htmlFor="up-cur-level" className="block text-xs text-ash-500">Одоогийн +</label>
+              <input id="up-cur-level" type="number" min={0} max={15} className="input mt-1 w-full" value={curLevel} onChange={(e) => setCurLevel(Math.max(0, Math.min(15, Number(e.target.value))))} /></div>
+            <div><label htmlFor="up-target-path" className="block text-xs text-ash-500">Зорилтот зам</label>
+              <select id="up-target-path" className="input mt-1 w-full" value={target} onChange={(e) => { setTarget(e.target.value); setTargetLevel(UPGRADE_PATHS.find((p) => p.id === e.target.value)!.maxLevel); }}>{UPGRADE_PATHS.map((p) => <option key={p.id} value={p.id}>{p.name}{p.verified ? "" : " (баталгаажаагүй)"}</option>)}</select></div>
+            <div><label htmlFor="up-target-level" className="block text-xs text-ash-500">Зорилтот +</label>
+              <input id="up-target-level" type="number" min={0} max={tPath.maxLevel} className="input mt-1 w-full" value={targetLevel} onChange={(e) => setTargetLevel(Number(e.target.value))} /></div>
           </div>
           <p className="mt-3 text-xs text-ash-400">{tPath.mn}</p>
         </Panel>

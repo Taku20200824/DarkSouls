@@ -65,9 +65,9 @@ export function GameBar() {
 
   const lib = state?.library;
   return (
-    <div className="game-bar sticky top-0 z-20 border-b border-gold-600/15 bg-stone-950/90 backdrop-blur max-md:top-[53px]">
+    <div className="game-bar sticky top-0 z-20 border-b border-gold-600/15 bg-stone-950/90 backdrop-blur max-md:top-[var(--mobile-bar-h)]">
       <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 md:px-10">
-        <nav aria-label="Тоглоом сонгох" className="scrollbar-thin flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-0.5">
+        <nav aria-label="Тоглоом сонгох" className="game-bar__list flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-0.5">
           {games.map((g) => {
             const own = ownership(g);
             const on = g.id === active;
@@ -83,7 +83,7 @@ export function GameBar() {
                   router.push(gameHome(g));
                 }}
                 className={clsx(
-                  "group flex shrink-0 items-center gap-2 border px-3 py-1.5 text-left transition",
+                  "game-chip group flex min-h-11 shrink-0 items-center gap-2 border px-3 py-1.5 text-left transition md:min-h-0",
                   on ? "border-ember-500/70 bg-[linear-gradient(180deg,rgba(242,106,27,0.18),rgba(242,106,27,0.04))] text-gold-200" : "border-gold-600/20 bg-black/30 hover:border-gold-500/50",
                   own === "not_owned" && !on && "opacity-55",
                 )}
@@ -104,8 +104,8 @@ export function GameBar() {
           })}
         </nav>
         {signedIn && !demo && (
-          <button type="button" className="btn btn-sm shrink-0" disabled={busy} aria-busy={busy} onClick={() => void verify()} title="Steam бүртгэлийн тоглоомуудыг дахин шалгах">
-            <RefreshCw className={clsx("h-3.5 w-3.5", busy && "animate-spin")} />
+          <button type="button" className="btn btn-sm shrink-0" disabled={busy} aria-busy={busy} onClick={() => void verify()} title="Steam бүртгэлийн тоглоомуудыг дахин шалгах" aria-label="Steam бүртгэлийн тоглоомуудыг дахин шалгах">
+            <RefreshCw className={clsx("h-3.5 w-3.5", busy && "animate-spin")} aria-hidden />
             <span className="max-sm:hidden">Steam шалгах</span>
           </button>
         )}

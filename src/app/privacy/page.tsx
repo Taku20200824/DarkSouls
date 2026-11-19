@@ -46,7 +46,7 @@ export default function Privacy() {
         </Panel>
 
         <Panel title="Цуглуулдаг өгөгдөл" className="lg:col-span-2">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Цуглуулдаг өгөгдлийн хүснэгт">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="text-micro uppercase tracking-caps text-ash-500">
                 <tr><th className="py-2 pr-4">Юу</th><th className="py-2 pr-4">Хаанаас</th><th className="py-2">Юунд</th></tr>

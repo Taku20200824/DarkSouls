@@ -80,7 +80,7 @@ export default function Achievements() {
           <div className="min-w-0">
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:grid-cols-4">
               {perCat.map(({ c, total, done }) => (
-                <button key={c} type="button" onClick={() => setCat(cat === c ? "all" : c)} className={clsx("ach-cat text-left", cat === c && "ach-cat--active")}>
+                <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(cat === c ? "all" : c)} className={clsx("ach-cat text-left", cat === c && "ach-cat--active")}>
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-display text-micro font-semibold uppercase tracking-caps text-ash-400">{CAT[c]}</span>
                     <span className="font-display text-xs text-gold-300">{done}/{total}</span>
@@ -120,17 +120,17 @@ export default function Achievements() {
       </Panel>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="seg" role="tablist" aria-label="Шүүлтүүр">
+        <div className="seg" role="group" aria-label="Шүүлтүүр">
           {FILTERS.map((f) => (
-            <button key={f.id} role="tab" aria-selected={filter === f.id} className={clsx("seg__btn", filter === f.id && "seg__btn--on")} onClick={() => setFilter(f.id)}>
+            <button key={f.id} type="button" aria-pressed={filter === f.id} className={clsx("seg__btn", filter === f.id && "seg__btn--on")} onClick={() => setFilter(f.id)}>
               {f.label}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <button className={clsx("chip", cat === "all" && "chip--on")} onClick={() => setCat("all")}>Бүх ангилал</button>
+          <button type="button" aria-pressed={cat === "all"} className={clsx("chip", cat === "all" && "chip--on")} onClick={() => setCat("all")}>Бүх ангилал</button>
           {(Object.keys(CAT) as AchCategory[]).map((c) => (
-            <button key={c} className={clsx("chip", cat === c && "chip--on")} onClick={() => setCat(c)}>{CAT[c]}</button>
+            <button key={c} type="button" aria-pressed={cat === c} className={clsx("chip", cat === c && "chip--on")} onClick={() => setCat(c)}>{CAT[c]}</button>
           ))}
         </div>
         <span className="ml-auto font-display text-micro uppercase tracking-caps text-ash-500">{shown.length} achievement</span>

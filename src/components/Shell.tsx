@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import { useTracker } from "./TrackerProvider";
-import { fmtAgo } from "./ui";
+import { Loading, fmtAgo } from "./ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { Menu, X } from "lucide-react";
 import { navFor, roman } from "./nav";
@@ -113,11 +113,33 @@ function VictoryOverlay() {
   );
 }
 
+/** True below the md breakpoint (where the sidebar becomes a drawer). */
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return mobile;
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { state, demo, status } = useTracker();
   const [open, setOpen] = useState(false);
+  const mobile = useIsMobile();
   const game = useCurrentGame();
+  // Close the drawer on navigation and with Escape.
+  useEffect(() => setOpen(false), [path]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   useSyncPickedGame();
   const nav = navFor(game);
   const bare = path === "/" || path === "/login";
@@ -125,7 +147,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative z-10 flex min-h-screen">
       {open && <div className="fixed inset-0 z-30 bg-black/70 md:hidden" onClick={() => setOpen(false)} />}
-      <aside className={clsx("scrollbar-thin fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col overflow-y-auto border-r border-gold-600/15 bg-[linear-gradient(180deg,rgba(11,11,14,0.98),rgba(5,5,6,0.98))] px-4 py-5 transition-transform duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={clsx("scrollbar-thin scrollbar-quiet fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col overflow-y-auto border-r border-gold-600/15 bg-[linear-gradient(180deg,rgba(11,11,14,0.98),rgba(5,5,6,0.98))] px-4 py-5 transition-transform duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}
+        // Off-screen on phones while closed: keep its links out of the tab order and screen readers.
+        inert={mobile && !open ? true : undefined}
+        aria-label="Үндсэн цэс"
+      >
         <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gold-500/40 to-transparent" />
         <Link href="/" className="group flex items-center gap-3 px-2">
           <BonfireMark className="h-12 w-9" />
@@ -134,17 +160,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="font-display text-micro tracking-logo text-ash-500 group-hover:text-ember-300">TRACKER</div>
           </div>
         </Link>
-        <div className="mt-4 border border-gold-600/20 bg-black/30 px-3 py-2">
-          <div className="font-display text-micro uppercase tracking-eyebrow text-ember-300/90">Тоглоом</div>
-          <div className="font-display mt-0.5 text-label font-semibold leading-snug tracking-caps text-gold-300">{game.title}</div>
+        <div className="mt-3 flex items-center gap-2 border-l-2 border-ember-500/70 bg-black/30 px-3 py-1.5">
+          <span className="sr-only">Сонгосон тоглоом: </span>
+          <span className="font-display min-w-0 text-label font-semibold leading-snug tracking-caps text-gold-300">{game.title}</span>
         </div>
-        <div className="ornament my-5" />
+        <div className="ornament my-3" aria-hidden />
         <nav id="tracker-navigation" aria-label="Tracker navigation" className="space-y-0.5">
           {nav.map((n, i) => {
             const active = path.startsWith(n.href);
             const Icon = n.icon;
             return (
-              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("nav-item group relative flex items-center gap-3 overflow-hidden px-3 py-2.5 transition", active ? "nav-item--on text-gold-200" : "text-ash-400 hover:text-gold-300")}>
+              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={clsx("nav-item group relative flex items-center gap-3 overflow-hidden px-3 py-2 transition", active ? "nav-item--on text-gold-200" : "text-ash-400 hover:text-gold-300")}>
                 {active && <motion.span layoutId="nav-active" className="nav-item__active absolute inset-0" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
                 <span className={clsx("nav-item__icon relative mx-0.5 grid h-7 w-7 shrink-0 place-items-center", active && "nav-item__icon--on")}>
                   <Icon className={clsx("h-4 w-4 transition", active ? "text-ember-300" : "text-ash-500 group-hover:text-gold-400")} strokeWidth={1.6} />
@@ -158,7 +184,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="mt-auto pt-6">
+        <div className="mt-auto pt-4">
           {game.tracker === "full" ? <LiveStatus /> : <SteamStatus game={game} />}
           {status === "ready" && state && !demo && (
             <div className="mt-3 flex items-center gap-3 border border-gold-600/15 bg-black/30 p-2.5 text-xs text-ash-400">
@@ -180,7 +206,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gold-600/15 bg-stone-950/85 px-4 py-2.5 backdrop-blur md:hidden">
+        <div className="sticky top-0 z-30 flex h-[var(--mobile-bar-h)] items-center justify-between border-b border-gold-600/15 bg-stone-950/95 px-4 backdrop-blur md:hidden">
           <button className="btn btn-sm" onClick={() => setOpen(!open)} aria-label="Цэс" aria-expanded={open} aria-controls="tracker-navigation">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
           <span className="font-display gold-text text-sm font-bold tracking-eyebrow">LORDRAN TRACKER</span>
           <BonfireMark className="h-7 w-5" />
@@ -196,8 +222,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
 /** Wraps pages that need either a login or demo mode. */
 export function Gate({ children }: { children: React.ReactNode }) {
-  const { status, setDemo, errorMessage } = useTracker();
-  if (status === "loading") return <div className="py-20 text-center text-ash-500">Ачааллаж байна…</div>;
+  const { status, setDemo, errorMessage, refresh } = useTracker();
+  if (status === "loading") return <Loading />;
   if (status === "store_unavailable")
     return (
       <div className="panel mx-auto max-w-xl p-6 text-center">
@@ -217,6 +243,14 @@ export function Gate({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
-  if (status === "error") return <div className="py-20 text-center text-blood-500">Сервертэй холбогдож чадсангүй. {errorMessage}</div>;
+  if (status === "error")
+    return (
+      <div role="alert" className="panel mx-auto max-w-xl p-6 text-center">
+        <h2 className="font-display text-xl text-gold-300">Сервертэй холбогдож чадсангүй</h2>
+        <p className="mt-2 text-sm text-ash-400">Интернэт холболтоо шалгаад дахин оролдоно уу.</p>
+        {errorMessage && <p className="mt-2 break-words text-xs text-ash-500">{errorMessage}</p>}
+        <button className="btn btn-ember mt-5" onClick={() => void refresh()}>Дахин оролдох</button>
+      </div>
+    );
   return <>{children}</>;
 }

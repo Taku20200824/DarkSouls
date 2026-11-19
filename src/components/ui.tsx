@@ -86,14 +86,25 @@ export function Stat({ label, value, certainty, demo, hint }: { label: string; v
   return (
     <div className="panel panel-hover stat group flex flex-col p-4">
       <span className="panel-rivets" aria-hidden />
-      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
+      <div className="flex min-h-[2.75rem] flex-col items-start gap-1.5">
         <span className="font-display text-micro font-semibold uppercase tracking-caps text-ash-500">{label}</span>
-        {demo ? <Badge kind="demo" /> : certainty && <Badge kind={certainty} />}
+        {/* Demo mode is announced once by the banner; each tile only shows real data's certainty. */}
+        {!demo && certainty && <Badge kind={certainty} />}
       </div>
-      <div className="stat__value font-display mt-auto pt-3 text-2xl font-semibold leading-tight [overflow-wrap:anywhere] xl:text-3xl">
+      <div className="stat__value font-display mt-auto pt-3 text-2xl font-semibold leading-tight [overflow-wrap:break-word]">
         {value ?? <span className="text-ash-500">—</span>}
       </div>
       {hint && <div className="mt-1 text-xs text-ash-500">{hint}</div>}
+    </div>
+  );
+}
+
+/** Centred loading indicator for a page or panel (announced to screen readers). */
+export function Loading({ label = "Ачааллаж байна…" }: { label?: string }) {
+  return (
+    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center gap-4 py-20 text-ash-400">
+      <span className="loading-ember" aria-hidden />
+      <span className="font-display text-micro uppercase tracking-eyebrow">{label}</span>
     </div>
   );
 }

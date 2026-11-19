@@ -23,3 +23,7 @@ electron/node_modules
 electron/dist
 
 .env*
+
+# UI audit screenshots (large; regenerate locally)
+docs/redesign/before/
+docs/redesign/after/
