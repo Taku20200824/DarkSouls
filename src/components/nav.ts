@@ -14,7 +14,7 @@ export const NAV = [
   { href: "/deaths", label: "Үхлийн статистик", en: "Deaths", icon: Skull },
   { href: "/quests", label: "NPC quest", en: "Quests", icon: ScrollText },
   { href: "/roadmap", label: "NG → NG++", en: "Roadmap", icon: Milestone },
-  { href: "/settings", label: "Тохиргоо", en: "Settings · Companion", icon: Settings },
+  { href: "/settings", label: "Тохиргоо", en: "Settings", icon: Settings },
 ] as const;
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];

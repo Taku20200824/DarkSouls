@@ -201,6 +201,27 @@ export async function getPublicAchievements(steamId: string, f: TextFetch = fetc
   }
 }
 
+/**
+ * Key-free ownership evidence from the public stats page. Steam lists every achievement of a
+ * game (all locked, 0 hours) even for accounts that don't own it, so the page existing proves
+ * nothing: only hours played or an unlocked achievement count as proof. `owned: null` = can't tell.
+ */
+export async function getPublicOwnership(steamId: string, appid: number, f: TextFetch = fetch as unknown as TextFetch): Promise<ApiResult<{ owned: true | null; hoursPlayed: number | null }>> {
+  try {
+    const r = await f(`https://steamcommunity.com/profiles/${steamId}/stats/${appid}/achievements/?xml=1&l=english`, { redirect: "follow", cache: "no-store" });
+    if (!r.ok) return { ok: false, reason: "error", status: r.status };
+    const xml = await r.text();
+    const privacy = xmlField(xml, "privacyState");
+    if (privacy && privacy !== "public") return { ok: false, reason: "private", message: `profile ${privacy}` };
+    const hours = Number(xmlField(xml, "hoursPlayed") ?? "");
+    const unlocked = /<achievement closed="1">/.test(xml);
+    const played = Number.isFinite(hours) && hours > 0;
+    return { ok: true, data: { owned: played || unlocked ? true : null, hoursPlayed: Number.isFinite(hours) ? hours : null } };
+  } catch (e) {
+    return { ok: false, reason: "error", message: String(e) };
+  }
+}
+
 /** Key-free profile basics from the public community profile (?xml=1). */
 export async function getPublicProfile(steamId: string, f: TextFetch = fetch as unknown as TextFetch): Promise<ApiResult<{ personaname: string | null; avatarfull: string | null; isPublic: boolean }>> {
   try {

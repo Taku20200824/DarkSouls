@@ -80,9 +80,22 @@ it("hosted: verifies owned Souls games with the Web API and shows them in the st
 it("hosted: without a key, ownership comes from the public achievement pages", async () => {
   await hosted(async (url) => communityStats(new Set([570940, DS3]))(url) ?? new Response("unexpected", { status: 500 }), null);
   const body = await (await hostedLibrary(bearer("/api/companion/library"))).json();
-  expect(body.library).toMatchObject({ status: "ok", via: "community" });
+  expect(body.library).toMatchObject({ status: "partial", via: "community" });
   expect(body.library.games[DS3]).toEqual({ owned: true });
-  expect(body.library.games[ER]).toEqual({ owned: false });
+  // No proof either way: unknown, never "not owned".
+  expect(body.library.games[ER]).toEqual({ owned: null });
+});
+
+it("hosted: a public stats page with every achievement locked and 0 hours is not proof of ownership", async () => {
+  // Steam serves the full (locked) list for games the account doesn't own.
+  const lockedList = `<playerstats><privacyState>public</privacyState><game><gameName>X</gameName></game><stats><hoursPlayed>0</hoursPlayed></stats><achievements>
+<achievement closed="0"><name><![CDATA[A]]></name><apiname><![CDATA[a]]></apiname></achievement></achievements></playerstats>`;
+  const played = lockedList.replace("<hoursPlayed>0</hoursPlayed>", "<hoursPlayed>12.5</hoursPlayed>");
+  await hosted(async (url) => new Response(url.includes(`/stats/${DS3}/`) ? played : lockedList), null);
+  const body = await (await hostedLibrary(bearer("/api/companion/library"))).json();
+  expect(body.library.games[DS3]).toEqual({ owned: true });
+  expect(body.library.games[ER]).toEqual({ owned: null });
+  expect(body.library.games[570940]).toEqual({ owned: null });
 });
 
 it("hosted: hidden game details are reported as private, not as 'not owned'", async () => {

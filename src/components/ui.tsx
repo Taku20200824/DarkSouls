@@ -10,12 +10,12 @@ export function Panel({ children, className, title, right, hover }: { children: 
     <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .08 }} transition={{ duration: .55, ease: [0.22, 1, 0.36, 1] }} className={clsx("panel p-5 md:p-6", hover && "panel-hover", className)}>
       <span className="panel-rivets" aria-hidden />
       {title && (
-        <header className="panel-head mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3">
-          <h2 className="font-display flex items-center gap-2 text-title font-semibold uppercase tracking-label text-gold-300 md:text-base">
-            <span className="inline-block h-1.5 w-1.5 rotate-45 bg-ember-400 shadow-[0_0_8px_var(--color-ember-400)]" />
+        <header className="panel-head mb-4 flex items-start justify-between gap-3 pb-3">
+          <h2 className="font-display flex min-w-0 items-baseline gap-2 text-title font-semibold uppercase leading-snug tracking-label text-gold-300 md:text-base">
+            <span className="inline-block h-1.5 w-1.5 shrink-0 -translate-y-0.5 rotate-45 bg-ember-400 shadow-[0_0_8px_var(--color-ember-400)]" aria-hidden />
             {title}
           </h2>
-          {right}
+          {right && <div className="shrink-0">{right}</div>}
         </header>
       )}
       {children}
@@ -82,19 +82,41 @@ export function Badge({ kind, children }: { kind: keyof typeof BADGE | Certainty
   );
 }
 
-export function Stat({ label, value, certainty, demo, hint }: { label: string; value: React.ReactNode; certainty?: Certainty; demo?: boolean; hint?: string }) {
+const CERTAINTY_DOT: Record<string, string> = {
+  verified: "bg-success", save: "bg-success", companion: "bg-success",
+  inferred: "bg-warning", inference: "bg-warning",
+  manual: "bg-info", steam: "bg-steam",
+  unknown: "bg-ash-500",
+};
+
+/** Compact certainty marker (dot + word) for dense tiles; the full Badge stays for panels. */
+export function CertaintyTag({ kind }: { kind: string }) {
+  const b = BADGE[kind] ?? BADGE.unknown;
   return (
-    <div className="panel panel-hover stat group flex flex-col p-4">
+    <span title={b.title} className={clsx("inline-flex items-center gap-1.5 whitespace-nowrap font-display text-micro font-semibold uppercase tracking-caps", b.cls.split(" ").filter((c) => c.startsWith("text-")))}>
+      <span className={clsx("h-1.5 w-1.5 rounded-full", CERTAINTY_DOT[kind] ?? "bg-ash-500")} aria-hidden />
+      {b.label}
+    </span>
+  );
+}
+
+export function Stat({ label, value, certainty, demo, hint }: { label: string; value: React.ReactNode; certainty?: Certainty; demo?: boolean; hint?: string }) {
+  // Words ("Тодорхойгүй") get a smaller size than numbers so they fit the tile without breaking.
+  const wordy = typeof value === "string" && value.replace(/\s/g, "").length > 8;
+  const tag = !demo && certainty;
+  return (
+    <div className="panel panel-hover stat group @container flex flex-col p-4">
       <span className="panel-rivets" aria-hidden />
-      <div className="flex min-h-[2.75rem] flex-col items-start gap-1.5">
-        <span className="font-display text-micro font-semibold uppercase tracking-caps text-ash-500">{label}</span>
-        {/* Demo mode is announced once by the banner; each tile only shows real data's certainty. */}
-        {!demo && certainty && <Badge kind={certainty} />}
-      </div>
-      <div className="stat__value font-display mt-auto pt-3 text-2xl font-semibold leading-tight [overflow-wrap:break-word]">
+      <span className="font-display text-micro font-semibold uppercase leading-snug tracking-caps text-ash-400 [text-wrap:balance]">{label}</span>
+      <div className={clsx("stat__value font-display mt-auto pt-3 font-semibold leading-tight", wordy ? "text-[clamp(1rem,10cqw,1.4rem)]" : "whitespace-nowrap text-[clamp(1.2rem,14cqw,1.85rem)]")}>
         {value ?? <span className="text-ash-500">—</span>}
       </div>
-      {hint && <div className="mt-1 text-xs text-ash-500">{hint}</div>}
+      {(tag || hint) && (
+        <div className="mt-2 space-y-1">
+          {tag && <CertaintyTag kind={certainty} />}
+          {hint && <div className="text-xs leading-snug text-ash-500">{hint}</div>}
+        </div>
+      )}
     </div>
   );
 }
@@ -120,7 +142,7 @@ export function fmtDuration(sec: number | null | undefined) {
   if (sec === null || sec === undefined) return null;
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  return `${h}ц ${m.toString().padStart(2, "0")}м`;
+  return `${h}ц ${m.toString().padStart(2, "0")}м`;
 }
 export function fmtAgo(ms: number | null | undefined, now = Date.now()) {
   if (!ms) return "—";

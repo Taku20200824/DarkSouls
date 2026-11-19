@@ -6,8 +6,12 @@ import { Badge, Empty, PageTitle, Panel, Stat, fmtDate } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { BossThumb } from "@/components/BossThumb";
 import type { ClientEvent } from "@/lib/client/types";
+import { deathStats } from "@/lib/deaths";
 
-const SESSION_GAP = 2 * 3600_000;
+const fmtSpan = (ms: number) => {
+  const m = Math.round(ms / 60000);
+  return m < 60 ? `${m} мин` : `${Math.floor(m / 60)}ц ${String(m % 60).padStart(2, "0")}м`;
+};
 
 export default function Deaths() {
   return (
@@ -28,21 +32,9 @@ function Inner() {
   const delta = (e: ClientEvent) => Number(e.data.delta ?? 0);
   const total = ch?.deaths.value ?? null;
 
-  // Current tracking session = trailing run of snapshots without a gap > 2h.
-  let sessionStart = snaps.length ? snaps[snaps.length - 1].at : 0;
-  for (let i = snaps.length - 1; i > 0; i--) {
-    if (snaps[i].at - snaps[i - 1].at > SESSION_GAP) break;
-    sessionStart = snaps[i - 1].at;
-  }
-  const sessionDeaths = deaths.filter((d) => d.at >= sessionStart).reduce((a, d) => a + delta(d), 0);
-  const today = new Date().toDateString();
-  const todayDeaths = deaths.filter((d) => new Date(d.at).toDateString() === today).reduce((a, d) => a + delta(d), 0);
-
-  const perDay = new Map<string, number>();
-  for (const d of deaths) {
-    const k = new Date(d.at).toLocaleDateString("mn-MN");
-    perDay.set(k, (perDay.get(k) ?? 0) + delta(d));
-  }
+  const stats = useMemo(() => deathStats(deaths, snaps), [deaths, snaps]);
+  const perDay = stats.perDay;
+  const dayMax = Math.max(1, ...perDay.map(([, n]) => n));
   const perNg = new Map<number, { min: number; max: number }>();
   for (const s of snaps) {
     if (s.ng === null || s.deaths === null) continue;
@@ -51,8 +43,6 @@ function Inner() {
     r.max = Math.max(r.max, s.deaths);
     perNg.set(s.ng, r);
   }
-  let bestStreak = 0;
-  for (let i = 1; i < deaths.length; i++) bestStreak = Math.max(bestStreak, deaths[i].at - deaths[i - 1].at);
   const byBoss = new Map<string, number>();
   for (const d of deaths) if (d.attribution?.label === "User confirmation" && d.attribution.bossId) byBoss.set(d.attribution.bossId, (byBoss.get(d.attribution.bossId) ?? 0) + delta(d));
   const hardest = [...byBoss.entries()].sort((a, b) => b[1] - a[1]);
@@ -71,9 +61,9 @@ function Inner() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat label="Нийт үхэл" value={total ?? "Тодорхойгүй"} certainty={ch.deaths.certainty} demo={demo} />
-            <Stat label="Энэ session" value={snaps.length ? sessionDeaths : "—"} certainty={snaps.length ? "inferred" : "unknown"} demo={demo} hint="2+ цагийн завсаргүй синкүүд" />
-            <Stat label="Өнөөдөр" value={todayDeaths} certainty="inferred" demo={demo} hint="Илрүүлсэн үхлийн event-ээс" />
-            <Stat label="Үхэлгүй хамгийн урт" value={bestStreak ? `${Math.round(bestStreak / 60000)} мин` : "—"} certainty={bestStreak ? "inferred" : "unknown"} demo={demo} hint="Save-ийн давтамжаар ойролцоогоор" />
+            <Stat label="Энэ session" value={stats.sessionLive ? stats.session : "—"} certainty={stats.sessionLive ? "inferred" : "unknown"} demo={demo} hint={stats.sessionLive ? "Одоогийн тоглолт (2 цагаас бага завсартай)" : "Сүүлийн 2 цагт тоглоогүй"} />
+            <Stat label="Өнөөдөр" value={stats.today} certainty="inferred" demo={demo} hint="Өнөөдөр болсон нь тодорхой үхэл" />
+            <Stat label="Үхэлгүй хамгийн урт" value={stats.longestAliveMs ? fmtSpan(stats.longestAliveMs) : "—"} certainty={stats.longestAliveMs ? "inferred" : "unknown"} demo={demo} hint="Тоглож байх үеийн хамгийн урт хугацаа" />
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Panel title="Үхлийн чиг хандлага" right={<Badge kind={demo ? "demo" : "save"} />}>
@@ -82,8 +72,19 @@ function Inner() {
               )}
             </Panel>
             <Panel title="Өдөр тутмын үхэл">
-              {perDay.size === 0 ? <p className="text-sm text-ash-500">Илрүүлсэн үхэл алга.</p> : (
-                <ul className="space-y-1 text-sm">{[...perDay.entries()].slice(-10).map(([d, n]) => <li key={d} className="flex items-center gap-2"><span className="w-24 text-ash-500">{d}</span><span className="h-2 rounded bg-blood-500" style={{ width: `${Math.min(100, n * 4)}%` }} /><span>{n}</span></li>)}</ul>
+              {perDay.length === 0 ? <p className="text-sm text-ash-500">Өдөр нь тодорхой үхэл алга.</p> : (
+                <ul className="space-y-1.5 text-sm">{perDay.slice(-10).map(([d, n]) => (
+                  <li key={d} className="grid grid-cols-[6rem_1fr_2.5rem] items-center gap-2">
+                    <span className="text-ash-500">{d}</span>
+                    <span className="h-2 overflow-hidden rounded bg-stone-800"><span className="block h-full rounded bg-blood-500" style={{ width: `${(n / dayMax) * 100}%` }} /></span>
+                    <span className="text-right tabular-nums">{n}</span>
+                  </li>
+                ))}</ul>
+              )}
+              {stats.undated > 0 && (
+                <p className="mt-3 border-t border-gold-600/10 pt-3 text-xs text-ash-400">
+                  + {stats.undated} үхэл save синк хийгдээгүй хугацаанд (апп хаалттай байх үед) болсон тул аль өдөр болсныг тодорхойлох боломжгүй — өдөр болон session-д тооцоогүй. Нийт үхэлд орсон.
+                </p>
               )}
             </Panel>
             <Panel title="NG тойрог тутам (хянаж эхэлснээс)">

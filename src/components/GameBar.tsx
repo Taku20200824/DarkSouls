@@ -115,6 +115,11 @@ export function GameBar() {
           Steam профайлын «Game details» private тул эзэмшсэн тоглоомыг шалгаж чадсангүй. Steam → Privacy Settings-ээс Public болгоно уу.
         </p>
       )}
+      {signedIn && !demo && lib?.via === "community" && (lib.status === "partial" || lib.status === "error") && (
+        <p className="mx-auto max-w-7xl px-4 pb-2 text-micro text-ash-400 md:px-10">
+          Steam API одоогоор ашиглах боломжгүй тул зөвхөн тоглосон цаг эсвэл нээсэн achievement-тай тоглоомыг баталгаажуулж байна. «?» тэмдэгтэй тоглоомыг Steam-ээс баталж чадсангүй.
+        </p>
+      )}
     </div>
   );
 }

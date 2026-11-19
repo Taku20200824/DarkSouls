@@ -1,7 +1,7 @@
 import "server-only";
 import { GAME_APPIDS } from "@/lib/games";
 import { CLOUD_SITE_URL } from "@/lib/desktop-cloud";
-import { getOwnedGames, getPublicAchievements, type OwnedGame } from "@/lib/steam/webapi";
+import { getOwnedGames, getPublicOwnership, type OwnedGame } from "@/lib/steam/webapi";
 import { cloudLinkPath, type CloudLink } from "./desktop-cloud";
 import type { Store } from "./store";
 
@@ -27,21 +27,22 @@ export interface LibraryDoc {
 }
 
 /**
- * Key-free fallback: a game whose public achievement page lists achievements is owned.
- * Slower (one request per game) and has no playtime, but needs no Steam API key.
+ * Key-free fallback (no or rejected Steam key, or hidden game list): a game counts as owned
+ * only with proof on its public stats page (hours played or an unlocked achievement). Steam
+ * shows that page for games an account doesn't own too, so "no proof" stays unknown (null),
+ * never "not owned".
  */
 async function viaCommunity(steamId: string): Promise<Omit<LibraryDoc, "checkedAt">> {
-  const answers = await Promise.all(GAME_APPIDS.map(async (appid) => [appid, await getPublicAchievements(steamId, undefined, appid)] as const));
+  const answers = await Promise.all(GAME_APPIDS.map(async (appid) => [appid, await getPublicOwnership(steamId, appid)] as const));
   const games: Record<string, LibraryGame> = {};
   let unknown = 0;
   let privateCount = 0;
   for (const [appid, r] of answers) {
-    if (r.ok) games[appid] = { owned: true };
-    else if (r.reason === "not_owned") games[appid] = { owned: false };
+    if (r.ok && r.data.owned) games[appid] = { owned: true };
     else {
       games[appid] = { owned: null };
       unknown++;
-      if (r.reason === "private") privateCount++;
+      if (!r.ok && r.reason === "private") privateCount++;
     }
   }
   const status = unknown === 0 ? "ok" : privateCount === unknown ? "private" : unknown === answers.length ? "error" : "partial";

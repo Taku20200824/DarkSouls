@@ -41,12 +41,12 @@ export function charKey(c: Pick<ParsedCharacter, "slot" | "name">): string {
 const defeatedSet = (c: ParsedCharacter) => new Set(Object.keys(c.bosses));
 
 /** Pure diff: what changed between two snapshots of the same character. */
-export function diffCharacters(prev: ParsedCharacter, next: ParsedCharacter, at: number, key: string, source: TrackerEvent["source"]): TrackerEvent[] {
+export function diffCharacters(prev: ParsedCharacter, next: ParsedCharacter, at: number, key: string, source: TrackerEvent["source"], sinceAt?: number): TrackerEvent[] {
   const ev: TrackerEvent[] = [];
   const pd = prev.deaths.value;
   const nd = next.deaths.value;
   if (pd !== null && nd !== null && nd > pd)
-    ev.push({ type: "death", at, charKey: key, source, data: { from: pd, to: nd, delta: nd - pd }, attribution: { label: "Unconfirmed" } });
+    ev.push({ type: "death", at, charKey: key, source, data: { from: pd, to: nd, delta: nd - pd, ...(sinceAt ? { sinceAt } : {}) }, attribution: { label: "Unconfirmed" } });
   const pl = prev.level.value;
   const nl = next.level.value;
   if (pl !== null && nl !== null && nl > pl) ev.push({ type: "level", at, charKey: key, source, data: { from: pl, to: nl } });
@@ -90,7 +90,7 @@ async function ingestProgress(store: TransactionStore, steamId: string, payload:
       ...Object.keys(prev.character.bosses),
       ...past.filter((e) => e.type === "boss" && e.charKey === key).map((e) => String(e.data.boss)),
     ] : []));
-    const events = prev ? withoutSeenBosses(diffCharacters(prev.character, c, now, key, source), seen) : [];
+    const events = prev ? withoutSeenBosses(diffCharacters(prev.character, c, now, key, source, prev.updatedAt), seen) : [];
     for (const e of events) await store.add(`users/${steamId}/events`, e);
     const doc: StoredCharacter = {
       character: c,
