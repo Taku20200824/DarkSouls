@@ -28,5 +28,15 @@ export interface ClientState {
   manual: { bosses?: Record<string, boolean>; achievements?: Record<string, boolean>; quests?: Record<string, string[]>; items?: Record<string, boolean> };
   companion: { connected: boolean; lastHeartbeat?: number; lastSyncAt?: number; deviceName?: string; version?: string; saveFound?: boolean; saveModifiedAt?: number | null; message?: string | null } | null;
   sync: { lastSyncAt?: number; lastSource?: string; saveModifiedAt?: number | null } | null;
+  library?: { status: "ok" | "private" | "partial" | "error"; checkedAt: number; via?: string; games: Record<string, { owned: boolean | null; playtimeMinutes?: number | null; lastPlayed?: number | null }> } | null;
+  gameAchievements?: Record<string, GameAchievementsDoc>;
   demo?: boolean;
+}
+
+export interface GameAchievementsDoc {
+  status?: string;
+  message?: string | null;
+  fetchedAt?: number;
+  checkedAt?: number;
+  items?: Record<string, { unlocked: boolean; unlockTime: number | null; apiName: string; icon?: string; iconGray?: string; description?: string }>;
 }

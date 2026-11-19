@@ -1,3 +1,4 @@
+import type { GameInfo } from "@/lib/games";
 import { Backpack, Compass, Hammer, LayoutDashboard, Map as MapIcon, Milestone, ScrollText, Settings, Skull, Swords, Trophy, Users } from "lucide-react";
 
 /** Tracker sections, in "chapter" order. Shared by the sidebar and page titles. */
@@ -25,3 +26,15 @@ export function chapterFor(path: string | null): { numeral: string; en: string }
   const i = NAV.findIndex((n) => path.startsWith(n.href));
   return i < 0 ? null : { numeral: roman(i), en: NAV[i].en };
 }
+
+/** Sidebar for a game the tracker follows through Steam only (no save parser yet). */
+export function navFor(game: GameInfo | null): readonly { href: string; label: string; en: string; icon: (typeof NAV)[number]["icon"] }[] {
+  if (!game || game.tracker === "full") return NAV;
+  return [
+    { href: `/games/${game.id}`, label: "Тойм ба achievement", en: "Overview", icon: Trophy },
+    { href: "/settings", label: "Тохиргоо", en: "Settings", icon: Settings },
+  ];
+}
+
+/** Paths that belong to the Dark Souls: Remastered tracker (settings is shared by all games). */
+export const isDs1Path = (path: string) => NAV.some((n) => n.href !== "/settings" && path.startsWith(n.href)) || path.startsWith("/areas/");

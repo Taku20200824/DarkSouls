@@ -84,5 +84,27 @@ export function demoState(now = Date.now()): ClientState {
     manual: { bosses: {}, achievements: {}, quests: { solaire: ["meet", "gargoyles"] } },
     companion: { connected: true, lastHeartbeat: now - 10_000, lastSyncAt: now - 5 * 60_000, deviceName: "DEMO-PC", saveFound: true },
     sync: { lastSyncAt: now - 5 * 60_000, lastSource: "Demo" },
+    library: {
+      status: "ok",
+      checkedAt: now,
+      games: {
+        570940: { owned: true, playtimeMinutes: 7340 },
+        335300: { owned: false },
+        374320: { owned: true, playtimeMinutes: 9105 },
+        1245620: { owned: true, playtimeMinutes: 12480 },
+      },
+    },
+    gameAchievements: {
+      374320: {
+        status: "ok",
+        checkedAt: now,
+        items: Object.fromEntries(
+          ["Lord of Cinder", "Dark Soul", "Cinders", "Supreme Weapon", "Untended Graves", "Archdragon Peak", "Pyromancer"].map((name, i) => [
+            name,
+            { unlocked: i < 4, unlockTime: i < 4 ? Math.floor((now - (4 - i) * DAY) / 1000) : null, apiName: `DEMO_${i}`, description: "Demo achievement" },
+          ]),
+        ),
+      },
+    },
   };
 }

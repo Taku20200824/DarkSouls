@@ -2,12 +2,14 @@ import { withUser, ok } from "@/lib/server/api";
 import { isDesktopApp, isStoreApp } from "@/lib/server/env";
 import { cloudLinkPath, type CloudLink } from "@/lib/server/desktop-cloud";
 import type { StoredCharacter, TrackerEvent } from "@/lib/server/progress";
+import { libraryPath, type LibraryDoc } from "@/lib/server/library";
+import type { AchievementsDoc } from "@/lib/server/achievements";
 
 export const dynamic = "force-dynamic";
 
 export const GET = withUser(async ({ steamId, store }) => {
   const desktop = isDesktopApp();
-  const [user, chars, events, snapshots, ach, manual, companion, sync, link] = await Promise.all([
+  const [user, chars, events, snapshots, ach, manual, companion, sync, link, library, gameAch] = await Promise.all([
     store.get<Record<string, unknown>>(`users/${steamId}`),
     store.list<StoredCharacter>(`users/${steamId}/characters`),
     store.list<TrackerEvent>(`users/${steamId}/events`, { orderBy: "at", desc: true, limit: 500 }),
@@ -17,6 +19,8 @@ export const GET = withUser(async ({ steamId, store }) => {
     store.get<{ lastHeartbeat?: number; deviceName?: string; version?: string; saveFound?: boolean; message?: string }>(`users/${steamId}/meta/companion`),
     store.get<{ lastSyncAt?: number; lastSource?: string; saveModifiedAt?: number | null }>(`users/${steamId}/meta/sync`),
     desktop && store.kind === "dev-file" ? store.get<CloudLink>(cloudLinkPath(steamId)) : null,
+    store.get<LibraryDoc>(libraryPath(steamId)),
+    store.list<AchievementsDoc>(`users/${steamId}/gameAchievements`),
   ]);
   const now = Date.now();
   const companionConnected = !!companion?.lastHeartbeat && now - companion.lastHeartbeat < 90_000;
@@ -34,5 +38,8 @@ export const GET = withUser(async ({ steamId, store }) => {
     manual: manual ?? { bosses: {}, achievements: {}, quests: {} },
     companion: companion ? { ...companion, connected: companionConnected } : null,
     sync: sync ?? null,
+    library: library ?? null,
+    // Steam achievements of the other Souls games, keyed by appid.
+    gameAchievements: Object.fromEntries(gameAch.map(({ id, ...doc }) => [id, doc])),
   });
 });

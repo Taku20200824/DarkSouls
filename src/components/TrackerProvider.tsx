@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ClientState } from "@/lib/client/types";
 import { demoState } from "@/lib/client/demo";
 import type { TrackerContext } from "@/lib/guide/engine";
+import { useRouter } from "next/navigation";
+import { DEFAULT_GAME, gameById, gameHome } from "@/lib/games";
 
 type Status = "loading" | "anon" | "ready" | "error" | "store_unavailable";
 
@@ -17,12 +19,17 @@ interface Ctx {
   post(path: string, body: unknown): Promise<Response>;
   tracker: TrackerContext;
   errorMessage: string | null;
+  /** The game picked in the top bar (see lib/games.ts). */
+  game: string;
+  setGame(id: string): void;
 }
 
 const C = createContext<Ctx | null>(null);
 const POLL_MS = 15_000;
 const ACHIEVEMENTS_TTL = 10 * 60_000;
 const DESKTOP_SYNC_MS = 10_000;
+/** How long a Steam library (owned games) check stays fresh. */
+const LIBRARY_TTL = 6 * 3600_000;
 
 function readFlag(k: string): string | null {
   try {
@@ -47,6 +54,8 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   const [selectedKey, setSelected] = useState<string | null>(null);
   const [errorMessage, setErr] = useState<string | null>(null);
   const demoRef = useRef(false);
+  const [game, setGameState] = useState(DEFAULT_GAME);
+  const router = useRouter();
 
   const refresh = useCallback(async () => {
     if (demoRef.current) {
@@ -88,12 +97,24 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     demoRef.current = d;
     setDemoState(d);
     setSelected(readFlag("lt_char"));
+    const picked = gameById(readFlag("lt_game"));
+    if (picked) setGameState(picked.id);
+    // Picked a game on the login page: land on that game after Steam sign-in.
+    if (signedIn && picked && picked.tracker === "steam") router.replace(gameHome(picked));
     refresh();
     const t = setInterval(() => {
       if (document.visibilityState === "visible") refresh();
     }, POLL_MS);
     return () => clearInterval(t);
+    // Runs once on load; router is stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
+
+  const setGame = useCallback((id: string) => {
+    if (!gameById(id)) return;
+    setGameState(id);
+    writeFlag("lt_game", id);
+  }, []);
 
   const setDemo = useCallback(
     (v: boolean) => {
@@ -136,6 +157,28 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
     post("/api/achievements/sync", {}).catch(() => {});
   }, [status, demo, state, post]);
 
+  // Verify which Souls games the Steam account owns, after sign-in and every few hours.
+  const libraryTried = useRef(false);
+  useEffect(() => {
+    if (status !== "ready" || demo || !state || state.demo || libraryTried.current) return;
+    if (state.library && state.now - state.library.checkedAt < LIBRARY_TTL) return;
+    libraryTried.current = true;
+    post("/api/library/sync", {}).catch(() => {});
+  }, [status, demo, state, post]);
+
+  // Steam achievements of the picked game (the DS1 tracker has its own sync above).
+  const gameAchTried = useRef(new Map<number, number>());
+  useEffect(() => {
+    const g = gameById(game);
+    if (status !== "ready" || demo || !state || state.demo || !g || g.tracker !== "steam") return;
+    if (state.library?.games[g.appid]?.owned === false) return;
+    const now = Date.now();
+    if (now - (gameAchTried.current.get(g.appid) ?? 0) < ACHIEVEMENTS_TTL) return;
+    if (state.now - (state.gameAchievements?.[g.appid]?.checkedAt ?? 0) < ACHIEVEMENTS_TTL) return;
+    gameAchTried.current.set(g.appid, now);
+    post("/api/achievements/sync", { appid: g.appid }).catch(() => {});
+  }, [status, demo, state, post, game]);
+
   // The desktop build reads the save itself, so the game's autosaves appear with no setup.
   const desktopSync = status === "ready" && !demo && state?.desktop === true;
   useEffect(() => {
@@ -172,7 +215,7 @@ export function TrackerProvider({ children }: { children: React.ReactNode }) {
   }, [state, selectedKey, demo]);
 
   return (
-    <C.Provider value={{ status, state, demo, setDemo, selectedKey, select, refresh, post, tracker, errorMessage }}>{children}</C.Provider>
+    <C.Provider value={{ status, state, demo, setDemo, selectedKey, select, refresh, post, tracker, errorMessage, game, setGame }}>{children}</C.Provider>
   );
 }
 

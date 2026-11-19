@@ -8,9 +8,11 @@ import { useTracker } from "./TrackerProvider";
 import { fmtAgo } from "./ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { Menu, X } from "lucide-react";
-import { NAV, roman } from "./nav";
+import { navFor, roman } from "./nav";
 import { BonfireMark } from "./BonfireMark";
 import { BossThumb } from "./BossThumb";
+import { GameBar, useCurrentGame, useOwnership, useSyncPickedGame } from "./GameBar";
+import type { GameInfo } from "@/lib/games";
 
 
 
@@ -43,6 +45,18 @@ function Pill({ main, sub, color, pulse }: { main: string; sub?: string; color: 
       {sub && <div className="mt-0.5 text-ash-400">{sub}</div>}
     </div>
   );
+}
+
+/** Status pill for a game followed through Steam only: what Steam says about this account. */
+function SteamStatus({ game }: { game: GameInfo }) {
+  const { state, demo, status } = useTracker();
+  const own = useOwnership()(game);
+  if (demo) return <Pill color="fuchsia" main="DEMO MODE" sub="Жишээ өгөгдөл — бодит биш" />;
+  if (status !== "ready" || !state) return <Pill color="ash" main="NOT CONNECTED" sub="Steam-ээр нэвтэрнэ үү" />;
+  const checked = state.library?.checkedAt;
+  if (own === "owned") return <Pill color="ember" main="STEAM — VERIFIED" sub={`Таны бүртгэлд байгаа · шалгасан ${fmtAgo(checked)}`} />;
+  if (own === "not_owned") return <Pill color="ash" main="NOT OWNED" sub="Энэ Steam бүртгэлд байхгүй" />;
+  return <Pill color="ash" main="STEAM — ШАЛГАЖ БАЙНА" sub={state.library?.status === "private" ? "Game details private байна" : "Эзэмшлийг шалгаж байна…"} />;
 }
 
 const VICTORY_MS = 8000;
@@ -103,6 +117,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { state, demo, status } = useTracker();
   const [open, setOpen] = useState(false);
+  const game = useCurrentGame();
+  useSyncPickedGame();
+  const nav = navFor(game);
   const bare = path === "/" || path === "/login";
   if (bare) return <>{children}</>;
   return (
@@ -117,9 +134,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="font-display text-micro tracking-logo text-ash-500 group-hover:text-ember-300">TRACKER</div>
           </div>
         </Link>
+        <div className="mt-4 border border-gold-600/20 bg-black/30 px-3 py-2">
+          <div className="font-display text-micro uppercase tracking-eyebrow text-ember-300/90">Тоглоом</div>
+          <div className="font-display mt-0.5 text-label font-semibold leading-snug tracking-caps text-gold-300">{game.title}</div>
+        </div>
         <div className="ornament my-5" />
         <nav id="tracker-navigation" aria-label="Tracker navigation" className="space-y-0.5">
-          {NAV.map((n, i) => {
+          {nav.map((n, i) => {
             const active = path.startsWith(n.href);
             const Icon = n.icon;
             return (
@@ -138,7 +159,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="mt-auto pt-6">
-          <LiveStatus />
+          {game.tracker === "full" ? <LiveStatus /> : <SteamStatus game={game} />}
           {status === "ready" && state && !demo && (
             <div className="mt-3 flex items-center gap-3 border border-gold-600/15 bg-black/30 p-2.5 text-xs text-ash-400">
               {state.user.avatar && <img src={state.user.avatar} alt="" className="h-9 w-9 border border-gold-500/50" />}
@@ -164,6 +185,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <span className="font-display gold-text text-sm font-bold tracking-eyebrow">LORDRAN TRACKER</span>
           <BonfireMark className="h-7 w-5" />
         </div>
+        <GameBar />
         {demo && <div className="bg-demo-deep/40 px-4 py-1.5 text-center text-xs font-semibold tracking-widest text-demo-soft">DEMO MODE — эдгээр нь жишээ утгууд, таны бодит статистик биш</div>}
         <motion.main id="main-content" key={path} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="tracker-main mx-auto max-w-7xl p-4 md:p-10">{children}</motion.main>
       </div>
