@@ -4,7 +4,8 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { documentsRoots, findSave, steamAccountId, syncDesktopSave, STABLE_MS } from "@/lib/server/desktop-sync";
 import { ingest } from "@/lib/server/progress";
-import { cloudLinkPath } from "@/lib/server/desktop-cloud";
+import { cloudLinkPath, UPLOAD_RETRY_MS } from "@/lib/server/desktop-cloud";
+import { syncLinkedAccounts } from "@/lib/server/desktop-autosync";
 import type { Store } from "@/lib/server/store";
 
 vi.mock("@/lib/server/progress", () => ({ ingest: vi.fn(async () => []) }));
@@ -23,7 +24,9 @@ function memoryStore(): Store {
     },
     create: async () => true,
     add: async () => "id",
-    list: async () => [],
+    list: async <T,>(c: string) => [...docs.entries()]
+      .filter(([k]) => k.startsWith(`${c}/`) && !k.slice(c.length + 1).includes("/"))
+      .map(([k, v]) => ({ ...(v as T), id: k.slice(c.length + 1) })),
     delete: async () => {},
     deleteTree: async () => {},
   };
@@ -135,9 +138,14 @@ describe("desktop save sync", () => {
     await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
     await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
     expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ error: "upload_failed" });
+    // Backs off instead of hitting the network on every poll …
     await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    expect(request).toHaveBeenCalledTimes(1);
+    // … and retries once the wait is over.
+    const later = Date.now() + UPLOAD_RETRY_MS + 1;
+    await syncDesktopSave(STEAM_ID, store, later, [docs]);
     expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ syncedSaveAt: modified, error: null });
-    await syncDesktopSave(STEAM_ID, store, Date.now(), [docs]);
+    await syncDesktopSave(STEAM_ID, store, later, [docs]);
 
     expect(ingest).toHaveBeenCalledTimes(1);
     expect(request).toHaveBeenCalledTimes(2);
@@ -178,5 +186,23 @@ describe("desktop save sync", () => {
     expect(ingest).toHaveBeenCalledOnce();
     expect(request).not.toHaveBeenCalled();
     expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ error: "account_save_not_found" });
+  });
+
+  it("syncs every linked account in the background, without the page open", async () => {
+    const file = place(ACCOUNT);
+    const modified = age(file, 60);
+    const store = memoryStore();
+    const request = vi.fn().mockResolvedValue(Response.json({ ok: true }));
+    vi.stubGlobal("fetch", request);
+    await store.set(`users/${STEAM_ID}`, { steamId: STEAM_ID });
+    await store.set("users/76561198000000001", { steamId: "76561198000000001" }); // signed in once, never linked
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
+
+    expect(await syncLinkedAccounts(store, [docs])).toEqual([STEAM_ID]);
+    expect(request).toHaveBeenCalledOnce();
+    expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ syncedSaveAt: modified, error: null });
+    // Nothing new on the next pass.
+    await syncLinkedAccounts(store, [docs]);
+    expect(request).toHaveBeenCalledOnce();
   });
 });

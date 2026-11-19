@@ -7,12 +7,20 @@ export interface CloudLink extends DesktopCloudState {
   token: string;
   syncedSaveAt?: number;
   syncedParser?: string;
+  /** After a failed upload, the next attempt waits until this time. */
+  retryAt?: number;
 }
+
+export const UPLOAD_RETRY_MS = 30_000;
 
 export const cloudLinkPath = (steamId: string) => `users/${steamId}/meta/desktopCloud`;
 
-// Pairing, unlinking and the save poll share the same local connection record.
-const active = new Map<string, Promise<unknown>>();
+// Pairing, unlinking, the page's save poll and the background sync (instrumentation.ts)
+// share the same local connection record. Next bundles instrumentation separately from
+// the route handlers, so the lock lives on globalThis to be one map for both.
+const LOCKS = Symbol.for("lordran.desktopLocks");
+const lockHolder = globalThis as { [LOCKS]?: Map<string, Promise<unknown>> };
+const active = (lockHolder[LOCKS] ??= new Map<string, Promise<unknown>>());
 export async function withDesktopLock<T>(steamId: string, operation: () => Promise<T>): Promise<T> {
   const next = (active.get(steamId) ?? Promise.resolve()).catch(() => {}).then(operation);
   active.set(steamId, next);
@@ -51,7 +59,7 @@ export async function uploadDesktopSave(store: Store, steamId: string, link: Clo
   }
   if (response && !response.ok) console.error("cloud upload rejected", response.status);
   const error = response?.status === 401 ? "invalid_token" : "upload_failed";
-  if (link.error === error) return false;
-  await store.set(docPath, { error }, true);
-  return true;
+  // Offline or a website outage: wait a little before the next attempt instead of every poll.
+  await store.set(docPath, { error, retryAt: Date.now() + UPLOAD_RETRY_MS }, true);
+  return link.error !== error;
 }

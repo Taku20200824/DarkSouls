@@ -87,7 +87,8 @@ export async function syncDesktopSave(steamId: string, store: Store, now = Date.
   const saveModifiedAt = Math.floor(st.mtimeMs);
   const alreadySynced = prev.syncedSaveAt === saveModifiedAt && prev.syncedParser === PARSER_VERSION;
   const ownSave = path.basename(path.dirname(file)) === steamAccountId(steamId);
-  const pendingCloud = link && ownSave && link.error !== "invalid_token" && (
+  const backingOff = link?.error === "upload_failed" && (link.retryAt ?? 0) > now;
+  const pendingCloud = link && ownSave && link.error !== "invalid_token" && !backingOff && (
     link.syncedSaveAt !== saveModifiedAt || link.syncedParser !== PARSER_VERSION || link.error
   );
   const accountMismatch = link && !ownSave && link.error !== "account_save_not_found" && link.error !== "invalid_token";
