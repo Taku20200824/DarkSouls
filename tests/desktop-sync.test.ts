@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { documentsRoots, findSave, steamAccountId, syncDesktopSave, STABLE_MS } from "@/lib/server/desktop-sync";
 import { ingest } from "@/lib/server/progress";
 import { cloudLinkPath, UPLOAD_RETRY_MS } from "@/lib/server/desktop-cloud";
+import { CLOUD_RESEND_MS } from "@/lib/server/desktop-sync";
 import { syncLinkedAccounts } from "@/lib/server/desktop-autosync";
 import type { Store } from "@/lib/server/store";
 
@@ -204,5 +205,32 @@ describe("desktop save sync", () => {
     // Nothing new on the next pass.
     await syncLinkedAccounts(store, [docs]);
     expect(request).toHaveBeenCalledOnce();
+  });
+
+  it("re-sends an unchanged save to the website every 5 minutes so it shows a recent sync", async () => {
+    const file = place(ACCOUNT);
+    age(file, 60);
+    const store = memoryStore();
+    const request = vi.fn(async () => Response.json({ ok: true, unchanged: true }));
+    vi.stubGlobal("fetch", request);
+    await store.set(cloudLinkPath(STEAM_ID), { token: "test-token" });
+    const start = Date.now();
+    vi.useFakeTimers({ now: start, toFake: ["Date"] });
+    try {
+      await syncDesktopSave(STEAM_ID, store, start, [docs]);
+      expect(request).toHaveBeenCalledTimes(1);
+      // Same save a little later: nothing to send yet.
+      vi.setSystemTime(start + CLOUD_RESEND_MS - 1000);
+      await syncDesktopSave(STEAM_ID, store, start + CLOUD_RESEND_MS - 1000, [docs]);
+      expect(request).toHaveBeenCalledTimes(1);
+      // Five minutes after the last send: it goes again and the website confirms it.
+      vi.setSystemTime(start + CLOUD_RESEND_MS);
+      await syncDesktopSave(STEAM_ID, store, start + CLOUD_RESEND_MS, [docs]);
+      expect(request).toHaveBeenCalledTimes(2);
+      expect(await store.get(cloudLinkPath(STEAM_ID))).toMatchObject({ lastSyncedAt: start + CLOUD_RESEND_MS, lastResult: "unchanged", error: null });
+      expect(ingest).toHaveBeenCalledTimes(1); // the local copy is not re-imported
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

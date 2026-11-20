@@ -24,6 +24,11 @@ const SAVE_FOLDERS = [
 export const STABLE_MS = 3_000;
 /** Keeps the status "connected" (the state route allows 90 s) without a write on every poll. */
 export const HEARTBEAT_MS = 30_000;
+/**
+ * The linked website gets the save again at least this often, even when nothing changed,
+ * so it always shows a recent sync (it answers "unchanged" and only moves the sync time).
+ */
+export const CLOUD_RESEND_MS = 5 * 60_000;
 
 interface DesktopStatus {
   lastHeartbeat?: number;
@@ -89,7 +94,8 @@ export async function syncDesktopSave(steamId: string, store: Store, now = Date.
   const ownSave = path.basename(path.dirname(file)) === steamAccountId(steamId);
   const backingOff = link?.error === "upload_failed" && (link.retryAt ?? 0) > now;
   const pendingCloud = link && ownSave && link.error !== "invalid_token" && !backingOff && (
-    link.syncedSaveAt !== saveModifiedAt || link.syncedParser !== PARSER_VERSION || link.error
+    link.syncedSaveAt !== saveModifiedAt || link.syncedParser !== PARSER_VERSION || link.error ||
+    now - (link.lastSyncedAt ?? 0) >= CLOUD_RESEND_MS
   );
   const accountMismatch = link && !ownSave && link.error !== "account_save_not_found" && link.error !== "invalid_token";
   if (accountMismatch) await store.set(linkPath, { error: "account_save_not_found" }, true);

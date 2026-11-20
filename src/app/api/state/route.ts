@@ -23,7 +23,9 @@ export const GET = withUser(async ({ steamId, store }) => {
     store.list<AchievementsDoc>(`users/${steamId}/gameAchievements`),
   ]);
   const now = Date.now();
-  const companionConnected = !!companion?.lastHeartbeat && now - companion.lastHeartbeat < 90_000;
+  // The app's local status beats every 30 s; on the website the app checks in at least every
+  // 5 minutes (CLOUD_RESEND_MS), so it counts as connected for a little longer than that.
+  const companionConnected = !!companion?.lastHeartbeat && now - companion.lastHeartbeat < (desktop ? 90_000 : 6 * 60_000);
   return ok({
     now,
     storeKind: store.kind,
