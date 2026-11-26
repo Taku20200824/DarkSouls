@@ -1,8 +1,9 @@
 "use client";
+import { NoSaveData } from "@/components/NoSaveNotice";
 import Link from "next/link";
 import { Gate } from "@/components/Shell";
 import { useSelected, useTracker } from "@/components/TrackerProvider";
-import { Badge, Empty, PageTitle, Panel, Stat, fmtAgo, fmtDuration, fmtNum } from "@/components/ui";
+import { Badge, PageTitle, Panel, Stat, fmtAgo, fmtDuration, fmtNum } from "@/components/ui";
 import { ItemIcon } from "@/components/ItemIcon";
 import { BossThumb } from "@/components/BossThumb";
 import { BOSSES } from "@/lib/data/bosses";
@@ -47,11 +48,7 @@ function Inner() {
         <BonfireMark className="chapter-bonfire" />
       </div>
       <PageTitle title={ch?.name.value ?? "Live Dashboard"} sub={ch ? `${ch.className.value ?? ""} · Slot ${ch.slot + 1} · ${sel?.source ?? ""} · ${fmtAgo(Math.max(sel?.updatedAt ?? 0, state?.sync?.lastSyncAt ?? 0) || null)}` : "Дүрийн мэдээлэл хүлээгдэж байна"} />
-      {!ch && (
-        <Empty>
-          Save өгөгдөл алга (<b>Waiting for save data</b>). <Link className="text-ember-300 underline" href="/characters">Save upload</Link> эсвэл <Link className="text-ember-300 underline" href="/settings">companion</Link> холбоно уу.
-        </Empty>
-      )}
+      {!ch && <NoSaveData />}
       {ch && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <Stat label="Soul Level" value={ch.level.value} certainty={ch.level.certainty} demo={demo} />

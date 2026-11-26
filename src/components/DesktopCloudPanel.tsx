@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CLOUD_SITE_URL } from "@/lib/desktop-cloud";
 import { useTracker } from "./TrackerProvider";
 import { Panel, fmtDate } from "./ui";
+import { SAVE_MISSING_TEXT, SAVE_MISSING_TITLE, useSaveMissing } from "./NoSaveNotice";
 
 const errors: Record<string, string> = {
   account_save_not_found: "Энэ Steam бүртгэлийн save файл олдсонгүй. Өөр бүртгэлийн save вэб рүү илгээгдэхгүй.",
@@ -16,6 +17,7 @@ export function DesktopCloudPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const link = state?.desktopCloud;
+  const saveMissing = useSaveMissing();
   const needsSignIn = !link || link.error === "invalid_token";
 
   const [sent, setSent] = useState<string | null>(null);
@@ -73,7 +75,12 @@ export function DesktopCloudPanel() {
       </div>
       {link && (
         <div className="mt-4 space-y-2 text-sm" aria-live="polite">
-          {link.error ? <p className="text-warning">{errors[link.error]}</p> : <p className="text-ember-300">{link.lastSyncedAt ? `Вэбтэй синк хийсэн · ${fmtDate(link.lastSyncedAt)}${link.lastResult === "unchanged" ? " · вэб дээр аль хэдийн шинэ" : ""}` : "Холбогдсон · save хүлээж байна"}</p>}
+          {saveMissing && !link.error ? (
+            <div className="border-l-2 border-warning-line/60 pl-3">
+              <p className="font-semibold text-warning">{SAVE_MISSING_TITLE} — вэб рүү илгээх зүйл алга</p>
+              <p className="mt-1 text-ash-400">{SAVE_MISSING_TEXT}</p>
+            </div>
+          ) : link.error ? <p className="text-warning">{errors[link.error]}</p> : <p className="text-ember-300">{link.lastSyncedAt ? `Вэбтэй синк хийсэн · ${fmtDate(link.lastSyncedAt)}${link.lastResult === "unchanged" ? " · вэб дээр аль хэдийн шинэ" : ""}` : "Холбогдсон · save хүлээж байна"}</p>}
           <div className="flex flex-wrap gap-2">
             {link.error !== "invalid_token" && <button className="btn btn-sm btn-ember" disabled={busy} aria-busy={busy} onClick={() => void sendNow()}>Одоо вэб рүү илгээх</button>}
             <button className="btn btn-sm" disabled={busy} onClick={() => void disconnect()}>Холболт салгах</button>

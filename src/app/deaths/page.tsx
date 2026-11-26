@@ -2,11 +2,12 @@
 import { useMemo } from "react";
 import { Gate } from "@/components/Shell";
 import { useSelected, useTracker } from "@/components/TrackerProvider";
-import { Badge, Empty, PageTitle, Panel, Stat, fmtDate } from "@/components/ui";
+import { Badge, PageTitle, Panel, Stat, fmtDate } from "@/components/ui";
 import { BOSSES } from "@/lib/data/bosses";
 import { BossThumb } from "@/components/BossThumb";
 import type { ClientEvent } from "@/lib/client/types";
 import { deathStats } from "@/lib/deaths";
+import { NoSaveData } from "@/components/NoSaveNotice";
 
 const fmtSpan = (ms: number) => {
   const m = Math.round(ms / 60000);
@@ -57,7 +58,7 @@ function Inner() {
   return (
     <>
       <PageTitle title="YOU DIED — Analytics" sub="Save дахь нийт тооллогын өөрчлөлтийг snapshot бүрээр харьцуулж үхлийг илрүүлнэ." />
-      {!ch ? <Empty>Save өгөгдөл алга (Waiting for save data).</Empty> : (
+      {!ch ? <NoSaveData /> : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat label="Нийт үхэл" value={total ?? "Тодорхойгүй"} certainty={ch.deaths.certainty} demo={demo} />

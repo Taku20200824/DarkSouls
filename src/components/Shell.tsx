@@ -12,12 +12,14 @@ import { navFor, roman } from "./nav";
 import { BonfireMark } from "./BonfireMark";
 import { BossThumb } from "./BossThumb";
 import { GameBar, useCurrentGame, useOwnership, useSyncPickedGame } from "./GameBar";
+import { useSaveMissing } from "./NoSaveNotice";
 import type { GameInfo } from "@/lib/games";
 
 
 
 export function LiveStatus() {
   const { state, demo, status } = useTracker();
+  const saveMissing = useSaveMissing();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 5000);
@@ -27,6 +29,7 @@ export function LiveStatus() {
   if (status !== "ready" || !state) return <Pill color="ash" main="NOT CONNECTED" sub="Steam-ээр нэвтэрнэ үү" />;
   const c = state.companion;
   const lastSync = state.sync?.lastSyncAt;
+  if (saveMissing) return <Pill color="ash" main="SAVE NOT FOUND" sub="Энэ компьютерт DARK SOULS save алга" />;
   if (c?.connected) {
     const waiting = !lastSync || now - lastSync > 60_000;
     return <Pill color="ember" main="CONNECTED — LIVE TRACKING" sub={waiting ? `WAITING FOR NEXT SAVE · сүүлийн sync ${fmtAgo(lastSync, now)}` : `Шинэ save ${fmtAgo(lastSync, now)}`} pulse />;

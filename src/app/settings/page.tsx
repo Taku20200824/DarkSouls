@@ -39,7 +39,7 @@ function Connected() {
       <>
       <Panel title="Автомат sync">
         <div className="text-sm">
-          <p>Төлөв: {c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : <span className="text-ash-500">Эхэлж байна…</span>}</p>
+          <p>Төлөв: {c?.connected && c.saveFound === false ? <span className="text-warning">SAVE NOT FOUND — энэ компьютерт save алга</span> : c?.connected ? <span className="text-ember-300">CONNECTED — LIVE TRACKING</span> : <span className="text-ash-500">Эхэлж байна…</span>}</p>
           {c?.saveFound === false && <p className="text-warning">Save файл олдсонгүй. Тоглоомыг нэг удаа ажиллуулж хадгална уу, эсвэл Manual upload ашиглана уу.</p>}
           {c?.saveFound && c.message && <p className="text-warning">{c.message}</p>}
           {c?.saveModifiedAt && <p className="text-ash-400">Сүүлийн save: {fmtDate(c.saveModifiedAt)}</p>}
