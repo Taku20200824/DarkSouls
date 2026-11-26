@@ -48,7 +48,7 @@ export default async function CodeSigning() {
             <a className="text-ember-300 underline" href="https://signpath.org" target="_blank" rel="noreferrer">SignPath Foundation</a>.
           </p>
           <p className="mt-2 text-sm text-warning">
-            Status: application to SignPath Foundation pending. Releases up to and including v0.1.18 are <b>not</b> code-signed, so Windows SmartScreen may
+            Status: application to SignPath Foundation pending. Releases up to and including v0.1.19 are <b>not</b> code-signed, so Windows SmartScreen may
             warn on first run («More info» → «Run anyway»).
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ash-300">
